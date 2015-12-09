@@ -1,0 +1,12 @@
+{
+    "playerMapping" :
+    {
+        "btn0" : "INCR",
+        "btn1" : "DECR",
+        "btn2" : "PASS"
+    },
+    "masterMapping" :
+    {
+        "btn0" : "PAUSE"
+    }
+}
