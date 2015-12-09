@@ -6,6 +6,10 @@ import time
 import logging
 from collections import deque
 
+class AnnouncementKind(object):
+    PLAYER_PANEL = 0
+    TIMER_PANEL = 1
+
 class TimerAnnouncement(object):
     def __init__(self, heading, text, callback=None, cb_args=None):
         self.heading = heading
@@ -15,7 +19,7 @@ class TimerAnnouncement(object):
 
 class TimerHandler(object):
 
-    def __init__(self, timer_end=None):
+    def __init__(self, timer_end=None, chainball_game=None):
 
         self.logger = logging.getLogger('sboard.timer')
         #self.logger.debug('Spawning matrix control server')
@@ -38,6 +42,12 @@ class TimerHandler(object):
         self.pause_timer = None
         self.timer_end = None
         self.end_cb = timer_end
+        self.a_kind = None
+        self.a_player = None
+
+        #game reference
+        #NEEDS DECOUPLING
+        self.game = chainball_game
 
         #shit
         self.last_cycle = datetime.datetime.now()
@@ -70,10 +80,17 @@ class TimerHandler(object):
 
     def stop(self, clear=False):
         self.stopped = True
-        #signal.alarm(0)
+        #self.timer_end = None
 
         if clear:
             self.matCli.clear()
+
+    #get current time
+    def get_timer(self):
+        if self.timer_end == None or self.stopped:
+            return None
+
+        return self.timer_end - datetime.datetime.now()
 
     def handle(self):
 
@@ -86,12 +103,22 @@ class TimerHandler(object):
 
         if self.announcing:
             self.logger.debug('announcing')
-            self.draw_announcement()
+            if self.a_kind == AnnouncementKind.TIMER_PANEL:
+                self.draw_announcement()
+            elif self.a_kind == AnnouncementKind.PLAYER_PANEL:
+                self.game.players[self.a_player].show_text(self.a_msg.text)
             td = datetime.datetime.now() - self.a_start
             if td.seconds >= self.a_duration:
                 self.logger.debug('Announcement ends: delta = {}, duration = {}'.format(td.seconds, self.a_duration))
+
+                if self.a_kind == AnnouncementKind.PLAYER_PANEL:
+                    #restore player text
+                    self.game.players[self.a_player].restore_text()
+
                 self.announcing = False
                 self.a_start = None
+                self.a_player = None
+                self.a_kind = None
                 if self.a_msg.cb != None:
                     if self.a_msg.cb_args:
                         self.a_msg.cb(self.a_msg.cb_args)
@@ -196,11 +223,22 @@ class TimerHandler(object):
     #hack hack hack hack
     def announcement(self, announcement, duration):
         self.logger.debug('queuing announcement')
-        self.a_queue.append([announcement, duration])
+        self.a_queue.append([announcement, duration, -1])
 
-    def _announcement(self, announcement, duration):
+    #announcements on player panels
+    def player_announcement(self, announcement, duration, player_number):
+        self.logger.debug('queuing player announcement')
+        self.a_queue.append([announcement, duration, player_number])
+
+    def _announcement(self, announcement, duration, player_panel):
 
         self.logger.debug('Announcing: {} -> {}'.format(announcement.heading, announcement.text))
+
+        if player_panel > -1:
+            self.a_kind = AnnouncementKind.PLAYER_PANEL
+            self.a_player = player_panel
+        else:
+            self.a_kind = AnnouncementKind.TIMER_PANEL
 
         self.a_msg = announcement
         self.a_duration = duration
