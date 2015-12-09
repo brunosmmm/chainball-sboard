@@ -2,9 +2,7 @@ import threading
 import pygame
 import logging
 import time
-
-SOUND_FX_LIB = {'buzzer' : 'sfx/buzzer.wav',
-                'out' : 'sfx/out.wav'}
+import json
 
 class GameSoundEffect(threading.Thread):
 
@@ -37,7 +35,21 @@ class GameSFXHandler(object):
 
         pygame.mixer.init(frequency=44100)
 
-        self.fx_dict = dict([(x, pygame.mixer.Sound(y)) for x, y in SOUND_FX_LIB.iteritems()])
+        #build library
+        self.fx_dict = {}
+        try:
+            sfx_config_contents = open('conf/sfx.json')
+            sfx_config = json.loads(sfx_config_contents.read())
+            sfx_config_contents.close()
+        except IOError:
+            #no library, nothing to do
+            self.logger.error('Could not open SFX library configuration file')
+            return
+        except KeyError:
+            self.logger.error('Invalid SFX library configuration file')
+            return
+
+        self.fx_dict = dict([(x, pygame.mixer.Sound(sfx_config['sfxpath']+'/'+y)) for x, y in sfx_config['sfxlib'].iteritems()])
 
     def play_fx(self, fx):
 
