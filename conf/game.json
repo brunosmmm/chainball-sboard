@@ -1,0 +1,7 @@
+{
+    "sfxmap" :
+    {
+        "gameEnd" : "buzzer",
+        "cowOut" : "out"
+    }
+}

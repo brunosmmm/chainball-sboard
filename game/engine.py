@@ -8,7 +8,7 @@ from game_persist import GamePersistance, PlayerPersistData
 from soundfx import GameSFXHandler
 from game.remotemapper import RemoteMapping, RemoteMappingLoadFailed
 from game.constants import GameTurnActions, MasterRemoteActions
-from game.sfxmapper import SFXMapping
+from game.sfxmapper import SFXMapping, SFXMappingLoadFailed, SFXUnknownEvent, SFXMappableEvents
 
 #remote pairing timeout in seconds
 GAME_PAIRING_TIMEOUT = 30
@@ -34,6 +34,13 @@ class ChainballGame(object):
         except RemoteMappingLoadFailed:
             self.logger.error('Failed to load remote button mapping')
             exit(1)
+
+        #load SFX mapping configuration file
+        try:
+            self.sfx_mapping = SFXMapping()
+            self.sfx_mapping.load_config('conf/game.json')
+        except SFXMappingLoadFailed:
+            self.logger.error('Failed to load SFX mapping')
 
         #remote pair handler (non-threaded)
         self.pair_handler = RemotePairHandler(fail_cb=self.pair_fail,
@@ -343,8 +350,12 @@ class ChainballGame(object):
         self.s_handler.set_turn(winner_player)
         self.announce_end(winner_player)
 
-        #play buzzer
-        self.sfx_handler.play_fx('buzzer')
+        #play sfx
+        try:
+            game_end_sfx = self.sfx_mapping.get_sfx(SFXMappableEvents.GAME_END)
+            self.sfx_handler.play_fx(game_end_sfx)
+        except SFXUnknownEvent:
+            pass
 
         self.timer_handler.stop()
         self.ongoing = False
@@ -432,9 +443,10 @@ class ChainballGame(object):
         self.timer_handler.announcement(TimerAnnouncement(self.players[player].panel_text, "COWOUT"), 4)
 
         try:
-            self.sfx_handler.play_fx('out')
-        except:
-            self.logger.warning('Could not play SFX')
+            cowout_sfx = self.sfx_mapping.get_sfx(SFXMappableEvents.COW_OUT)
+            self.sfx_handler.play_fx(cowout_sfx)
+        except SFXUnknownEvent:
+            self.logger.warning('SFX play error')
 
     def game_decrement_score(self, player):
 
