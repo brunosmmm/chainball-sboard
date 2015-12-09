@@ -1,13 +1,13 @@
 from score import ScoreHandler, PlayerScore
 from nrf24 import NRF24Handler
-from remote import RemoteDecoder, RemoteCommands, RemotePairFailureType, RemotePairHandler, RemotePairStates
+from remote import RemoteDecoder, RemoteCommands, RemotePairFailureType, RemotePairHandler
 import logging
-import time
 from game_except import *
-import copy
 from timer import TimerHandler, TimerAnnouncement
 from game_persist import GamePersistance, PlayerPersistData
 from soundfx import GameSFXHandler
+import json
+import re
 
 class GameTurnActions(object):
 
@@ -24,13 +24,6 @@ class GameStates(object):
     IDLE = 0
     RUNNING = 1
     ERROR = 2
-
-#map remote buttons
-GAME_REMOTE_MAPPING = {0: GameTurnActions.INCREASE_SCORE,
-                       1: GameTurnActions.DECREASE_SCORE,
-                       2: GameTurnActions.PASS_TURN}
-
-MASTER_REMOTE_MAPPING = {0: MasterRemoteActions.PAUSE_UNPAUSE_CLOCK}
 
 #remote pairing timeout in seconds
 GAME_PAIRING_TIMEOUT = 30
@@ -58,6 +51,78 @@ class PlayerText(object):
 
         self.panel_txt = panel_txt
 
+class RemoteMappingLoadFailed(Exception):
+    pass
+
+class RemoteMapping(object):
+    #configuration file name mapping
+    PLAYER_ACTIONS = {"INCR" : GameTurnActions.INCREASE_SCORE,
+                      "DECR" : GameTurnActions.DECREASE_SCORE,
+                      "PASS" : GameTurnActions.PASS_TURN}
+    MASTER_ACTIONS = {"PAUSE" : MasterRemoteActions.PAUSE_UNPAUSE_CLOCK}
+
+    def __init__(self, logger):
+        self.logger = logger
+        self.player_mapping = {}
+        self.master_mapping = {}
+
+    def load_config(self, filename):
+        try:
+            remote_map_file = open(filename)
+            remote_map = json.loads(remote_map_file.read())
+            remote_map_file.close()
+        except IOError:
+            self.logger.error('Could not open remote mapping configuration file')
+            raise RemoteMappingLoadFailed
+
+        if "playerMapping" not in remote_map:
+            raise RemoteMappingLoadFailed('Invalid remote configuration!')
+
+        #load player mapping
+        for button, mapping in remote_map['playerMapping'].iteritems():
+            m = re.match(r"btn([0-9]+)", button)
+
+            if m != None:
+                if int(m.group(1)) > 2:
+                    #invalid button
+                    continue
+
+                if mapping not in self.PLAYER_ACTIONS:
+                    #invalid mapping
+                    continue
+
+                #map button to action
+                self.player_mapping[int(m.group(1))] = self.PLAYER_ACTIONS[mapping]
+
+            else:
+                #invalid entry
+                continue
+
+        #load master mapping
+        for button, mapping in remote_map['masterMapping'].iteritems():
+            m = re.match(r"btn([0-9]+)", button)
+
+            if m != None:
+                if int(m.group(1)) > 2:
+                    #invalid button
+                    continue
+
+                if mapping not in self.MASTER_ACTIONS:
+                    #invalid mapping
+                    continue
+
+                #map button to action
+                self.master_mapping[int(m.group(1))] = self.MASTER_ACTIONS[mapping]
+
+            else:
+                #invalid entry
+                continue
+
+        #check that we have all necessary mappings
+        if len(self.player_mapping) < 3:
+            raise RemoteMappingLoadFailed('Player remote mapping is invalid!')
+
+
 class ChainballGame(object):
 
     def __init__(self, virtual_hw=False):
@@ -66,6 +131,14 @@ class ChainballGame(object):
 
         self.s_handler = ScoreHandler('/dev/ttyAMA0', virt_hw=virtual_hw)
         self.rf_handler = NRF24Handler(fake_hw=virtual_hw)
+
+        #load remote mapping configuration file
+        try:
+            self.remote_mapping = RemoteMapping(self.logger)
+            self.remote_mapping.load_config('conf/remotemap.json')
+        except RemoteMappingLoadFailed:
+            self.logger.error('Failed to load remote button mapping')
+            exit(1)
 
         #remote pair handler (non-threaded)
         self.pair_handler = RemotePairHandler(fail_cb=self.pair_fail,
@@ -521,7 +594,7 @@ class ChainballGame(object):
         if message.remote_id == self.m_remote.remote_id:
             #master remote actions
             if message.command == RemoteCommands.BTN_PRESS:
-                if MASTER_REMOTE_MAPPING[message.cmd_data] == MasterRemoteActions.PAUSE_UNPAUSE_CLOCK:
+                if self.remote_mapping.master_mapping[message.cmd_data] == MasterRemoteActions.PAUSE_UNPAUSE_CLOCK:
                     if not self.ongoing:
                         if self.game_can_start():
                             self.game_begin()
@@ -546,11 +619,11 @@ class ChainballGame(object):
         commanding_player = self.find_player_by_remote(message.remote_id)
 
         if message.command == RemoteCommands.BTN_PRESS:
-            if GAME_REMOTE_MAPPING[message.cmd_data] == GameTurnActions.DECREASE_SCORE:
+            if self.remote_mapping.player_mapping[message.cmd_data] == GameTurnActions.DECREASE_SCORE:
                 self.game_decrement_score(commanding_player)
-            elif GAME_REMOTE_MAPPING[message.cmd_data] == GameTurnActions.INCREASE_SCORE:
+            elif self.remote_mapping.player_mapping[message.cmd_data] == GameTurnActions.INCREASE_SCORE:
                 self.game_increment_score(commanding_player)
-            elif GAME_REMOTE_MAPPING[message.cmd_data] == GameTurnActions.PASS_TURN:
+            elif self.remote_mapping.player_mapping[message.cmd_data] == GameTurnActions.PASS_TURN:
                 if message.remote_id != self.players[self.active_player].remote_id:
                     self.logger.debug('Only the active player can force the serve')
                     return
