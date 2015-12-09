@@ -1,4 +1,4 @@
-from game import ChainballGame
+from game.engine import ChainballGame
 from web import WebBoard
 import threading
 import logging
