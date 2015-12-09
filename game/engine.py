@@ -1,4 +1,5 @@
-from score import ScoreHandler, PlayerScore
+from score.handler import ScoreHandler
+from score.player import PlayerScore
 from remote.nrf24 import NRF24Handler
 from remote.decoder import RemoteDecoder
 from remote.constants import RemoteCommands, RemotePairFailureType
@@ -6,8 +7,8 @@ from remote.pair import RemotePairHandler
 import logging
 from game.exceptions import *
 from timer import TimerHandler, TimerAnnouncement
-from game.persist import GamePersistance, PlayerPersistData
-from soundfx import GameSFXHandler
+#from game.persist import GamePersistance, PlayerPersistData
+from util.soundfx import GameSFXHandler
 from game.remotemapper import RemoteMapping, RemoteMappingLoadFailed
 from game.constants import GameTurnActions, MasterRemoteActions
 from game.sfxmapper import SFXMapping, SFXMappingLoadFailed, SFXUnknownEvent, SFXMappableEvents

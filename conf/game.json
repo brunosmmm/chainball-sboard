@@ -3,5 +3,8 @@
     {
         "gameEnd" : "buzzer",
         "cowOut" : "out"
-    }
+    },
+
+    "serveTimeout" : 3,
+    "pairTimeout" : 30
 }
