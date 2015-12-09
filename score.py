@@ -90,6 +90,12 @@ class PlayerScore(object):
             if self.handler and self.panel_text:
                 self.handler.register_player(self.pid, self.panel_text)
 
+    def show_text(self, text):
+        self.handler.set_panel_text(self.pid, text)
+
+    def restore_text(self):
+        self.handler.set_panel_text(self.pid, self.panel_text)
+
     def start_serve(self):
         self.logger.debug('Player {} serving'.format(self.pid))
         self.serve_state = PlayerServeStates.SERVING
@@ -263,8 +269,12 @@ class ScoreHandler(StoppableThread):
         self.evt_q.put(ScoreUpdateEvent(ScoreUpdateEventTypes.SET_TURN,
                                         [player]))
 
-    #cannot change player text mid-game?
+    #backwards compatibility
     def register_player(self, player, text):
+        self.set_panel_text(player, text)
+
+    #set panel text
+    def set_panel_text(self, player, text):
 
         #if self.is_running.isSet():
         #    raise IOError('Cannot change player text while running')
