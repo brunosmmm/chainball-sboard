@@ -1,4 +1,4 @@
-{"sfxpath" : "sfx",
+{"sfxpath" : "data/sfx",
  "sfxlib" : {
      "buzzer" : "buzzer.wav",
      "out" : "out.wav"

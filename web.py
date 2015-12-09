@@ -25,19 +25,19 @@ class WebBoard(object):
         return template('base')
 
     def jsFiles(self, filename):
-        return static_file(filename, root='web_static/js')
+        return static_file(filename, root='data/web_static/js')
 
     def cssFiles(self, filename):
-        return static_file(filename, root='web_static/css')
+        return static_file(filename, root='data/web_static/css')
 
     def imgFiles(self, filename):
-        return static_file(filename, root='web_static/images')
+        return static_file(filename, root='data/web_static/images')
 
     def fontFiles(self, filename):
-        return static_file(filename, root='web_static/fonts')
+        return static_file(filename, root='data/web_static/fonts')
 
     def staticFiles(self, filename):
-        return static_file(filename, root='web_static')
+        return static_file(filename, root='data/web_static')
 
     def begin_game(self):
         try:
