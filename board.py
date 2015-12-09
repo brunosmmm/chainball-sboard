@@ -3,16 +3,15 @@ from web import WebBoard
 import threading
 import logging
 import time
-
-NO_HW = False
-BIND_TO_ALL = True
-WEB_PORT = 80
-
-#NO_HW = True
-#BIND_TO_ALL = True
-#WEB_PORT = 8080
+import argparse
 
 if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--nohw', action='store_true', help='hardware not present, development only')
+    parser.add_argument('--port', help='web interface port', default=80)
+
+    args = parser.parse_args()
 
     #main loop
     logging.basicConfig(level=logging.DEBUG,
@@ -29,10 +28,10 @@ if __name__ == "__main__":
     logger.info("Scoreboard Starting")
 
     #create game object
-    game = ChainballGame(virtual_hw=NO_HW)
+    game = ChainballGame(virtual_hw=args.nohw)
 
     #web server
-    webScoreBoard = WebBoard(WEB_PORT, game, bind_all=BIND_TO_ALL)
+    webScoreBoard = WebBoard(args.port, game, bind_all=True)
 
     #spawn web server
     threading.Thread(target=webScoreBoard.run).start()
