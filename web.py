@@ -2,7 +2,7 @@ from bottle import route, run, template, static_file, request
 from game.playertxt import PlayerText
 from game.exceptions import PlayerNotRegisteredError, TooManyPlayersError, PlayerAlreadyPairedError, PlayerNotPairedError, GameRunningError, NotEnoughPlayersError, GameNotStartedError, GameAlreadyStarterError, GameAlreadyPausedError, GameNotPausedError
 import logging
-from timer import TimerAnnouncement
+from announce.timer import TimerAnnouncement
 import time
 
 class WebBoard(object):

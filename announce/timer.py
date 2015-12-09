@@ -1,8 +1,6 @@
-from matrixser import MatrixControllerSerial, Color
-import signal, os
+from announce.matrixser import MatrixControllerSerial, Color
 import datetime
 #import subprocess32
-import time
 import logging
 from collections import deque
 

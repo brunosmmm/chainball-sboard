@@ -6,7 +6,7 @@ from remote.constants import RemoteCommands, RemotePairFailureType
 from remote.pair import RemotePairHandler
 import logging
 from game.exceptions import *
-from timer import TimerHandler, TimerAnnouncement
+from announce.timer import TimerHandler, TimerAnnouncement
 #from game.persist import GamePersistance, PlayerPersistData
 from util.soundfx import GameSFXHandler
 from game.remotemapper import RemoteMapping, RemoteMappingLoadFailed
