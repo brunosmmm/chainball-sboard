@@ -1,6 +1,6 @@
 from bottle import route, run, template, static_file, request
 from game.playertxt import PlayerText
-from game_except import PlayerNotRegisteredError, TooManyPlayersError, PlayerAlreadyPairedError, PlayerNotPairedError, GameRunningError, NotEnoughPlayersError, GameNotStartedError, GameAlreadyStarterError, GameAlreadyPausedError, GameNotPausedError
+from game.exceptions import PlayerNotRegisteredError, TooManyPlayersError, PlayerAlreadyPairedError, PlayerNotPairedError, GameRunningError, NotEnoughPlayersError, GameNotStartedError, GameAlreadyStarterError, GameAlreadyPausedError, GameNotPausedError
 import logging
 from timer import TimerAnnouncement
 import time

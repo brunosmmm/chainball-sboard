@@ -1,5 +1,5 @@
 import time
-from threadutil import StoppableThread
+from util.threads import StoppableThread
 import Queue
 import remote.nrf24const as rf
 import logging

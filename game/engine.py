@@ -4,9 +4,9 @@ from remote.decoder import RemoteDecoder
 from remote.constants import RemoteCommands, RemotePairFailureType
 from remote.pair import RemotePairHandler
 import logging
-from game_except import *
+from game.exceptions import *
 from timer import TimerHandler, TimerAnnouncement
-from game_persist import GamePersistance, PlayerPersistData
+from game.persist import GamePersistance, PlayerPersistData
 from soundfx import GameSFXHandler
 from game.remotemapper import RemoteMapping, RemoteMappingLoadFailed
 from game.constants import GameTurnActions, MasterRemoteActions

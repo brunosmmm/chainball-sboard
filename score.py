@@ -1,6 +1,6 @@
 import serial
 import struct
-from threadutil import StoppableThread
+from util.threads import StoppableThread
 import threading
 import Queue
 import logging
