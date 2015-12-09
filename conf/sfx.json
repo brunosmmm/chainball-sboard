@@ -1,5 +1,6 @@
 {"sfxpath" : "sfx",
  "sfxlib" : {
-     "buzzer" : "buzzer.wav"
+     "buzzer" : "buzzer.wav",
+     "out" : "out.wav"
  }
 }
