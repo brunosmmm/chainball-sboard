@@ -6,24 +6,9 @@ from game_except import *
 from timer import TimerHandler, TimerAnnouncement
 from game_persist import GamePersistance, PlayerPersistData
 from soundfx import GameSFXHandler
-import json
-import re
-
-class GameTurnActions(object):
-
-    INCREASE_SCORE = 0
-    DECREASE_SCORE = 1
-    PASS_TURN = 2
-
-class MasterRemoteActions(object):
-
-    PAUSE_UNPAUSE_CLOCK = 0
-
-class GameStates(object):
-
-    IDLE = 0
-    RUNNING = 1
-    ERROR = 2
+from game.remotemapper import RemoteMapping, RemoteMappingLoadFailed
+from game.constants import GameTurnActions, MasterRemoteActions
+from game.sfxmapper import SFXMapping
 
 #remote pairing timeout in seconds
 GAME_PAIRING_TIMEOUT = 30
@@ -32,96 +17,6 @@ class MasterRemote(object):
 
     def __init__(self):
         self.remote_id = None
-
-class PlayerText(object):
-
-    def __init__(self, panel_txt, web_txt=None):
-
-        if panel_txt == None:
-            raise ValueError('Display name cannot be empty')
-        else:
-            if len(panel_txt) == 0:
-                raise ValueError('Display name cannot be empty')
-
-        if web_txt:
-            if len(web_txt) > 0:
-                self.web_txt = web_txt
-        else:
-            self.web_txt = panel_txt
-
-        self.panel_txt = panel_txt
-
-class RemoteMappingLoadFailed(Exception):
-    pass
-
-class RemoteMapping(object):
-    #configuration file name mapping
-    PLAYER_ACTIONS = {"INCR" : GameTurnActions.INCREASE_SCORE,
-                      "DECR" : GameTurnActions.DECREASE_SCORE,
-                      "PASS" : GameTurnActions.PASS_TURN}
-    MASTER_ACTIONS = {"PAUSE" : MasterRemoteActions.PAUSE_UNPAUSE_CLOCK}
-
-    def __init__(self, logger):
-        self.logger = logger
-        self.player_mapping = {}
-        self.master_mapping = {}
-
-    def load_config(self, filename):
-        try:
-            remote_map_file = open(filename)
-            remote_map = json.loads(remote_map_file.read())
-            remote_map_file.close()
-        except IOError:
-            self.logger.error('Could not open remote mapping configuration file')
-            raise RemoteMappingLoadFailed
-
-        if "playerMapping" not in remote_map:
-            raise RemoteMappingLoadFailed('Invalid remote configuration!')
-
-        #load player mapping
-        for button, mapping in remote_map['playerMapping'].iteritems():
-            m = re.match(r"btn([0-9]+)", button)
-
-            if m != None:
-                if int(m.group(1)) > 2:
-                    #invalid button
-                    continue
-
-                if mapping not in self.PLAYER_ACTIONS:
-                    #invalid mapping
-                    continue
-
-                #map button to action
-                self.player_mapping[int(m.group(1))] = self.PLAYER_ACTIONS[mapping]
-
-            else:
-                #invalid entry
-                continue
-
-        #load master mapping
-        for button, mapping in remote_map['masterMapping'].iteritems():
-            m = re.match(r"btn([0-9]+)", button)
-
-            if m != None:
-                if int(m.group(1)) > 2:
-                    #invalid button
-                    continue
-
-                if mapping not in self.MASTER_ACTIONS:
-                    #invalid mapping
-                    continue
-
-                #map button to action
-                self.master_mapping[int(m.group(1))] = self.MASTER_ACTIONS[mapping]
-
-            else:
-                #invalid entry
-                continue
-
-        #check that we have all necessary mappings
-        if len(self.player_mapping) < 3:
-            raise RemoteMappingLoadFailed('Player remote mapping is invalid!')
-
 
 class ChainballGame(object):
 
