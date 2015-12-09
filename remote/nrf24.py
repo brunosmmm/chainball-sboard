@@ -1,7 +1,7 @@
 import time
 from threadutil import StoppableThread
 import Queue
-import nrf24const as rf
+import remote.nrf24const as rf
 import logging
 
 #constants

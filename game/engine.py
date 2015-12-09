@@ -1,6 +1,8 @@
 from score import ScoreHandler, PlayerScore
-from nrf24 import NRF24Handler
-from remote import RemoteDecoder, RemoteCommands, RemotePairFailureType, RemotePairHandler
+from remote.nrf24 import NRF24Handler
+from remote.decoder import RemoteDecoder
+from remote.constants import RemoteCommands, RemotePairFailureType
+from remote.pair import RemotePairHandler
 import logging
 from game_except import *
 from timer import TimerHandler, TimerAnnouncement
