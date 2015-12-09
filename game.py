@@ -72,7 +72,7 @@ class ChainballGame(object):
                                               success_cb=self.pair_end)
         
         #timer handler
-        self.timer_handler = TimerHandler(self.game_timeout)
+        self.timer_handler = TimerHandler(self.game_timeout, self)
 
         #create player dictionary
         self.players = dict([(x, PlayerScore(self.s_handler, x, autoadv_cb=self.game_pass_turn)) for x in range(4)])
@@ -209,6 +209,18 @@ class ChainballGame(object):
             announcement.cb_args = original_cb
 
         self.timer_handler.announcement(announcement, duration)
+
+    def do_player_announcement(self, player_number, announcement, duration, dont_handle=False):
+
+        if dont_handle == False:
+            #save callback
+            original_cb = announcement.cb
+
+            #insert our callback
+            announcement.cb = self.default_announcement_end
+            announcement.cb_args = original_cb
+
+        self.timer_handler.player_announcement(announcement, duration, player_number)
 
     def default_announcement_end(self, original_cb=None):
 
@@ -407,6 +419,11 @@ class ChainballGame(object):
                 self.timer_handler.announcement(TimerAnnouncement(self.players[p].panel_text,
                                                                   '{:+1d}'.format(self.players[p].score_diff)),
                                                 2)
+                self.timer_handler.player_announcement(TimerAnnouncement('',
+                                                                         '{:+1d} -> {:+1d}'.format(self.players[p].score_diff,
+                                                                                                   self.players[p].current_score)),
+                                                       5,
+                                                       p)
 
     def game_pass_turn(self):
 
