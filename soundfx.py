@@ -51,6 +51,8 @@ class GameSFXHandler(object):
 
         self.fx_dict = dict([(x, pygame.mixer.Sound(sfx_config['sfxpath']+'/'+y)) for x, y in sfx_config['sfxlib'].iteritems()])
 
+        self.logger.debug('loaded {} SFX files'.format(len(self.fx_dict)))
+
     def play_fx(self, fx):
 
         #return
