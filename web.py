@@ -322,6 +322,28 @@ class WebBoard(object):
 
         return players
 
+    def get_timer(self):
+        td = self.game.timer_handler.get_timer()
+
+        if td == None:
+            return {'status' : 'error', 'error' : 'game not running or not started'}
+
+        if td.days < 0:
+            minutes = 0
+            seconds = 0
+        else:
+            hours, remainder = divmod(td.seconds, 3600)
+            minutes, seconds = divmod(remainder, 60)
+
+        return {'minutes' : minutes, 'seconds' : seconds}
+
+    def get_game_status(self):
+
+        if self.game.ongoing:
+            return {'status' : 'ok', 'game' : 'started', 'serving' : self.game.active_player}
+        else:
+            return {'status' : 'ok', 'game' : 'stopped'}
+
     def pause_unpause(self):
 
         try:
@@ -334,6 +356,16 @@ class WebBoard(object):
             return {'status' : 'error', 'error' : e.message}
 
         return {'status' : 'ok'}
+
+    def get_all_status(self):
+        timer = self.get_timer()
+        board = self.core_status()
+        game = self.get_game_status()
+        players = self.get_players()
+        scores = self.get_scores()
+
+        return {'board' : board, 'game' : game,
+                'players' : players, 'scores' : scores, 'timer' : timer}
 
     def run(self):
 
@@ -379,6 +411,9 @@ class WebBoard(object):
         route("/status/scores")(self.get_scores)
         route("/status/board")(self.core_status)
         route("/status/players")(self.get_players)
+        route("/status/timer")(self.get_timer)
+        route("/status/game")(self.get_game_status)
+        route("/status/all")(self.get_all_status)
 
         if self.bind_all:
             bind_to = '0.0.0.0'
