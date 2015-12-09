@@ -114,7 +114,7 @@ class RemotePersistence(object):
         self.remote_list[hex(remote_id)] = data
         self._do_save()
 
-PERSISTENT_REMOTE_DATA = RemotePersistence('conf/remote.json')
+PERSISTENT_REMOTE_DATA = RemotePersistence('data/remotedata.json')
 
 class RemoteCommands(object):
 
