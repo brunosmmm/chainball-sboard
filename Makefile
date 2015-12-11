@@ -2,4 +2,4 @@
 .PHONY: clean
 
 clean:
-	rm -f *.pyc *.log
+	find . -name "*.pyc" -exec rm -rf {} \;
