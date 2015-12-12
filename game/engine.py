@@ -49,8 +49,10 @@ class ChainballGame(object):
         self.pair_handler = RemotePairHandler(fail_cb=self.pair_fail,
                                               success_cb=self.pair_end)
         
-        #timer handler
+        #timer handler for RGB matrix
         self.timer_handler = TimerHandler(self.game_timeout, self)
+        #timer handler for player panels
+        self.ptimer_handler = TimerHandler(self.game_timeout, self, False)
 
         #create player dictionary
         self.players = dict([(x, PlayerScore(self.s_handler, x, autoadv_cb=self.game_pass_turn)) for x in range(4)])
@@ -65,6 +67,7 @@ class ChainballGame(object):
         self.game_uuid = None
         self.paused = False
         self.error = False
+        self.score_display_ended = True
 
         #start rf handler
         self.rf_handler.start()
@@ -296,6 +299,7 @@ class ChainballGame(object):
         self.game_set_active_player(0)
 
         self.timer_handler.start(20)
+        self.ptimer_handler.start(20)
 
         self.timer_handler.announcement(TimerAnnouncement("Game", "START"), 2)
         self.logger.info('Game started')
@@ -330,6 +334,7 @@ class ChainballGame(object):
         self.logger.info('Game PAUSED')
         self.paused = True
         self.timer_handler.pause()
+        self.ptimer_handler.pause()
 
     def game_unpause(self):
 
@@ -342,6 +347,7 @@ class ChainballGame(object):
         self.logger.info('Game UNPAUSED')
         self.paused = False
         self.timer_handler.unpause()
+        self.ptimer_handler.unpause()
 
     def game_end(self):
         self.logger.info('Stopping game...')
@@ -361,6 +367,7 @@ class ChainballGame(object):
             pass
 
         self.timer_handler.stop()
+        self.ptimer_handler.stop()
         self.ongoing = False
 
         #self.g_persist.end_game()
@@ -401,11 +408,11 @@ class ChainballGame(object):
                 self.timer_handler.announcement(TimerAnnouncement(self.players[p].panel_text,
                                                                   '{:+1d}'.format(self.players[p].score_diff)),
                                                 2)
-                self.timer_handler.player_announcement(TimerAnnouncement('',
-                                                                         '{:+1d} -> {:+1d}'.format(self.players[p].score_diff,
-                                                                                                   self.players[p].current_score)),
-                                                       5,
-                                                       p)
+                #self.timer_handler.player_announcement(TimerAnnouncement('',
+                #                                                         '{:+1d} -> {:+1d}'.format(self.players[p].score_diff,
+                #                                                                                   self.players[p].current_score)),
+                #                                       5,
+                #                                       p)
 
     def game_pass_turn(self):
 
@@ -601,6 +608,9 @@ class ChainballGame(object):
     def force_show_clock(self):
         self.timer_handler.refresh_matrix()
 
+    def end_score_display(self):
+        self.score_display_ended = True
+
     def game_loop(self):
 
         #handle serves
@@ -616,6 +626,9 @@ class ChainballGame(object):
 
         #handle timer
         self.timer_handler.handle()
+
+        #handle player panel timer
+        self.ptimer_handler.handle()
 
         #check for a winner
         if self.ongoing:
@@ -643,6 +656,23 @@ class ChainballGame(object):
 
             self.logger.debug('Received: {}'.format(decoded))
             self._game_decode_remote(decoded)
+
+        #make score announcements
+        if self.score_display_ended and self.ongoing:
+            self.score_display_ended = False
+            for p in self.players:
+                if p > self.player_count - 1:
+                    continue
+                if p == self.player_count - 1:
+                    callback = self.end_score_display
+                else:
+                    callback = None
+                self.ptimer_handler.player_announcement(TimerAnnouncement('',
+                                                                         '{:+1d}'.format(self.players[p].current_score), callback),
+                                                       5,
+                                                       p)
+
+
 
         #throttle game loop
         #time.sleep(0.01)

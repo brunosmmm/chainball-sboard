@@ -17,16 +17,23 @@ class TimerAnnouncement(object):
 
 class TimerHandler(object):
 
-    def __init__(self, timer_end=None, chainball_game=None):
+    #quick hack, separate into two different classes later
+    def __init__(self, timer_end=None, chainball_game=None, rgbmat=True):
 
-        self.logger = logging.getLogger('sboard.timer')
+        if rgbmat:
+            self.logger = logging.getLogger('sboard.timer')
+        else:
+            self.logger = logging.getLogger('sboard.ptimer')
         #self.logger.debug('Spawning matrix control server')
         #summon matrix server?
         #self.matSrv = subprocess32.Popen('./matrixsrv/matrixsrv')
         #time.sleep(1)
 
-        self.matCli = MatrixControllerSerial('/dev/ttyUSB0')
-        self.matCli.clear()
+        if rgbmat:
+            self.matCli = MatrixControllerSerial('/dev/ttyUSB0')
+            self.matCli.clear()
+        else:
+            self.matCli = None
 
         #CONVERT INTO STATE MACHINE!!!
         self.stopped = True
@@ -81,7 +88,8 @@ class TimerHandler(object):
         #self.timer_end = None
 
         if clear:
-            self.matCli.clear()
+            if self.matCli:
+                self.matCli.clear()
 
     #get current time
     def get_timer(self):
@@ -134,7 +142,8 @@ class TimerHandler(object):
         if self.stopped or self.powered_off or self.paused:
             return
 
-        self.refresh_matrix()
+        if self.matCli:
+            self.refresh_matrix()
 
         diff = self.timer_end - datetime.datetime.now()
         if diff.seconds == 0:
