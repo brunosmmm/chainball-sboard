@@ -12,6 +12,7 @@ from util.soundfx import GameSFXHandler
 from game.remotemapper import RemoteMapping, RemoteMappingLoadFailed
 from game.constants import GameTurnActions, MasterRemoteActions
 from game.sfxmapper import SFXMapping, SFXMappingLoadFailed, SFXUnknownEvent, SFXMappableEvents
+from game.config import ChainballGameConfiguration
 
 #remote pairing timeout in seconds
 GAME_PAIRING_TIMEOUT = 30
@@ -31,19 +32,26 @@ class ChainballGame(object):
         self.rf_handler = NRF24Handler(fake_hw=virtual_hw)
 
         #load remote mapping configuration file
+        self.remote_mapping = RemoteMapping(self.logger)
         try:
-            self.remote_mapping = RemoteMapping(self.logger)
             self.remote_mapping.load_config('conf/remotemap.json')
         except RemoteMappingLoadFailed:
             self.logger.error('Failed to load remote button mapping')
             exit(1)
 
         #load SFX mapping configuration file
+        self.sfx_mapping = SFXMapping()
         try:
-            self.sfx_mapping = SFXMapping()
             self.sfx_mapping.load_config('conf/game.json')
         except SFXMappingLoadFailed:
             self.logger.error('Failed to load SFX mapping')
+
+        #load other game configuration
+        self.game_config = ChainballGameConfiguration()
+        try:
+            self.game_config.load_config('conf/game.json')
+        except:
+            self.logger.error('Failed to load game configuration')
 
         #remote pair handler (non-threaded)
         self.pair_handler = RemotePairHandler(fail_cb=self.pair_fail,

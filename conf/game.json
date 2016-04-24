@@ -6,5 +6,6 @@
     },
 
     "serveTimeout" : 3,
-    "pairTimeout" : 30
+    "pairTimeout" : 30,
+    "scoreAnnounceInterval" : 5
 }
