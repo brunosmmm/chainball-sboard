@@ -41,6 +41,7 @@ if __name__ == "__main__":
 
     #spawn web server
     web_server = threading.Thread(target=webScoreBoard.run)
+    web_server.daemon = True
     web_server.start()
 
     game.post_init()
