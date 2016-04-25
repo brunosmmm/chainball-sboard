@@ -130,9 +130,10 @@ class GamePersistance(object):
                 file_uuid = f.split('.')[0]
 
                 try:
-                    with open(f, 'r') as g:
-                        game_data = json.load(f)
+                    with open(join(self.path, f), 'r') as g:
+                        game_data = json.load(g)
                 except:
+                    raise
                     self.logger.warning('Could not load game persistance for game {}'.format(f))
                     continue
 
