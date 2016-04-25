@@ -235,7 +235,7 @@ class WebBoard(object):
 
     def tpass(self):
         try:
-            self.game.game_pass_turn()
+            self.game.game_pass_turn(force_serve=True)
         except GameNotStartedError as e:
             self.logger.warning('Could not pass turn: {}'.format(e.message))
             return {'status' : 'error', 'error' : e.message}

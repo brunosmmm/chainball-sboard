@@ -429,7 +429,7 @@ class ChainballGame(object):
                 #                                       5,
                 #                                       p)
 
-    def game_pass_turn(self):
+    def game_pass_turn(self, force_serve=False):
 
         if not self.ongoing:
             raise GameNotStartedError('Game is not running')
@@ -440,8 +440,9 @@ class ChainballGame(object):
             self.players[player].reset_serve()
 
         #create event in persistance
-        self.g_persist.log_event(GameEventTypes.FORCE_SERVE,
-                                 'player {}'.format(self.active_player))
+        if force_serve is True:
+            self.g_persist.log_event(GameEventTypes.FORCE_SERVE,
+                                     'player {}'.format(self.active_player))
 
         #announce score deltas
         self.announce_player_deltas(0)
@@ -578,7 +579,7 @@ class ChainballGame(object):
                 if message.remote_id != self.players[self.active_player].remote_id:
                     self.logger.debug('Only the active player can force the serve')
                     return
-                self.game_pass_turn()
+                self.game_pass_turn(force_serve=True)
 
     def find_player_by_remote(self, remote_id):
         for player in self.players:
