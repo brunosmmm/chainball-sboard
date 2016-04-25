@@ -151,6 +151,8 @@ class ScoreHandler(StoppableThread):
 
         #if self.is_running.isSet():
         #    raise IOError('Cannot change player text while running')
+        if text is None:
+            return
 
         if len(text) > PlayerScoreConstraints.LARGE_TEXT_MAX_LEN:
             #set mode 0
