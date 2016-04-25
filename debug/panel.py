@@ -165,7 +165,7 @@ class RootWidget(FloatLayout):
 
         if score > 5 or score < -10:
             print 'Invalid score input'
-            self.score_input.text = ''
+            self.ids['setscore{}'.format(player)].text = ''
             return
 
         r = requests.get(SCOREBOARD_LOCATION+'/debug/setscore/{},{}'.format(player, score))
