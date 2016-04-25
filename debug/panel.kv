@@ -10,6 +10,7 @@
                 #FlowControl
                 padding: 10
                 spacing: 10
+                size_hint_x: 0.25
                 orientation: 'vertical'
 
                 Label:
@@ -47,6 +48,7 @@
                 #TesingControl
                 spacing: 10
                 padding: 10
+                size_hint_x: 0.25
                 orientation: 'vertical'
 
                 Label:
@@ -136,11 +138,14 @@
                         text: 'Score'
                     Label:
                         text: 'Indirect\nControl'
+                    Label:
+                        text: 'Scoring/Referee\nTools'
                 BoxLayout:
                     id: playergrid
                     orientation: 'vertical'
                     spacing: 10
                     BoxLayout:
+                        spacing: 10
                         orientation: 'horizontal'
                         Button:
                             id: pname0
@@ -168,7 +173,29 @@
                             Button:
                                 text: 'F'
                                 on_press: root.do_force_serve(0)
+                        GridLayout:
+                            cols: 3
+                            spacing: 5
+                            Button:
+                                text: 'DB'
+                                on_press: root.register_scoring_event('deadball', 0)
+                            Button:
+                                text: 'CB'
+                                on_press: root.register_scoring_event('chainball', 0)
+                            Button:
+                                text: 'JB'
+                                on_press: root.register_scoring_event('jailbreak', 0)
+                            Button:
+                                text: 'SM'
+                                on_press: root.register_scoring_event('sailormoon', 0)
+                            Button:
+                                text: 'RM'
+                                on_press: root.register_scoring_event('ratmeat', 0)
+                            Button:
+                                text: 'MS'
+                                on_press: root.register_scoring_event('mudskipper', 0)
                     BoxLayout:
+                        spacing: 10
                         orientation: 'horizontal'
                         Button:
                             id: pname1
@@ -193,8 +220,30 @@
                             Button:
                                 text: 'F'
                                 on_press: root.do_force_serve(1)
+                        GridLayout:
+                            cols: 3
+                            spacing: 5
+                            Button:
+                                text: 'DB'
+                                on_press: root.register_scoring_event('deadball', 1)
+                            Button:
+                                text: 'CB'
+                                on_press: root.register_scoring_event('chainball', 1)
+                            Button:
+                                text: 'JB'
+                                on_press: root.register_scoring_event('jailbreak', 1)
+                            Button:
+                                text: 'SM'
+                                on_press: root.register_scoring_event('sailormoon', 1)
+                            Button:
+                                text: 'RM'
+                                on_press: root.register_scoring_event('ratmeat', 1)
+                            Button:
+                                text: 'MS'
+                                on_press: root.register_scoring_event('mudskipper', 1)
                     BoxLayout:
                         orientation: 'horizontal'
+                        spacing: 10
                         Button:
                             id: pname2
                             markup: True
@@ -218,8 +267,30 @@
                             Button:
                                 text: 'F'
                                 on_press: root.do_force_serve(2)
+                        GridLayout:
+                            cols: 3
+                            spacing: 5
+                            Button:
+                                text: 'DB'
+                                on_press: root.register_scoring_event('deadball', 2)
+                            Button:
+                                text: 'CB'
+                                on_press: root.register_scoring_event('chainball', 2)
+                            Button:
+                                text: 'JB'
+                                on_press: root.register_scoring_event('jailbreak', 2)
+                            Button:
+                                text: 'SM'
+                                on_press: root.register_scoring_event('sailormoon', 2)
+                            Button:
+                                text: 'RM'
+                                on_press: root.register_scoring_event('ratmeat', 2)
+                            Button:
+                                text: 'MS'
+                                on_press: root.register_scoring_event('mudskipper', 2)
                     BoxLayout:
                         orientation: 'horizontal'
+                        spacing: 10
                         Button:
                             id: pname3
                             markup: True
@@ -243,3 +314,24 @@
                             Button:
                                 text: 'F'
                                 on_press: root.do_force_serve(3)
+                        GridLayout:
+                            cols: 3
+                            spacing: 5
+                            Button:
+                                text: 'DB'
+                                on_press: root.register_scoring_event('deadball', 3)
+                            Button:
+                                text: 'CB'
+                                on_press: root.register_scoring_event('chainball', 3)
+                            Button:
+                                text: 'JB'
+                                on_press: root.register_scoring_event('jailbreak', 3)
+                            Button:
+                                text: 'SM'
+                                on_press: root.register_scoring_event('sailormoon', 3)
+                            Button:
+                                text: 'RM'
+                                on_press: root.register_scoring_event('ratmeat', 3)
+                            Button:
+                                text: 'MS'
+                                on_press: root.register_scoring_event('mudskipper', 3)

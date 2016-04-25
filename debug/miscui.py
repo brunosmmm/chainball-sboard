@@ -1,5 +1,6 @@
 from kivy.uix.spinner import Spinner
-from kivy.properties import ObjectProperty, NumericProperty
+from kivy.properties import NumericProperty
+from kivy.uix.gridlayout import GridLayout
 
 
 class RootFinderMixin(object):

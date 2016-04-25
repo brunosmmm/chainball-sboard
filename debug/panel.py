@@ -249,6 +249,9 @@ class RootWidget(FloatLayout):
 
         self.ids['timerlabel'].text ='{:0>2d}'.format(json_data['minutes']) + ':' + '{:0>2d}'.format(json_data['seconds'])
 
+    def register_scoring_event(self, evt_type, player):
+        r = requests.get(SCOREBOARD_LOCATION+'/control/scoreevt/{},{}'.format(player, evt_type))
+
 class SimpleboardDebugPanel(App):
 
     def build(self):
