@@ -96,6 +96,9 @@ class TimerHandler(object):
         if self.timer_end == None or self.stopped:
             return None
 
+        if self.paused:
+            return self.pause_timer
+
         return self.timer_end - datetime.datetime.now()
 
     def handle(self):
