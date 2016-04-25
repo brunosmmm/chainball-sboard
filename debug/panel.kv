@@ -259,30 +259,6 @@
                         text: 'set'
                         size_hint_x: 0.2
                         on_press: root.do_set_score(3)
-
-                BoxLayout:
-                    id: turnsetter
-                    spacing: 5
-                    orientation: 'horizontal'
-                    size_hint_y: 0.5
-                    Label:
-                        text: 'Set Turn'
-                    Button:
-                        id: turnset0
-                        text: '0'
-                        on_press: root.do_set_turn_0()
-                    Button:
-                        id: turnset1
-                        text: '1'
-                        on_press: root.do_set_turn_1()
-                    Button:
-                        id: turnset2
-                        text: '2'
-                        on_press: root.do_set_turn_2()
-                    Button:
-                        id: turnset3
-                        text: '3'
-                        on_press: root.do_set_turn_3()
             BoxLayout:
                 #GameStatus
                 padding: 5
@@ -307,37 +283,41 @@
                     orientation: 'vertical'
                     BoxLayout:
                         orientation: 'horizontal'
-                        Label:
+                        Button:
                             id: pname0
                             markup: True
                             text: ''
+                            on_press: root.do_set_turn_1()
                         Label:
                             id: pscore0
                             text: ''
                     BoxLayout:
                         orientation: 'horizontal'
-                        Label:
+                        Button:
                             id: pname1
                             markup: True
                             text: ''
+                            on_press: root.do_set_turn_2()
                         Label:
                             id: pscore1
                             text: ''
                     BoxLayout:
                         orientation: 'horizontal'
-                        Label:
+                        Button:
                             id: pname2
                             markup: True
                             text: ''
+                            on_press: root.do_set_turn_3()
                         Label:
                             id: pscore2
                             text: ''
                     BoxLayout:
                         orientation: 'horizontal'
-                        Label:
+                        Button:
                             id: pname3
                             markup: True
                             text: ''
+                            on_press: root.do_set_turn_4()
                         Label:
                             id: pscore3
                             text: ''
