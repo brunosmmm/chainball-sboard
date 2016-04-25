@@ -108,7 +108,7 @@ class TimerHandler(object):
         self.last_cycle = datetime.datetime.now()
 
         if self.announcing:
-            self.logger.debug('announcing')
+            #self.logger.debug('announcing')
             if self.a_kind == AnnouncementKind.TIMER_PANEL:
                 self.draw_announcement()
             elif self.a_kind == AnnouncementKind.PLAYER_PANEL:
