@@ -6,6 +6,7 @@ import requests
 import logging
 import json
 import argparse
+from miscui import ScoreSpinner
 
 SCOREBOARD_LOCATION = 'http://localhost:8080'
 
@@ -15,6 +16,7 @@ class RootWidget(FloatLayout):
     def __init__(self, *args, **kwargs):
         super(RootWidget, self).__init__(*args, **kwargs)
 
+        self.stop_refreshing = False
         Clock.schedule_interval(self.refresh_status, 1)
 
     def do_pause_unpause(self, *args):
@@ -158,7 +160,7 @@ class RootWidget(FloatLayout):
     def do_set_score(self, player):
 
         try:
-            score = int(self.ids['setscore{}'.format(player)].text)
+            score = int(self.ids['pscore{}'.format(player)].text)
         except (TypeError, ValueError):
             print 'Invalid score input'
             return
@@ -191,6 +193,9 @@ class RootWidget(FloatLayout):
         r = requests.get(SCOREBOARD_LOCATION+'/debug/setturn/3')
 
     def refresh_status(self, *args):
+
+        if self.stop_refreshing is True:
+            return
 
         r = requests.get(SCOREBOARD_LOCATION+'/status/all')
         status = r.json()
@@ -225,13 +230,13 @@ class RootWidget(FloatLayout):
         json_data = status['scores']
         if json_data['status'] == 'error':
             for i in range(0,4):
-                self.ids['pscore{}'.format(i)].text = ''
+                self.ids['pscore{}'.format(i)].update_score('-')
 
         for i in range(0,4):
             if str(i) in json_data and i < self.player_num:
-                self.ids['pscore{}'.format(i)].text = str(json_data[str(i)])
+                self.ids['pscore{}'.format(i)].update_score(str(json_data[str(i)]))
             else:
-                self.ids['pscore{}'.format(i)].text = ''
+                self.ids['pscore{}'.format(i)].update_score('-')
 
         if server > -1:
             player_name = self.ids['pname{}'.format(server)].text

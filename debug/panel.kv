@@ -108,66 +108,6 @@
                         on_press: root.do_sfx_play()
 
             BoxLayout:
-                #GameDirectControl
-                padding: 10
-                spacing: 10
-                orientation: 'vertical'
-                Label:
-                    text: 'Direct game control'
-                    size_hint_y: 0.2
-
-                Label:
-                    text: 'Player 0 score'
-                BoxLayout:
-                    spacing: 2
-                    orientation: 'horizontal'
-                    TextInput:
-                        id: setscore0
-                        multiline: False
-                    Button:
-                        text: 'set'
-                        size_hint_x: 0.2
-                        on_press: root.do_set_score(0)
-
-                Label:
-                    text: 'Player 1 score'
-                BoxLayout:
-                    spacing: 2
-                    orientation: 'horizontal'
-                    TextInput:
-                        id: setscore1
-                        multiline: False
-                    Button:
-                        text: 'set'
-                        size_hint_x: 0.2
-                        on_press: root.do_set_score(1)
-
-                Label:
-                    text: 'Player 2 score'
-                BoxLayout:
-                    spacing: 2
-                    orientation: 'horizontal'
-                    TextInput:
-                        id: setscore2
-                        multiline: False
-                    Button:
-                        text: 'set'
-                        size_hint_x: 0.2
-                        on_press: root.do_set_score(2)
-
-                Label:
-                    text: 'Player 3 score'
-                BoxLayout:
-                    spacing: 2
-                    orientation: 'horizontal'
-                    TextInput:
-                        id: setscore3
-                        multiline: False
-                    Button:
-                        text: 'set'
-                        size_hint_x: 0.2
-                        on_press: root.do_set_score(3)
-            BoxLayout:
                 #GameStatus
                 padding: 5
                 orientation: 'vertical'
@@ -207,9 +147,13 @@
                             markup: True
                             text: ''
                             on_press: root.do_set_turn_1()
-                        Label:
+                        #Label:
+                        #    id: pscore0
+                        #    text: ''
+                        ScoreSpinner:
                             id: pscore0
-                            text: ''
+                            player: 0
+                            disabled: True
                         BoxLayout:
                             orientation: 'vertical'
                             #spacing: 5
@@ -231,9 +175,10 @@
                             markup: True
                             text: ''
                             on_press: root.do_set_turn_2()
-                        Label:
+                        ScoreSpinner:
                             id: pscore1
-                            text: ''
+                            player: 1
+                            disabled: True
                         BoxLayout:
                             orientation: 'vertical'
                             #spacing: 5
@@ -255,9 +200,10 @@
                             markup: True
                             text: ''
                             on_press: root.do_set_turn_3()
-                        Label:
+                        ScoreSpinner:
                             id: pscore2
-                            text: ''
+                            player: 2
+                            disabled: True
                         BoxLayout:
                             orientation: 'vertical'
                             #spacing: 5
@@ -279,9 +225,10 @@
                             markup: True
                             text: ''
                             on_press: root.do_set_turn_4()
-                        Label:
+                        ScoreSpinner:
                             id: pscore3
-                            text: ''
+                            player: 3
+                            disabled: True
                         BoxLayout:
                             orientation: 'vertical'
                             #spacing: 5
