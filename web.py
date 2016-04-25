@@ -14,6 +14,10 @@ class WebBoard(object):
         self.bind_all = bind_all
         self.logger = logging.getLogger('sboard.web')
 
+    def quit(self):
+        self.logger.debug('killing web server')
+        exit(0)
+
     #views (templates)
     def index(self):
         return template('index', gameData=self.game)

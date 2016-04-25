@@ -167,10 +167,12 @@ class ChainballGame(object):
         return ['IDLE', None]
 
     def shutdown(self):
+        self.logger.debug('shutting down game engine')
         self.s_handler.stop()
         self.rf_handler.stop()
         self.s_handler.join()
         self.rf_handler.join()
+        self.logger.debug('game enging shutdown complete')
 
     def game_can_start(self):
         #check that at least 2 players are registered
