@@ -216,8 +216,12 @@ class RootWidget(FloatLayout):
         if json_data['game'] == 'started':
             self.ids['statuslabel'].text = 'Running'
             server = int(json_data['serving'])
+            for i in range(0, 4):
+                self.ids['psettings{}'.format(i)].disabled = False
         elif json_data['game'] == 'stopped':
             self.ids['statuslabel'].text = 'Stopped'
+            for i in range(0, 4):
+                self.ids['psettings{}'.format(i)].disabled = True
 
         json_data = status['players']
         self.player_num = len(json_data)
@@ -235,6 +239,8 @@ class RootWidget(FloatLayout):
         for i in range(0,4):
             if str(i) in json_data and i < self.player_num:
                 self.ids['pscore{}'.format(i)].update_score(str(json_data[str(i)]))
+                if int(json_data[str(i)]) == -10:
+                    self.ids['psettings{}'.format(i)].disabled = True
             else:
                 self.ids['pscore{}'.format(i)].update_score('-')
 
