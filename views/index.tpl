@@ -50,7 +50,7 @@
       var refreshTimer;
       function startRefreshing()
       {
-      refreshTimer = setInterval(refreshScores, 10000);
+      refreshTimer = setInterval(refreshScores, 1000);
       }
 
       function stopRefreshing()
