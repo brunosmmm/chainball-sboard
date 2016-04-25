@@ -23,6 +23,7 @@ class PlayerScore(object):
         self.serve_state = PlayerServeStates.IDLE
         self.score_start_timer = None
         self.autoadvance_callback = autoadv_cb
+        self.is_cowout = False
 
         self.initialized = True
 

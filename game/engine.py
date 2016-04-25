@@ -502,7 +502,7 @@ class ChainballGame(object):
                 #player is out of the game
                 self.g_persist.log_event(GameEventTypes.COWOUT,
                                          'player {}'.format(player))
-                self.game_player_out(player)
+                #self.game_player_out(player)
                 return
 
         #TODO IF A PLAYER HITS -10 HES OUT OF THE GAME, PLAY SOUND - OK
@@ -664,6 +664,13 @@ class ChainballGame(object):
 
         #handle player panel timer
         self.ptimer_handler.handle()
+
+        #check for a cowout
+        if self.ongoing:
+            for player in self.players:
+                if self.players[player].current_score == -10 and self.players[player].is_cowout is False:
+                    self.players[player].is_cowout = True
+                    self.game_player_out(player)
 
         #check for a winner
         if self.ongoing:
