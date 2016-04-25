@@ -387,6 +387,9 @@ class WebBoard(object):
         return {'status': 'ok',
                 'data': self.game.g_persist.game_history[game_uuid]}
 
+    def score_evt(self, player, evt_type):
+        self.game.scoring_evt(player, evt_type)
+
     def run(self):
 
         #route
@@ -408,6 +411,7 @@ class WebBoard(object):
         route("/control/pmove", method="POST")(self.pmove)
         route("/control/announce", method="POST")(self.announce)
         route("/control/pauseunpause")(self.pause_unpause)
+        route('/control/scoreevt/<player>,<evt_type>')(self.score_evt)
 
         #development
         #route("/example")(self.example)

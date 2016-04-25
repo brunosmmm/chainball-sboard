@@ -478,7 +478,7 @@ class ChainballGame(object):
         except SFXUnknownEvent:
             self.logger.warning('SFX play error')
 
-    def game_decrement_score(self, player):
+    def game_decrement_score(self, player, referee_event=False):
 
         if player == None:
             return
@@ -494,8 +494,9 @@ class ChainballGame(object):
             self.players[player].score_diff -= 1
 
             #update persistance data
-            self.g_persist.update_current_score(player,
-                                                self.players[player].current_score)
+            if referee_event is False:
+                self.g_persist.update_current_score(player,
+                                                    self.players[player].current_score)
 
             #check here if we have reached -10
             if self.players[player].current_score == -10:
@@ -509,7 +510,7 @@ class ChainballGame(object):
         #TODO AT GAME END, PLAY SOUND - OK
         #TODO ADVANCE SERVE AUTOMATICALLY - OK
 
-    def game_increment_score(self, player):
+    def game_increment_score(self, player, referee_event=False):
 
         if player == None:
             return
@@ -525,8 +526,9 @@ class ChainballGame(object):
             self.players[player].score_diff += 1
 
             # update persistance data
-            self.g_persist.update_current_score(player,
-                                                self.players[player].current_score)
+            if referee_event is False:
+                self.g_persist.update_current_score(player,
+                                                    self.players[player].current_score)
 
     def game_set_score(self, player, score):
         self.players[player].current_score = score
@@ -645,6 +647,38 @@ class ChainballGame(object):
 
     def end_score_display(self):
         self.score_display_ended = True
+
+    # scoring events
+    def scoring_evt(self, player, evt_type):
+        if self.ongoing is False:
+            return
+
+        if evt_type == 'deadball':
+            self.g_persist.log_event(GameEventTypes.DEADBALL,
+                                     {'player': int(player)})
+            self.game_pass_turn()
+        elif evt_type == 'chainball':
+            self.g_persist.log_event(GameEventTypes.CHAINBALL,
+                                     {'player': int(player)})
+            self.game_increment_score(int(player), referee_event=True)
+        elif evt_type == 'jailbreak':
+            self.g_persist.log_event(GameEventTypes.JAILBREAK,
+                                     {'player': int(player)})
+            self.game_increment_score(int(player), referee_event=True)
+            self.game_increment_score(int(player), referee_event=True)
+        elif evt_type == 'ratmeat':
+            self.g_persist.log_event(GameEventTypes.RATMEAT,
+                                     {'player': int(player)})
+            self.game_decrement_score(int(player), referee_event=True)
+        elif evt_type == 'mudskipper':
+            self.g_persist.log_event(GameEventTypes.MUDSKIPPER,
+                                     {'player': int(player)})
+            self.game_decrement_score(int(player), referee_event=True)
+        elif evt_type == 'sailormoon':
+            self.g_persist.log_event(GameEventTypes.SAILORMOON,
+                                     {'player': int(player)})
+            self.game_decrement_score(int(player), referee_event=True)
+            self.game_decrement_score(int(player), referee_event=True)
 
     def game_loop(self):
 
