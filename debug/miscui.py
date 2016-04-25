@@ -21,7 +21,7 @@ class ScoreSpinner(Spinner, RootFinderMixin):
     def __init__(self, *args, **kwargs):
         super(ScoreSpinner, self).__init__(*args, **kwargs)
 
-        self.values = [str(x) for x in range(-10, 5)]
+        self.values = [str(x) for x in range(-10, 6)]
 
         self.updating = False
 
