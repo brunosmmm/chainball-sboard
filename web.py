@@ -371,6 +371,22 @@ class WebBoard(object):
         return {'board' : board, 'game' : game,
                 'players' : players, 'scores' : scores, 'timer' : timer}
 
+    def get_persist_list(self):
+
+        game_list = []
+        game_list = self.game.g_persist.game_history.keys()
+
+        return {'game_list': game_list}
+
+    def dump_game_data(self, game_uuid):
+
+        if game_uuid not in self.game.g_persist.game_history:
+            return {'status': 'error',
+                    'error': 'invalid uuid'}
+
+        return {'status': 'ok',
+                'data': self.game.g_persist.game_history[game_uuid]}
+
     def run(self):
 
         #route
@@ -418,6 +434,10 @@ class WebBoard(object):
         route("/status/timer")(self.get_timer)
         route("/status/game")(self.get_game_status)
         route("/status/all")(self.get_all_status)
+
+        #persistance
+        route('/persist/game_list')(self.get_persist_list)
+        route('/persist/dump_game/<game_uuid>')(self.dump_game_data)
 
         if self.bind_all:
             bind_to = '0.0.0.0'
