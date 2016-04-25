@@ -19,6 +19,12 @@ class RootWidget(FloatLayout):
         self.stop_refreshing = False
         Clock.schedule_interval(self.refresh_status, 1)
 
+    def disable_app(self):
+        self.disabled = True
+
+    def enable_app(self):
+        self.disabled = False
+
     def do_pause_unpause(self, *args):
         r = requests.get(SCOREBOARD_LOCATION+'/control/pauseunpause')
 
@@ -197,8 +203,16 @@ class RootWidget(FloatLayout):
         if self.stop_refreshing is True:
             return
 
-        r = requests.get(SCOREBOARD_LOCATION+'/status/all')
-        status = r.json()
+        # try to contact scoreboard
+        try:
+            r = requests.get(SCOREBOARD_LOCATION+'/status/all', timeout=1)
+            status = r.json()
+            self.enable_app()
+        except (requests.exceptions.ConnectionError,
+                requests.exceptions.ConnectTimeout):
+            # disable
+            self.disable_app()
+            return
 
         #first look at board status
         json_data = status['board']
@@ -260,26 +274,27 @@ class RootWidget(FloatLayout):
 
 class SimpleboardDebugPanel(App):
 
+    def __init__(self, *args, **kwargs):
+        super(SimpleboardDebugPanel, self).__init__(*args, **kwargs)
+
+        self.root = RootWidget()
+
     def build(self):
-        return RootWidget()
+        return self.root
 
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('address')
-    parser.add_argument('port')
+    parser.add_argument('address', nargs='?')
+    parser.add_argument('port', nargs='?')
+    parser.set_defaults(address='1.1.1.1', port=80)
 
     args = parser.parse_args()
 
     SCOREBOARD_LOCATION = 'http://{}:{}'.format(args.address, args.port)
 
-    #try to see if the the scoreboard is running
-    try:
-        r = requests.get(SCOREBOARD_LOCATION+'/status/board')
-    except requests.exceptions.ConnectionError:
-        print 'ERROR: Could not connect to the scoreboard'
-        exit(0)
-
     Builder.load_file('panel.kv')
-    SimpleboardDebugPanel().run()
+    panel = SimpleboardDebugPanel()
+
+    panel.run()
