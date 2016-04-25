@@ -1,0 +1,343 @@
+
+<RootWidget>:
+    BoxLayout:
+        padding: 10
+        spacing: 10
+
+        GridLayout:
+            cols: 7
+            BoxLayout:
+                #FlowControl
+                padding: 10
+                spacing: 10
+                orientation: 'vertical'
+
+                Label:
+                    text: 'Game flow control'
+                    size_hint_y: 0.2
+
+                Button:
+                    text: 'Start Game'
+                    on_press: root.do_start_game()
+
+                Button:
+                    text: 'Stop Game'
+                    on_press: root.do_end_game()
+
+                Button:
+                    text: 'debug setup (2)'
+                    on_press: root.do_debug_setup2()
+
+                Button:
+                    text: 'debug setup (4)'
+                    on_press: root.do_debug_setup4()
+
+                Button:
+                    text: 'Remove players'
+                    on_press: root.do_remove_all()
+
+                Button:
+                    text: 'Pause/unpause timer'
+                    on_press: root.do_pause_unpause()
+
+            BoxLayout:
+                #TesingControl
+                spacing: 10
+                padding: 10
+                orientation: 'vertical'
+
+                Label:
+                    text: 'Testing & debugging'
+                    size_hint_y: 0.2
+
+                Button:
+                    text: 'score 1 array test'
+                    size_hint_y: 0.7
+                    on_press: root.do_test_score_1()
+
+                Button:
+                    text: 'score 2 array test'
+                    size_hint_y: 0.7
+                    on_press: root.do_test_score_2()
+
+                Button:
+                    text: 'score 3 array test'
+                    size_hint_y: 0.7
+                    on_press: root.do_test_score_3()
+
+                Button:
+                    text: 'score 4 array test'
+                    size_hint_y: 0.7
+                    on_press: root.do_test_score_4()
+
+                BoxLayout:
+                    id: announcebox
+                    spacing: 5
+                    orientation: 'vertical'
+                    Label:
+                        text: 'Announcement'
+                        size_hint_y: 0.5
+                    TextInput:
+                        id: ann_header
+                        multiline: False
+                    TextInput:
+                        id: ann_text
+                        multiline: False
+                    Button:
+                        text: 'Announce'
+                        on_press: root.do_announce
+
+                BoxLayout:
+                    id: sfxbox
+                    spacing: 5
+                    orientation: 'vertical'
+                    size_hint_y: 0.8
+                    Label:
+                        text: 'SFX'
+                        size_hint_y: 0.5
+
+                    TextInput:
+                        id: sfxname
+                        multiline: False
+
+                    Button:
+                        text: 'play'
+                        on_press: root.do_sfx_play()
+
+            BoxLayout:
+                #PlayerInterfaceControl
+                padding: 5
+                orientation: 'vertical'
+                Label:
+                    text: 'Indirect control'
+                    size_hint_y: 0.2
+
+                BoxLayout:
+                    orientation: 'horizontal'
+                    padding: 10
+                    spacing: 5
+
+                    BoxLayout:
+                        orientation: 'vertical'
+                        spacing: 5
+
+                        Label:
+                            id: pcontrol0
+                            text: '0'
+                            size_hint_y: 0.2
+
+                        Button:
+                            text: '+1'
+                            on_press: root.do_incr_score(0)
+
+                        Button:
+                            text: '-1'
+                            on_press: root.do_decr_score(0)
+
+                        Button:
+                            text: 'F'
+                            on_press: root.do_force_serve()
+                    BoxLayout:
+                        orientation: 'vertical'
+                        spacing: 5
+
+                        Label:
+                            id: pcontrol1
+                            text: '1'
+                            size_hint_y: 0.2
+
+                        Button:
+                            text: '+1'
+                            on_press: root.do_incr_score(1)
+
+                        Button:
+                            text: '-1'
+                            on_press: root.do_decr_score(1)
+
+                        Button:
+                            text: 'F'
+                            on_press: root.do_force_serve()
+
+                    BoxLayout:
+                        orientation: 'vertical'
+                        spacing: 5
+
+                        Label:
+                            id: pcontrol2
+                            text: '2'
+                            size_hint_y: 0.2
+
+                        Button:
+                            text: '+1'
+                            on_press: root.do_incr_score(2)
+
+                        Button:
+                            text: '-1'
+                            on_press: root.do_decr_score(2)
+
+                        Button:
+                            text: 'F'
+                            on_press: root.do_force_serve()
+
+                    BoxLayout:
+                        orientation: 'vertical'
+                        spacing: 5
+
+                        Label:
+                            id: pcontrol3
+                            text: '0'
+                            size_hint_y: 0.2
+
+                        Button:
+                            text: '+1'
+                            on_press: root.do_incr_score(3)
+
+                        Button:
+                            text: '-1'
+                            on_press: root.do_decr_score(3)
+
+                        Button:
+                            text: 'F'
+                            on_press: root.do_force_serve()
+            BoxLayout:
+                #GameDirectControl
+                padding: 10
+                spacing: 10
+                orientation: 'vertical'
+                Label:
+                    text: 'Direct game control'
+                    size_hint_y: 0.2
+
+                Label:
+                    text: 'Player 0 score'
+                BoxLayout:
+                    spacing: 2
+                    orientation: 'horizontal'
+                    TextInput:
+                        id: setscore0
+                        multiline: False
+                    Button:
+                        text: 'set'
+                        size_hint_x: 0.2
+                        on_press: root.do_set_score(0)
+
+                Label:
+                    text: 'Player 1 score'
+                BoxLayout:
+                    spacing: 2
+                    orientation: 'horizontal'
+                    TextInput:
+                        id: setscore1
+                        multiline: False
+                    Button:
+                        text: 'set'
+                        size_hint_x: 0.2
+                        on_press: root.do_set_score(1)
+
+                Label:
+                    text: 'Player 2 score'
+                BoxLayout:
+                    spacing: 2
+                    orientation: 'horizontal'
+                    TextInput:
+                        id: setscore2
+                        multiline: False
+                    Button:
+                        text: 'set'
+                        size_hint_x: 0.2
+                        on_press: root.do_set_score(2)
+
+                Label:
+                    text: 'Player 3 score'
+                BoxLayout:
+                    spacing: 2
+                    orientation: 'horizontal'
+                    TextInput:
+                        id: setscore3
+                        multiline: False
+                    Button:
+                        text: 'set'
+                        size_hint_x: 0.2
+                        on_press: root.do_set_score(3)
+
+                BoxLayout:
+                    id: turnsetter
+                    spacing: 5
+                    orientation: 'horizontal'
+                    size_hint_y: 0.5
+                    Label:
+                        text: 'Set Turn'
+                    Button:
+                        id: turnset0
+                        text: '0'
+                        on_press: root.do_set_turn_0()
+                    Button:
+                        id: turnset1
+                        text: '1'
+                        on_press: root.do_set_turn_1()
+                    Button:
+                        id: turnset2
+                        text: '2'
+                        on_press: root.do_set_turn_2()
+                    Button:
+                        id: turnset3
+                        text: '3'
+                        on_press: root.do_set_turn_3()
+            BoxLayout:
+                #GameStatus
+                padding: 5
+                orientation: 'vertical'
+                Label:
+                    text: 'Game Status'
+                    size_hint_y: 0.2
+                Label:
+                    id: statuslabel
+                    text: ''
+
+                Label:
+                    text: 'Game Timer'
+                    size_hint_y: 0.2
+                Label:
+                    id: timerlabel
+                    text: '00:00'
+                    size_hint_y: 0.2
+
+                BoxLayout:
+                    id: playergrid
+                    orientation: 'vertical'
+                    BoxLayout:
+                        orientation: 'horizontal'
+                        Label:
+                            id: pname0
+                            markup: True
+                            text: ''
+                        Label:
+                            id: pscore0
+                            text: ''
+                    BoxLayout:
+                        orientation: 'horizontal'
+                        Label:
+                            id: pname1
+                            markup: True
+                            text: ''
+                        Label:
+                            id: pscore1
+                            text: ''
+                    BoxLayout:
+                        orientation: 'horizontal'
+                        Label:
+                            id: pname2
+                            markup: True
+                            text: ''
+                        Label:
+                            id: pscore2
+                            text: ''
+                    BoxLayout:
+                        orientation: 'horizontal'
+                        Label:
+                            id: pname3
+                            markup: True
+                            text: ''
+                        Label:
+                            id: pscore3
+                            text: ''
