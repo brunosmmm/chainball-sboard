@@ -439,6 +439,10 @@ class ChainballGame(object):
         for player in self.players:
             self.players[player].reset_serve()
 
+        #create event in persistance
+        self.g_persist.log_event(GameEventTypes.FORCE_SERVE,
+                                 'player {}'.format(self.active_player))
+
         #announce score deltas
         self.announce_player_deltas(0)
         #self.timer_handler.announcement(TimerAnnouncement(self.players[self.active_player].panel_text,
