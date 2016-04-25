@@ -9,17 +9,39 @@ class CannotModifyScoresError(Exception):
     pass
 
 class PlayerPersistData(object):
-    def __init__(self, display_name):
+    def __init__(self, display_name, player_name=None):
         self.display_name = display_name
+        self.player_name = player_name
         self.score = 0
 
     def update_score(self, score):
         self.score = score
 
+    def get_data(self):
+        data = {}
+
+        data['display_name'] = self.display_name
+        data['full_name'] = self.player_name
+        data['score'] = self.score
+
+        return data
+
 class GamePersistStates(object):
     RUNNING = 0
     FINISHED = 1
     PAUSED = 2
+
+    NAMES = {RUNNING: 'RUNNING',
+             FINISHED: 'FINISHED',
+             PAUSED: 'PAUSED'}
+
+class GameEventTypes(object):
+    SCORE_CHANGE = 'SCORE_CHANGE'
+    COWOUT = 'COWOUT'
+    GAME_END = 'GAME_END'
+    GAME_PAUSE = 'GAME_PAUSE'
+    GAME_UNPAUSE = 'GAME_UNPAUSE'
+    FORCE_SERVE = 'FORCE_SERVE'
 
 class GamePersistData(object):
 
@@ -29,6 +51,7 @@ class GamePersistData(object):
         self.game_state = GamePersistStates.RUNNING
         self.start_time = datetime.datetime.now()
         self.data_change_handler = handler
+        self.events = []
 
         #if self.data_change_handler:
         #    self.data_change_handler()
@@ -42,23 +65,53 @@ class GamePersistData(object):
                 raise CannotModifyScoresError('Game has finished')
 
         self.player_data[player].update_score(score)
+        self.log_event(GameEventTypes.SCORE_CHANGE,
+                       'player {}: {}'.format(player, score))
 
-        if self.data_change_handler:
-            self.data_change_handler()
+        #if self.data_change_handler:
+        #    self.data_change_handler()
 
-    def end_game(self):
+    def end_game(self, reason, winner):
 
         self.game_state = GamePersistStates.FINISHED
+        self.log_event(GameEventTypes.GAME_END, {'REASON': reason,
+                                                 'WINNER': winner})
+        #if self.data_change_handler:
+        #    self.data_change_handler()
 
-        if self.data_change_handler:
+    def pause_unpause(self):
+        if self.game_state == GamePersistStates.RUNNING:
+            self.game_state = GamePersistStates.PAUSED
+            self.log_event(GameEventTypes.GAME_PAUSE, None)
+        elif self.game_state == GamePersistStates.PAUSED:
+            self.game_state = GamePersistStates.RUNNING
+            self.log_event(GameEventTypes.GAME_UNPAUSE, None)
+
+        #if self.data_change_handler:
+        #    self.data_change_handler()
+
+    def log_event(self, evt_type, evt_desc, save=True):
+        self.events.append({'evt_type': evt_type,
+                            'evt_desc': evt_desc,
+                            'evt_time': str(datetime.datetime.now())})
+
+        if save is True and self.data_change_handler:
             self.data_change_handler()
 
     def to_JSON(self):
 
         json_dict = {}
+        json_dict['start_time'] = str(self.start_time)
+        json_dict['game_state'] = GamePersistStates.NAMES[self.game_state]
+        player_dict = {}
 
-        return json.dumps(self, default=lambda o: o.__dict__,
-                          sort_keys=True, indent=4)
+        for player_num, player_data in self.player_data.iteritems():
+            player_dict[str(player_num)] = player_data.get_data()
+
+        json_dict['events'] = self.events
+
+        json_dict['player_data'] = player_dict
+        return json_dict
 
 class GamePersistance(object):
 
@@ -93,19 +146,40 @@ class GamePersistance(object):
 
         return game_uuid
 
-    def end_game(self):
-        self.game_history[self.current_game].end_game()
+    def log_event(self, evt_type, evt_desc):
+        try:
+            self.game_history[self.current_game].log_event(evt_type,
+                                                           evt_desc)
+        except:
+            pass
+
+    def end_game(self, reason, winner):
+        try:
+            self.game_history[self.current_game].end_game(reason, winner)
+        except:
+            pass
         self.current_game = None
 
-    def save_current_data(self):
-        return
+    def pause_unpause_game(self):
+        try:
+            self.game_history[self.current_game].pause_unpause()
+        except:
+            pass
 
-        file_name = self.current_game + '.json'
+    def update_current_score(self, player, score):
+        try:
+            self.game_history[self.current_game].update_score(player, score)
+        except:
+            pass
+
+    def save_current_data(self):
+
+        file_name = join(self.path, self.current_game + '.json')
 
         try:
             with open(file_name, 'w') as f:
-                f.write(self.game_history[self.current_game].to_JSON())
-                #json.dump(self.game_history[self.current_game].__dict__, f)
+                #f.write(self.game_history[self.current_game].to_JSON())
+                json.dump(self.game_history[self.current_game].to_JSON(), f)
         except:
             self.logger.error('Could not save game persistance data')
             raise

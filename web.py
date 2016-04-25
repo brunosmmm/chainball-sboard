@@ -54,7 +54,7 @@ class WebBoard(object):
 
     def end_game(self):
         try:
-            self.game.game_end()
+            self.game.game_end(reason='FORCED_STOP')
         except GameNotStartedError as e:
             self.logger.warning('Could not stop game: {}'.format(e.message))
             return {'status' : 'error', 'error' : e.message}

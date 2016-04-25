@@ -7,7 +7,7 @@ from remote.pair import RemotePairHandler
 import logging
 from game.exceptions import *
 from announce.timer import TimerHandler, TimerAnnouncement
-#from game.persist import GamePersistance, PlayerPersistData
+from game.persist import GamePersistance, PlayerPersistData, GameEventTypes
 from util.soundfx import GameSFXHandler
 from game.remotemapper import RemoteMapping, RemoteMappingLoadFailed
 from game.constants import GameTurnActions, MasterRemoteActions
@@ -67,7 +67,7 @@ class ChainballGame(object):
         self.player_count = 0
 
         #game persistance
-        #self.g_persist = GamePersistance('games')
+        self.g_persist = GamePersistance('data/persist/games')
 
         #set flags
         self.ongoing = False
@@ -298,10 +298,10 @@ class ChainballGame(object):
         for player in self.players:
             if self.players[player].registered:
                 self.game_set_score(player, 0)
-                #player_persist[player] = PlayerPersistData(self.players[player].web_text)
+                player_persist[player] = PlayerPersistData(self.players[player].panel_text, self.players[player].web_text)
 
         #create persistance data
-        #self.game_uuid = self.g_persist.new_record(player_persist)
+        self.game_uuid = self.g_persist.new_record(player_persist)
 
         #flag game start
         self.ongoing = True
@@ -331,7 +331,8 @@ class ChainballGame(object):
 
         #self.s_handler.set_turn(winner_player)
         #self.announce_end(winner_player)
-        self.game_end()
+        self.game_end(reason='TIMEOUT',
+                      winner=self.find_high_score())
 
     def game_pause(self):
 
@@ -340,6 +341,8 @@ class ChainballGame(object):
 
         if self.paused:
             raise GameAlreadyPausedError('game is already paused')
+
+        self.g_persist.pause_unpause_game()
 
         self.logger.info('Game PAUSED')
         self.paused = True
@@ -354,12 +357,14 @@ class ChainballGame(object):
         if not self.paused:
             raise GameNotPausedError('game is not paused')
 
+        self.g_persist.pause_unpause_game()
+
         self.logger.info('Game UNPAUSED')
         self.paused = False
         self.timer_handler.unpause()
         self.ptimer_handler.unpause()
 
-    def game_end(self):
+    def game_end(self, reason=None, winner=None):
         self.logger.info('Stopping game...')
         if not self.ongoing:
             raise GameNotStartedError('Game is not running')
@@ -380,7 +385,7 @@ class ChainballGame(object):
         self.ptimer_handler.stop()
         self.ongoing = False
 
-        #self.g_persist.end_game()
+        self.g_persist.end_game(reason, winner)
         self.game_uuid = None
 
         self.logger.info('Game stopped')
@@ -483,9 +488,15 @@ class ChainballGame(object):
             self.players[player].current_score -= 1
             self.players[player].score_diff -= 1
 
+            #update persistance data
+            self.g_persist.update_current_score(player,
+                                                self.players[player].current_score)
+
             #check here if we have reached -10
             if self.players[player].current_score == -10:
                 #player is out of the game
+                self.g_persist.log_event(GameEventTypes.COWOUT,
+                                         'player {}'.format(player))
                 self.game_player_out(player)
                 return
 
@@ -508,8 +519,17 @@ class ChainballGame(object):
             self.players[player].current_score += 1
             self.players[player].score_diff += 1
 
+            # update persistance data
+            self.g_persist.update_current_score(player,
+                                                self.players[player].current_score)
+
     def game_set_score(self, player, score):
         self.players[player].current_score = score
+
+        if self.ongoing is True:
+            # update persistance data
+            self.g_persist.update_current_score(player,
+                                                score)
 
     def _game_decode_remote(self, message):
 
@@ -651,7 +671,8 @@ class ChainballGame(object):
                 if self.players[player].current_score == 5:
                     self.logger.info('Player {} has won the game'.format(player))
                     self.announce_end(player)
-                    self.game_end()
+                    self.game_end(reason='PLAYER_WON',
+                                  winner=player)
                     return
 
         #check for remote activity
