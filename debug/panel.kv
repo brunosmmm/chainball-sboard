@@ -33,6 +33,9 @@
                     on_press: root.do_debug_setup4()
 
                 Button:
+                    text: 'Override pairing'
+                    on_press: root.force_pairing()
+                Button:
                     text: 'Remove players'
                     on_press: root.do_remove_all()
 
@@ -105,101 +108,6 @@
                         on_press: root.do_sfx_play()
 
             BoxLayout:
-                #PlayerInterfaceControl
-                padding: 5
-                orientation: 'vertical'
-                Label:
-                    text: 'Indirect control'
-                    size_hint_y: 0.2
-
-                BoxLayout:
-                    orientation: 'horizontal'
-                    padding: 10
-                    spacing: 5
-
-                    BoxLayout:
-                        orientation: 'vertical'
-                        spacing: 5
-
-                        Label:
-                            id: pcontrol0
-                            text: '0'
-                            size_hint_y: 0.2
-
-                        Button:
-                            text: '+1'
-                            on_press: root.do_incr_score(0)
-
-                        Button:
-                            text: '-1'
-                            on_press: root.do_decr_score(0)
-
-                        Button:
-                            text: 'F'
-                            on_press: root.do_force_serve()
-                    BoxLayout:
-                        orientation: 'vertical'
-                        spacing: 5
-
-                        Label:
-                            id: pcontrol1
-                            text: '1'
-                            size_hint_y: 0.2
-
-                        Button:
-                            text: '+1'
-                            on_press: root.do_incr_score(1)
-
-                        Button:
-                            text: '-1'
-                            on_press: root.do_decr_score(1)
-
-                        Button:
-                            text: 'F'
-                            on_press: root.do_force_serve()
-
-                    BoxLayout:
-                        orientation: 'vertical'
-                        spacing: 5
-
-                        Label:
-                            id: pcontrol2
-                            text: '2'
-                            size_hint_y: 0.2
-
-                        Button:
-                            text: '+1'
-                            on_press: root.do_incr_score(2)
-
-                        Button:
-                            text: '-1'
-                            on_press: root.do_decr_score(2)
-
-                        Button:
-                            text: 'F'
-                            on_press: root.do_force_serve()
-
-                    BoxLayout:
-                        orientation: 'vertical'
-                        spacing: 5
-
-                        Label:
-                            id: pcontrol3
-                            text: '0'
-                            size_hint_y: 0.2
-
-                        Button:
-                            text: '+1'
-                            on_press: root.do_incr_score(3)
-
-                        Button:
-                            text: '-1'
-                            on_press: root.do_decr_score(3)
-
-                        Button:
-                            text: 'F'
-                            on_press: root.do_force_serve()
-            BoxLayout:
                 #GameDirectControl
                 padding: 10
                 spacing: 10
@@ -263,24 +171,27 @@
                 #GameStatus
                 padding: 5
                 orientation: 'vertical'
-                Label:
-                    text: 'Game Status'
+                BoxLayout:
                     size_hint_y: 0.2
-                Label:
-                    id: statuslabel
-                    text: ''
-
-                Label:
-                    text: 'Game Timer'
+                    orientation: 'horizontal'
+                    Label:
+                        text: 'Game Status:'
+                    Label:
+                        id: statuslabel
+                        text: ''
+                BoxLayout:
                     size_hint_y: 0.2
-                Label:
-                    id: timerlabel
-                    text: '00:00'
-                    size_hint_y: 0.2
+                    orientation: 'horizontal'
+                    Label:
+                        text: 'Game Timer:'
+                    Label:
+                        id: timerlabel
+                        text: '00:00'
 
                 BoxLayout:
                     id: playergrid
                     orientation: 'vertical'
+                    spacing: 10
                     BoxLayout:
                         orientation: 'horizontal'
                         Button:
@@ -291,6 +202,20 @@
                         Label:
                             id: pscore0
                             text: ''
+                        BoxLayout:
+                            orientation: 'vertical'
+                            #spacing: 5
+                            Button:
+                                text: '+1'
+                                on_press: root.do_incr_score(0)
+
+                            Button:
+                                text: '-1'
+                                on_press: root.do_decr_score(0)
+
+                            Button:
+                                text: 'F'
+                                on_press: root.do_force_serve(0)
                     BoxLayout:
                         orientation: 'horizontal'
                         Button:
@@ -301,6 +226,20 @@
                         Label:
                             id: pscore1
                             text: ''
+                        BoxLayout:
+                            orientation: 'vertical'
+                            #spacing: 5
+                            Button:
+                                text: '+1'
+                                on_press: root.do_incr_score(1)
+
+                            Button:
+                                text: '-1'
+                                on_press: root.do_decr_score(1)
+
+                            Button:
+                                text: 'F'
+                                on_press: root.do_force_serve(1)
                     BoxLayout:
                         orientation: 'horizontal'
                         Button:
@@ -311,6 +250,20 @@
                         Label:
                             id: pscore2
                             text: ''
+                        BoxLayout:
+                            orientation: 'vertical'
+                            #spacing: 5
+                            Button:
+                                text: '+1'
+                                on_press: root.do_incr_score(2)
+
+                            Button:
+                                text: '-1'
+                                on_press: root.do_decr_score(2)
+
+                            Button:
+                                text: 'F'
+                                on_press: root.do_force_serve(2)
                     BoxLayout:
                         orientation: 'horizontal'
                         Button:
@@ -321,3 +274,17 @@
                         Label:
                             id: pscore3
                             text: ''
+                        BoxLayout:
+                            orientation: 'vertical'
+                            #spacing: 5
+                            Button:
+                                text: '+1'
+                                on_press: root.do_incr_score(3)
+
+                            Button:
+                                text: '-1'
+                                on_press: root.do_decr_score(3)
+
+                            Button:
+                                text: 'F'
+                                on_press: root.do_force_serve(3)

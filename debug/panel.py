@@ -110,6 +110,12 @@ class RootWidget(FloatLayout):
             #force pairing
             r = requests.get(SCOREBOARD_LOCATION+'/debug/fpair/{},{}'.format(player_num, player_num+1))
 
+    def force_pairing(self):
+
+        for p in range(0, self.player_num):
+            #force pairing
+            r = requests.get(SCOREBOARD_LOCATION+'/debug/fpair/{},{}'.format(p, p+1))
+
     def do_sfx_play(self, * args):
         r = requests.get(SCOREBOARD_LOCATION+'/debug/sfx/{}'.format(self.ids['sfxname'].text))
 
@@ -203,13 +209,13 @@ class RootWidget(FloatLayout):
 
         server = -1
         if json_data['game'] == 'started':
-            self.ids['statuslabel'].text = 'Game running'
+            self.ids['statuslabel'].text = 'Running'
             server = int(json_data['serving'])
         elif json_data['game'] == 'stopped':
-            self.ids['statuslabel'].text = 'Game stopped'
+            self.ids['statuslabel'].text = 'Stopped'
 
         json_data = status['players']
-        player_num = len(json_data)
+        self.player_num = len(json_data)
         for i in range(0,4):
             if str(i) in json_data:
                 self.ids['pname{}'.format(i)].text = json_data[str(i)]
@@ -222,7 +228,7 @@ class RootWidget(FloatLayout):
                 self.ids['pscore{}'.format(i)].text = ''
 
         for i in range(0,4):
-            if str(i) in json_data and i < player_num:
+            if str(i) in json_data and i < self.player_num:
                 self.ids['pscore{}'.format(i)].text = str(json_data[str(i)])
             else:
                 self.ids['pscore{}'.format(i)].text = ''
