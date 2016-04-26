@@ -37,6 +37,7 @@ class GameSFXHandler(object):
 
         #build library
         self.fx_dict = {}
+        self.fx_desc = {}
         try:
             sfx_config_contents = open('conf/sfx.json')
             sfx_config = json.loads(sfx_config_contents.read())
@@ -49,7 +50,9 @@ class GameSFXHandler(object):
             self.logger.error('Invalid SFX library configuration file')
             return
 
-        self.fx_dict = dict([(x, pygame.mixer.Sound(sfx_config['sfxpath']+'/'+y)) for x, y in sfx_config['sfxlib'].iteritems()])
+        self.fx_dict = dict([(x, pygame.mixer.Sound(sfx_config['sfxpath']+'/'+y['file'])) for x, y in sfx_config['sfxlib'].iteritems()])
+
+        self.fx_desc = dict([(x, y['description']) for x, y in sfx_config['sfxlib'].iteritems()])
 
         self.logger.debug('loaded {} SFX files'.format(len(self.fx_dict)))
 
@@ -75,3 +78,9 @@ class GameSFXHandler(object):
 
     def get_available_sfx(self):
         return self.fx_dict.keys()
+
+    def get_sfx_description(self, fx_name):
+        if fx_name in self.fx_desc:
+            return self.fx_desc[fx_name]
+
+        return None
