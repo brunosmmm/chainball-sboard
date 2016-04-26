@@ -2,6 +2,7 @@ from kivy.app import App
 from kivy.uix.floatlayout import FloatLayout
 from kivy.lang import Builder
 from kivy.clock import Clock
+from kivy.logger import Logger
 import requests
 import logging
 import json
@@ -16,7 +17,13 @@ class RootWidget(FloatLayout):
     def __init__(self, *args, **kwargs):
         super(RootWidget, self).__init__(*args, **kwargs)
 
+        # scoreboard data
+        self.sfx_list = {}
+        self.sfx_reverse_list = {}
+
+        # flags
         self.stop_refreshing = False
+
         Clock.schedule_interval(self.refresh_status, 1)
 
     def disable_app(self):
@@ -125,7 +132,14 @@ class RootWidget(FloatLayout):
             r = requests.get(SCOREBOARD_LOCATION+'/debug/fpair/{},{}'.format(p, p+1))
 
     def do_sfx_play(self, * args):
-        r = requests.get(SCOREBOARD_LOCATION+'/debug/sfx/{}'.format(self.ids['sfxname'].text))
+
+        if self.ids['sfxname'].text not in self.sfx_reverse_list:
+            # try directly
+            sfx_name = self.ids['sfxname'].text
+        else:
+            sfx_name = self.sfx_reverse_list[self.ids['sfxname'].text]
+
+        r = requests.get(SCOREBOARD_LOCATION+'/debug/sfx/{}'.format(sfx_name))
 
         try:
             status = r.json()
@@ -198,6 +212,30 @@ class RootWidget(FloatLayout):
     def do_set_turn_4(self, *args):
         r = requests.get(SCOREBOARD_LOCATION+'/debug/setturn/3')
 
+    def one_shot_refresh(self):
+        try:
+            r = requests.get(SCOREBOARD_LOCATION+'/status/sfxlist')
+            status = r.json()
+        except:
+            print 'error getting SFX List'
+            return
+
+        if status['status'] != 'ok':
+            print 'error getting SFX List'
+            return
+
+        self.sfx_list = status['sfx_list']
+
+        # update spinner
+        self.ids['sfxname'].values = [v if v is not None else k for k, v in self.sfx_list.iteritems()]
+        self.ids['sfxname'].text = self.ids['sfxname'].values[0]
+
+        # create SFX reverse lookup dictionary
+        self.sfx_reverse_list = {}
+        for k, v in self.sfx_list.iteritems():
+            if v is not None:
+                self.sfx_reverse_list[v] = k
+
     def refresh_status(self, *args):
 
         if self.stop_refreshing is True:
@@ -207,7 +245,9 @@ class RootWidget(FloatLayout):
         try:
             r = requests.get(SCOREBOARD_LOCATION+'/status/all', timeout=1)
             status = r.json()
-            self.enable_app()
+            if self.disabled:
+                self.enable_app()
+                self.one_shot_refresh()
         except (requests.exceptions.ConnectionError,
                 requests.exceptions.ConnectTimeout):
             # disable
@@ -268,6 +308,7 @@ class RootWidget(FloatLayout):
                 return
 
         self.ids['timerlabel'].text ='{:0>2d}'.format(json_data['minutes']) + ':' + '{:0>2d}'.format(json_data['seconds'])
+
 
     def register_scoring_event(self, evt_type, player):
         r = requests.get(SCOREBOARD_LOCATION+'/control/scoreevt/{},{}'.format(player, evt_type))
