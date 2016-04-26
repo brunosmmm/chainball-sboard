@@ -47,6 +47,7 @@ class GameEventTypes(object):
     SAILORMOON = 'SAILORMOON'
     CHAINBALL = 'CHAINBALL'
     JAILBREAK = 'JAILBREAK'
+    DOUBLEFAULT = 'DOUBLEFAULT'
 
 class GamePersistData(object):
 
@@ -61,7 +62,7 @@ class GamePersistData(object):
         #if self.data_change_handler:
         #    self.data_change_handler()
 
-    def update_score(self, player, score):
+    def update_score(self, player, score, forced_update=False):
 
         if player not in self.player_data:
             raise KeyError('Invalid Player')
@@ -70,12 +71,14 @@ class GamePersistData(object):
                 raise CannotModifyScoresError('Game has finished')
 
         self.player_data[player].update_score(score)
-        self.log_event(GameEventTypes.SCORE_CHANGE,
-                       {'player': player,
-                        'new_score': score})
 
-        #if self.data_change_handler:
-        #    self.data_change_handler()
+        if forced_update is False:
+            self.log_event(GameEventTypes.SCORE_CHANGE,
+                           {'player': player,
+                            'new_score': score})
+        else:
+            if self.data_change_handler:
+                self.data_change_handler()
 
     def end_game(self, reason, winner):
 
@@ -184,9 +187,9 @@ class GamePersistance(object):
         except:
             pass
 
-    def update_current_score(self, player, score):
+    def update_current_score(self, player, score, forced_update):
         try:
-            self.game_history[self.current_game].update_score(player, score)
+            self.game_history[self.current_game].update_score(player, score, forced_update)
         except:
             pass
 

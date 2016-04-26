@@ -494,9 +494,9 @@ class ChainballGame(object):
             self.players[player].score_diff -= 1
 
             #update persistance data
-            if referee_event is False:
-                self.g_persist.update_current_score(player,
-                                                    self.players[player].current_score)
+            self.g_persist.update_current_score(player,
+                                                self.players[player].current_score,
+                                                forced_update=referee_event)
 
             #check here if we have reached -10
             if self.players[player].current_score == -10:
@@ -526,9 +526,9 @@ class ChainballGame(object):
             self.players[player].score_diff += 1
 
             # update persistance data
-            if referee_event is False:
-                self.g_persist.update_current_score(player,
-                                                    self.players[player].current_score)
+            self.g_persist.update_current_score(player,
+                                                self.players[player].current_score,
+                                                forced_update=referee_event)
 
     def game_set_score(self, player, score):
         self.players[player].current_score = score
@@ -678,6 +678,10 @@ class ChainballGame(object):
             self.g_persist.log_event(GameEventTypes.SAILORMOON,
                                      {'player': int(player)})
             self.game_decrement_score(int(player), referee_event=True)
+            self.game_decrement_score(int(player), referee_event=True)
+        elif evt_type == 'doublefault':
+            self.g_persist.log_event(GameEventTypes.DOUBLEFAULT,
+                                     {'player': int(player)})
             self.game_decrement_score(int(player), referee_event=True)
 
     def game_loop(self):
