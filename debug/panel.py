@@ -20,6 +20,7 @@ class RootWidget(FloatLayout):
         # scoreboard data
         self.sfx_list = {}
         self.sfx_reverse_list = {}
+        self.game_persist_list = []
 
         # flags
         self.stop_refreshing = False
@@ -235,6 +236,19 @@ class RootWidget(FloatLayout):
         for k, v in self.sfx_list.iteritems():
             if v is not None:
                 self.sfx_reverse_list[v] = k
+
+        # get game persistance data
+        try:
+            r = requests.get(SCOREBOARD_LOCATION+'/persist/game_list')
+            status = r.json()
+        except:
+            print 'error getting game persistance'
+            return
+
+        self.game_persist_list = status['game_list']
+        # update spinner
+        self.ids['gpersist'].values = self.game_persist_list
+        self.ids['gpersist'].disabled = False
 
     def refresh_status(self, *args):
 

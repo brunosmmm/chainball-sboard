@@ -127,6 +127,9 @@
                                     Button:
                                         text: 'MS'
                                         on_press: root.register_scoring_event('mudskipper', 0)
+                                    Button:
+                                        text: 'DF'
+                                        on_press: root.register_scoring_event('doublefault', 0)
                             BoxLayout:
                                 spacing: 10
                                 id: psettings1
@@ -175,6 +178,9 @@
                                     Button:
                                         text: 'MS'
                                         on_press: root.register_scoring_event('mudskipper', 1)
+                                    Button:
+                                        text: 'DF'
+                                        on_press: root.register_scoring_event('doublefault', 1)
                             BoxLayout:
                                 orientation: 'horizontal'
                                 id: psettings2
@@ -223,6 +229,9 @@
                                     Button:
                                         text: 'MS'
                                         on_press: root.register_scoring_event('mudskipper', 2)
+                                    Button:
+                                        text: 'DF'
+                                        on_press: root.register_scoring_event('doublefault', 2)
                             BoxLayout:
                                 orientation: 'horizontal'
                                 id: psettings3
@@ -271,6 +280,9 @@
                                     Button:
                                         text: 'MS'
                                         on_press: root.register_scoring_event('mudskipper', 3)
+                                    Button:
+                                        text: 'DF'
+                                        on_press: root.register_scoring_event('doublefault', 3)
         TabbedPanelItem:
             text: 'Debug & test'
             BoxLayout:
@@ -353,3 +365,10 @@
                     Button:
                         text: 'debug setup (4)'
                         on_press: root.do_debug_setup4()
+        TabbedPanelItem:
+            text: 'Game data'
+            Spinner:
+                id: gpersist
+                disabled: True
+                text: '-'
+                size_hint_y: 0.1
