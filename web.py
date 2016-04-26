@@ -126,7 +126,10 @@ class WebBoard(object):
         player_data = request.POST
         #self.logger.debug('DUMP: {}'.format([x for x in player_data]))
         try:
-            player = self.game.next_player_num()
+            if 'playerNum' not in player_data:
+                player = self.game.next_player_num()
+            else:
+                player = int(player_data['playerNum'])
             self.game.register_players({player: PlayerText(player_data['panelTxt'],
                                                            player_data['webTxt'])})
         except TooManyPlayersError:
@@ -163,7 +166,6 @@ class WebBoard(object):
         return {'status' : 'ok'}
 
     def unregister(self):
-
         player = request.POST['playerNumber']
         try:
             self.game.unregister_players([int(player)])
