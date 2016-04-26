@@ -390,6 +390,10 @@ class WebBoard(object):
     def score_evt(self, player, evt_type):
         self.game.scoring_evt(player, evt_type)
 
+    def get_sfx_list(self):
+        return {'status': 'ok',
+                'sfx_list': self.game.sfx_handler.get_available_sfx()}
+
     def run(self):
 
         #route
@@ -438,6 +442,7 @@ class WebBoard(object):
         route("/status/timer")(self.get_timer)
         route("/status/game")(self.get_game_status)
         route("/status/all")(self.get_all_status)
+        route('/status/sfxlist')(self.get_sfx_list)
 
         #persistance
         route('/persist/game_list')(self.get_persist_list)
