@@ -1,6 +1,5 @@
 import json
 import datetime
-from uuid import uuid1, UUID
 import logging
 from os import listdir
 from os.path import isfile, join
@@ -72,7 +71,8 @@ class GamePersistData(object):
 
         self.player_data[player].update_score(score)
         self.log_event(GameEventTypes.SCORE_CHANGE,
-                       'player {}: {}'.format(player, score))
+                       {'player': player,
+                        'new_score': score})
 
         #if self.data_change_handler:
         #    self.data_change_handler()
@@ -80,8 +80,8 @@ class GamePersistData(object):
     def end_game(self, reason, winner):
 
         self.game_state = GamePersistStates.FINISHED
-        self.log_event(GameEventTypes.GAME_END, {'REASON': reason,
-                                                 'WINNER': winner})
+        self.log_event(GameEventTypes.GAME_END, {'reason': reason,
+                                                 'winner': winner})
         #if self.data_change_handler:
         #    self.data_change_handler()
 
@@ -127,10 +127,20 @@ class GamePersistance(object):
         self.path = folder
         self.game_history = {}
         self.current_game = None
+        self.current_game_series = 0
 
         self.load_history()
 
     def load_history(self):
+
+        # load current game number
+        try:
+            with open('data/persist/game.json', 'r') as f:
+                persist_data = json.load(f)
+                self.current_game_series = persist_data['current_series']
+        except:
+            self.logger.error('Could not load overall game persistance data')
+
         for f in listdir('./'+self.path):
             if isfile(join('./'+self.path, f)):
                 file_uuid = f.split('.')[0]
@@ -139,14 +149,15 @@ class GamePersistance(object):
                     with open(join(self.path, f), 'r') as g:
                         game_data = json.load(g)
                 except:
-                    raise
+                    #raise
                     self.logger.warning('Could not load game persistance for game {}'.format(f))
                     continue
 
                 self.game_history[file_uuid] = game_data
 
     def new_record(self, players):
-        game_uuid = str(uuid1())
+        game_uuid = '{s:06d}'.format(s=self.current_game_series)
+        self.current_game_series += 1
         self.current_game = game_uuid
         self.game_history[game_uuid] = GamePersistData(players, self.save_current_data)
         self.save_current_data()
@@ -181,6 +192,13 @@ class GamePersistance(object):
 
     def save_current_data(self):
 
+        # save game series number
+        try:
+            with open('data/persist/game.json', 'w') as f:
+                json.dump({'current_series': self.current_game_series}, f)
+        except:
+            self.logger.error('Could not save overall game persistance state')
+
         file_name = join(self.path, self.current_game + '.json')
 
         try:
@@ -189,4 +207,4 @@ class GamePersistance(object):
                 json.dump(self.game_history[self.current_game].to_JSON(), f)
         except:
             self.logger.error('Could not save game persistance data')
-            raise
+            #raise

@@ -502,7 +502,7 @@ class ChainballGame(object):
             if self.players[player].current_score == -10:
                 #player is out of the game
                 self.g_persist.log_event(GameEventTypes.COWOUT,
-                                         'player {}'.format(player))
+                                         {'player': player})
                 #self.game_player_out(player)
                 return
 

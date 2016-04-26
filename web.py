@@ -2,6 +2,7 @@ from bottle import route, run, template, static_file, request
 from game.playertxt import PlayerText
 from game.exceptions import PlayerNotRegisteredError, TooManyPlayersError, PlayerAlreadyPairedError, PlayerNotPairedError, GameRunningError, NotEnoughPlayersError, GameNotStartedError, GameAlreadyStarterError, GameAlreadyPausedError, GameNotPausedError
 import logging
+from game.persist import GamePersistData
 from announce.timer import TimerAnnouncement
 from remote.persistence import PERSISTENT_REMOTE_DATA
 import time
@@ -384,9 +385,11 @@ class WebBoard(object):
         if game_uuid not in self.game.g_persist.game_history:
             return {'status': 'error',
                     'error': 'invalid uuid'}
-
+        game_data = self.game.g_persist.game_history[game_uuid]
+        if isinstance(game_data, GamePersistData):
+            game_data = game_data.to_JSON()
         return {'status': 'ok',
-                'data': self.game.g_persist.game_history[game_uuid]}
+                'data': game_data}
 
     def score_evt(self, player, evt_type):
         self.game.scoring_evt(player, evt_type)
