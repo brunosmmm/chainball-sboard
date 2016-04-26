@@ -77,7 +77,7 @@ class GameSFXHandler(object):
                 self.state = GameSFXHandlerStates.IDLE
 
     def get_available_sfx(self):
-        return self.fx_dict.keys()
+        return self.fx_desc
 
     def get_sfx_description(self, fx_name):
         if fx_name in self.fx_desc:
