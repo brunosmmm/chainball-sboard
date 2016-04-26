@@ -5,7 +5,7 @@ from kivy.uix.gridlayout import GridLayout
 
 class RootFinderMixin(object):
 
-    def __init__(self, root_widget_class='RootWidget'):
+    def __init__(self, root_widget_class='RootWidget', **kwargs):
         self.root_widget_class = root_widget_class
 
     def find_root(self):
