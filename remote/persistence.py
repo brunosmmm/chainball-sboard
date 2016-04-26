@@ -27,4 +27,7 @@ class RemotePersistence(object):
         self.remote_list[hex(remote_id)] = data
         self._do_save()
 
+    def get_remote_persist(self):
+        return self.remote_list
+
 PERSISTENT_REMOTE_DATA = RemotePersistence('data/persist/remote.json')

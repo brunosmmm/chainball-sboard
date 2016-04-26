@@ -3,6 +3,7 @@ from game.playertxt import PlayerText
 from game.exceptions import PlayerNotRegisteredError, TooManyPlayersError, PlayerAlreadyPairedError, PlayerNotPairedError, GameRunningError, NotEnoughPlayersError, GameNotStartedError, GameAlreadyStarterError, GameAlreadyPausedError, GameNotPausedError
 import logging
 from announce.timer import TimerAnnouncement
+from remote.persistence import PERSISTENT_REMOTE_DATA
 import time
 
 class WebBoard(object):
@@ -394,6 +395,10 @@ class WebBoard(object):
         return {'status': 'ok',
                 'sfx_list': self.game.sfx_handler.get_available_sfx()}
 
+    def get_remote_data(self):
+        return {'status': 'ok',
+                'remote_data': PERSISTENT_REMOTE_DATA.get_remote_persist()}
+
     def run(self):
 
         #route
@@ -443,6 +448,7 @@ class WebBoard(object):
         route("/status/game")(self.get_game_status)
         route("/status/all")(self.get_all_status)
         route('/status/sfxlist')(self.get_sfx_list)
+        route('/status/remotedata')(self.get_remote_data)
 
         #persistance
         route('/persist/game_list')(self.get_persist_list)
