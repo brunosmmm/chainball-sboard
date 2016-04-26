@@ -39,7 +39,10 @@ class ScoreHandler(StoppableThread):
                 self.ser_port = serial.Serial(self.serial_port, self.serial_baud)
             else:
                 self.master_port, self.slave_port = pty.openpty()
-                self.ser_port = serial.Serial(os.ttyname(self.slave_port))
+                self.ser_port = serial.Serial(os.ttyname(self.slave_port),
+                                              self.serial_baud,
+                                              rtscts=True,
+                                              dsrdtr=True)
         except IOError:
             print "Can't open serial port"
             raise
