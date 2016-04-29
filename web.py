@@ -368,7 +368,10 @@ class WebBoard(object):
                 self.game.game_unpause()
             else:
                 self.game.game_pause()
-        except (GameNotStartedError, GameAlreadyPausedError, GameNotPausedError) as e:
+        except (GameNotStartedError,
+                GameAlreadyPausedError,
+                GameNotPausedError,
+                PlayerRemoteNotPaired) as e:
             self.logger.warning('Could not pause/unpause game: {}'.format(e.message))
             return {'status' : 'error', 'error' : e.message}
 
