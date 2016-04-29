@@ -27,6 +27,9 @@ class PlayerScore(object):
 
         self.initialized = True
 
+        # guard attribute score setting
+        self.forcing_score = False
+
     @classmethod
     def _score_offset(cls, score):
         return score + 10
@@ -55,13 +58,25 @@ class PlayerScore(object):
                 self.end_serve()
 
         elif name == "current_score":
-            if self.handler and self.current_score != None:
-                self.handler.update_score(self.pid, self.current_score)
-                self.start_score()
+            self._set_score(self.forcing_score)
 
         elif name == "panel_text":
             if self.handler and self.panel_text:
                 self.handler.register_player(self.pid, self.panel_text)
+
+    def force_score(self, new_score):
+        self.forcing_score = True
+        self.current_score = new_score
+        self.forcing_score = False
+
+    def _set_score(self, forced_update=False):
+        if self.handler and self.current_score is not None:
+            self.handler.update_score(self.pid, self.current_score)
+            if forced_update is False:
+                # enforce scoring window, pass serve automatically
+                self.start_score()
+            else:
+                self.logger.debug('Forcing player {} score to {}'.format(self.pid, self.current_score))
 
     def show_text(self, text):
         self.handler.set_panel_text(self.pid, text)

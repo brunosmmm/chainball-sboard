@@ -257,7 +257,7 @@ class WebBoard(object):
 
     def set_score(self, player, score):
         try:
-            self.game.players[int(player)].current_score = int(score)
+            self.game.players[int(player)].force_score(int(score))
         except KeyError:
             return {'status' : 'error', 'error' : 'Invalid player'}
         except TypeError:
