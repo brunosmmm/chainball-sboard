@@ -1,11 +1,12 @@
 
 <RootWidget>:
-    disabled: True
+    disabled: False
     TabbedPanel:
         do_default_tab: False
         TabbedPanelItem:
             text: 'Game control'
             BoxLayout:
+                id: gamectrltab
                 padding: 10
                 spacing: 10
 
@@ -293,9 +294,11 @@
                                         on_press: root.register_scoring_event('doublefault', 3)
         TabbedPanelItem:
             text: 'Game setup'
+            id: gamesetuptab
         TabbedPanelItem:
             text: 'Debug & test'
             BoxLayout:
+                id: debugtab
                 orientation: 'horizontal'
                 spacing: 10
                 BoxLayout:
@@ -377,8 +380,34 @@
                         on_press: root.do_debug_setup4()
         TabbedPanelItem:
             text: 'Saved data'
-            Spinner:
-                id: gpersist
-                disabled: True
-                text: '-'
-                size_hint_y: 0.1
+            BoxLayout:
+                id: saveddatatab
+                orientation: 'vertical'
+                Spinner:
+                    id: gpersist
+                    disabled: True
+                    text: '-'
+                    size_hint_y: 0.1
+
+        TabbedPanelItem:
+            text: 'Scoreboard'
+            BoxLayout:
+                orientation: 'vertical'
+                spacing: 10
+                padding: 10
+                GridLayout:
+                    cols: 2
+                    spacing: 10
+                    Label:
+                        text: 'Scoreboard address'
+                    TextInput:
+                        id: scorebrdip
+                        text: '1.1.1.1'
+                    Label:
+                        text: 'Scoreboard port'
+                    TextInput:
+                        id: scorebrdport
+                        text: '80'
+                Button:
+                    text: 'Apply'
+                    on_press: root.set_scoreboard_address()
