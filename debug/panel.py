@@ -3,13 +3,52 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.lang import Builder
 from kivy.clock import Clock
 from kivy.logger import Logger
+from kivy.uix.bubble import Bubble, BubbleButton
 import requests
 import logging
 import json
 import argparse
-from miscui import ScoreSpinner
+from miscui import ScoreSpinner, RootFinderMixin
+import json
 
 SCOREBOARD_LOCATION = 'http://localhost:8080'
+
+
+class PlayerActions(Bubble, RootFinderMixin):
+
+    def __init__(self, *args, **kwargs):
+        super(PlayerActions, self).__init__(*args, **kwargs)
+
+        self.player = kwargs['player']
+        self.pos = kwargs['position']
+        self.size = kwargs['size']
+        self.size_hint = (None, None)
+
+        self.add_btn = BubbleButton(on_press=self.add_player,
+                                    text='Add player',
+                                    disabled=kwargs['is_registered'])
+        self.rm_btn = BubbleButton(on_press=self.remove_player,
+                                   text='Remove player',
+                                   disabled=not kwargs['is_registered'])
+        self.pair_btn = BubbleButton(on_press=self.pair_remote,
+                                     text='Pair remote',
+                                     disabled=not kwargs['is_registered'])
+        self.add_widget(self.add_btn)
+        self.add_widget(self.rm_btn)
+        self.add_widget(self.pair_btn)
+
+    def add_player(self, *args):
+        #r = requests.post(SCOREBOARD_LOCATION+'/control/pregister', json=)
+        self.find_root().kill_pbubb()
+
+    def remove_player(self, *args):
+        r = requests.post(SCOREBOARD_LOCATION+'/control/punregister',
+                          data=('playerNumber={}'.format(self.player)))
+
+        self.find_root().kill_pbubb()
+
+    def pair_remote(self, *args):
+        self.find_root().kill_pbubb()
 
 
 class RootWidget(FloatLayout):
@@ -21,9 +60,13 @@ class RootWidget(FloatLayout):
         self.sfx_list = {}
         self.sfx_reverse_list = {}
         self.game_persist_list = []
+        self.registered_player_list = []
 
         # flags
         self.stop_refreshing = False
+        self.pbubb_open = False
+        self.pbubb_player = None
+        self.game_running = False
 
         Clock.schedule_interval(self.refresh_status, 1)
 
@@ -201,6 +244,9 @@ class RootWidget(FloatLayout):
         if response['status'] == 'error':
             print 'Could not set score, returned {}'.format(response['error'])
 
+    def do_set_turn(self, player):
+        r = requests.get(SCOREBOARD_LOCATION+'/debug/setturn/{}'.format(player))
+
     def do_set_turn_1(self, *args):
         r = requests.get(SCOREBOARD_LOCATION+'/debug/setturn/0')
 
@@ -247,7 +293,7 @@ class RootWidget(FloatLayout):
 
         self.game_persist_list = status['game_list']
         # update spinner
-        self.ids['gpersist'].values = self.game_persist_list
+        self.ids['gpersist'].values = sorted(self.game_persist_list)
         self.ids['gpersist'].disabled = False
 
     def refresh_status(self, *args):
@@ -263,7 +309,8 @@ class RootWidget(FloatLayout):
                 self.enable_app()
                 self.one_shot_refresh()
         except (requests.exceptions.ConnectionError,
-                requests.exceptions.ConnectTimeout):
+                requests.exceptions.ConnectTimeout,
+                requests.exceptions.ReadTimeout):
             # disable
             self.disable_app()
             return
@@ -282,17 +329,27 @@ class RootWidget(FloatLayout):
 
         server = -1
         if json_data['game'] == 'started':
+            self.game_running = True
             self.ids['statuslabel'].text = 'Running'
             server = int(json_data['serving'])
             for i in range(0, 4):
                 self.ids['psettings{}'.format(i)].disabled = False
+                self.ids['pscore{}'.format(i)].disabled = False
+                self.ids['pindirect{}'.format(i)].disabled = False
+                self.ids['preferee{}'.format(i)].disabled = False
         elif json_data['game'] == 'stopped':
+            self.game_running = False
             self.ids['statuslabel'].text = 'Stopped'
             for i in range(0, 4):
-                self.ids['psettings{}'.format(i)].disabled = True
+                self.ids['psettings{}'.format(i)].disabled = False
+                self.ids['pname{}'.format(i)].disabled = False
+                self.ids['pscore{}'.format(i)].disabled = True
+                self.ids['pindirect{}'.format(i)].disabled = True
+                self.ids['preferee{}'.format(i)].disabled = True
 
         json_data = status['players']
         self.player_num = len(json_data)
+        self.registered_player_list = json_data.keys()
         for i in range(0,4):
             if str(i) in json_data:
                 self.ids['pname{}'.format(i)].text = json_data[str(i)]
@@ -309,8 +366,11 @@ class RootWidget(FloatLayout):
                 self.ids['pscore{}'.format(i)].update_score(str(json_data[str(i)]))
                 if int(json_data[str(i)]) == -10:
                     self.ids['psettings{}'.format(i)].disabled = True
-            else:
+            elif self.game_running is True:
                 self.ids['pscore{}'.format(i)].update_score('-')
+                self.ids['pname{}'.format(i)].disabled = True
+                self.ids['pindirect{}'.format(i)].disabled = True
+                self.ids['preferee{}'.format(i)].disabled = True
 
         if server > -1:
             player_name = self.ids['pname{}'.format(server)].text
@@ -326,6 +386,58 @@ class RootWidget(FloatLayout):
 
     def register_scoring_event(self, evt_type, player):
         r = requests.get(SCOREBOARD_LOCATION+'/control/scoreevt/{},{}'.format(player, evt_type))
+
+    # beware of very convoluted logic below
+    def handle_player_button(self, player):
+
+        if self.game_running:
+            self.do_set_turn(player)
+            return
+
+        if not hasattr(self, 'pbubb'):
+            butpos = self.ids['pname{}'.format(player)].pos
+            butsize = self.ids['pname{}'.format(player)].size
+            bubsize = [320, 100]
+            bubpos = []
+            bubpos.append(butpos[0] + butsize[0]/2 - bubsize[0]/2)
+            bubpos.append(butpos[1] - butsize[1]/2 + bubsize[1])
+
+            is_registered = str(player) in self.registered_player_list
+            self.pbubb = PlayerActions(player=player,
+                                       position=bubpos,
+                                       size=bubsize,
+                                       is_registered=is_registered)
+            self.pbubb_open = False
+            self.pbubb_player = player
+        else:
+            self.pbubb_player = player
+
+    def kill_pbubb(self):
+        self.pbubb_open = False
+        self.remove_widget(self.pbubb)
+        pbubb_cur_player = self.pbubb.player
+        del self.pbubb
+
+        return pbubb_cur_player
+
+    def on_touch_down(self, touch):
+        super(RootWidget, self).on_touch_down(touch)
+
+        if hasattr(self, 'pbubb'):
+            pbubb_cur_player = None
+            if self.pbubb_open:
+                if self.pbubb.collide_point(*touch.pos) is False:
+                    # clicked outside of bubble
+                    pbubb_cur_player = self.kill_pbubb()
+                    if self.pbubb_player != pbubb_cur_player:
+                        # create new bubble now (clicked onther player button)
+                        self.handle_player_button(self.pbubb_player)
+                        self.pbubb_open = True
+                        self.add_widget(self.pbubb)
+            else:
+                self.pbubb_open = True
+                self.add_widget(self.pbubb)
+
 
 class SimpleboardDebugPanel(App):
 

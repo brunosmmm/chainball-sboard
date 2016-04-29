@@ -84,7 +84,7 @@
                                     id: pname0
                                     markup: True
                                     text: ''
-                                    on_press: root.do_set_turn_1()
+                                    on_press: root.handle_player_button(0)
                                 #Label:
                                 #    id: pscore0
                                 #    text: ''
@@ -94,6 +94,7 @@
                                     disabled: True
                                 BoxLayout:
                                     orientation: 'vertical'
+                                    id: pindirect0
                                     #spacing: 5
                                     Button:
                                         text: '+1'
@@ -108,6 +109,7 @@
                                         on_press: root.do_force_serve(0)
                                 GridLayout:
                                     cols: 3
+                                    id: preferee0
                                     spacing: 5
                                     Button:
                                         text: 'DB'
@@ -138,13 +140,14 @@
                                     id: pname1
                                     markup: True
                                     text: ''
-                                    on_press: root.do_set_turn_2()
+                                    on_press: root.handle_player_button(1)
                                 ScoreSpinner:
                                     id: pscore1
                                     player: 1
                                     disabled: True
                                 BoxLayout:
                                     orientation: 'vertical'
+                                    id: pindirect1
                                     #spacing: 5
                                     Button:
                                         text: '+1'
@@ -159,6 +162,7 @@
                                         on_press: root.do_force_serve(1)
                                 GridLayout:
                                     cols: 3
+                                    id: preferee1
                                     spacing: 5
                                     Button:
                                         text: 'DB'
@@ -189,13 +193,14 @@
                                     id: pname2
                                     markup: True
                                     text: ''
-                                    on_press: root.do_set_turn_3()
+                                    on_press: root.handle_player_button(2)
                                 ScoreSpinner:
                                     id: pscore2
                                     player: 2
                                     disabled: True
                                 BoxLayout:
                                     orientation: 'vertical'
+                                    id: pindirect2
                                     #spacing: 5
                                     Button:
                                         text: '+1'
@@ -210,6 +215,7 @@
                                         on_press: root.do_force_serve(2)
                                 GridLayout:
                                     cols: 3
+                                    id: preferee2
                                     spacing: 5
                                     Button:
                                         text: 'DB'
@@ -240,12 +246,13 @@
                                     id: pname3
                                     markup: True
                                     text: ''
-                                    on_press: root.do_set_turn_4()
+                                    on_press: root.handle_player_button(3)
                                 ScoreSpinner:
                                     id: pscore3
                                     player: 3
                                     disabled: True
                                 BoxLayout:
+                                    id: pindirect3
                                     orientation: 'vertical'
                                     #spacing: 5
                                     Button:
@@ -260,6 +267,7 @@
                                         text: 'F'
                                         on_press: root.do_force_serve(3)
                                 GridLayout:
+                                    id: preferee3
                                     cols: 3
                                     spacing: 5
                                     Button:
@@ -283,6 +291,8 @@
                                     Button:
                                         text: 'DF'
                                         on_press: root.register_scoring_event('doublefault', 3)
+        TabbedPanelItem:
+            text: 'Game setup'
         TabbedPanelItem:
             text: 'Debug & test'
             BoxLayout:
@@ -366,7 +376,7 @@
                         text: 'debug setup (4)'
                         on_press: root.do_debug_setup4()
         TabbedPanelItem:
-            text: 'Game data'
+            text: 'Saved data'
             Spinner:
                 id: gpersist
                 disabled: True
