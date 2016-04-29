@@ -10,13 +10,110 @@ from kivy.uix.popup import Popup
 from kivy.uix.label import Label
 from kivy.uix.textinput import TextInput
 import requests
-import logging
-import json
 import argparse
+from threading import Thread
 from miscui import ScoreSpinner, RootFinderMixin
-import json
 
-SCOREBOARD_LOCATION = 'http://localhost:8080'
+class PanelUpdater(Thread):
+
+    def __init__(self, *args, **kwargs):
+        super(PanelUpdater, self).__init__(*args)
+
+        self.scoreboard_address = kwargs['address']
+        self.root = kwargs['root']
+
+    def run(self):
+
+        if self.root.stop_refreshing is True:
+            return
+
+        # try to contact scoreboard
+        try:
+            r = requests.get(self.root.scoreboard_address+'/status/all', timeout=1)
+            status = r.json()
+            if self.root.disconnected:
+                self.root.enable_app()
+                self.root.one_shot_refresh()
+        except (requests.exceptions.ConnectionError,
+                requests.exceptions.ConnectTimeout,
+                requests.exceptions.ReadTimeout):
+            # disable
+            self.root.disable_app()
+            return
+
+        #first look at board status
+        json_data = status['board']
+        if json_data['status'] == 'error':
+            self.root.ids['statuslabel'].text = 'Scoreboard ERROR'
+            return
+
+        #get game status
+        json_data = status['game']
+        if json_data['status'] == 'error':
+            self.root.ids['statuslabel'].text = 'Game ERROR'
+            return
+
+        server = -1
+        if json_data['game'] == 'started':
+            self.root.game_running = True
+            self.root.game_paused = False
+            self.root.ids['statuslabel'].text = 'Running'
+            server = int(json_data['serving'])
+            for i in range(0, 4):
+                self.root.ids['psettings{}'.format(i)].disabled = False
+                self.root.ids['pscore{}'.format(i)].disabled = False
+                self.root.ids['pindirect{}'.format(i)].disabled = False
+                self.root.ids['preferee{}'.format(i)].disabled = False
+        elif json_data['game'] == 'stopped' or json_data['game'] == 'paused':
+            self.root.game_running = False
+            if json_data['game'] == 'stopped':
+                self.root.ids['statuslabel'].text = 'Stopped'
+                self.root.game_paused = False
+            else:
+                self.root.ids['statuslabel'].text = 'Paused'
+                self.root.game_paused = True
+            for i in range(0, 4):
+                self.root.ids['psettings{}'.format(i)].disabled = False
+                self.root.ids['pname{}'.format(i)].disabled = False
+                self.root.ids['pscore{}'.format(i)].disabled = True
+                self.root.ids['pindirect{}'.format(i)].disabled = True
+                self.root.ids['preferee{}'.format(i)].disabled = True
+
+        json_data = status['players']
+        self.root.player_num = len(json_data)
+        self.root.registered_player_list = json_data
+        for i in range(0,4):
+            if str(i) in json_data:
+                self.root.ids['pname{}'.format(i)].text = json_data[str(i)]['web_txt']
+            else:
+                self.root.ids['pname{}'.format(i)].text = ''
+
+        json_data = status['scores']
+        if json_data['status'] == 'error':
+            for i in range(0,4):
+                self.root.ids['pscore{}'.format(i)].update_score('-')
+
+        for i in range(0,4):
+            if str(i) in json_data and i < self.root.player_num:
+                self.root.ids['pscore{}'.format(i)].update_score(str(json_data[str(i)]))
+                if int(json_data[str(i)]) == -10:
+                    self.root.ids['psettings{}'.format(i)].disabled = True
+            elif self.root.game_running is True:
+                self.root.ids['pscore{}'.format(i)].update_score('-')
+                self.root.ids['pname{}'.format(i)].disabled = True
+                self.root.ids['pindirect{}'.format(i)].disabled = True
+                self.root.ids['preferee{}'.format(i)].disabled = True
+
+        if server > -1:
+            player_name = self.root.ids['pname{}'.format(server)].text
+            self.root.ids['pname{}'.format(server)].text = '[color=ff0000]{}[/color]'.format(player_name)
+
+        json_data = status['timer']
+        if 'status' in json_data:
+            if json_data['status'] == 'error':
+                return
+
+        self.root.ids['timerlabel'].text ='{:0>2d}'.format(json_data['minutes']) + ':' + '{:0>2d}'.format(json_data['seconds'])
 
 
 class PlayerActions(Bubble, RootFinderMixin):
@@ -29,6 +126,7 @@ class PlayerActions(Bubble, RootFinderMixin):
         self.size = kwargs['size']
         self.is_paired = kwargs['is_paired']
         self.game_paused = kwargs['is_paused']
+        self.scoreboard_address = kwargs['address']
         self.size_hint = (None, None)
 
         self.add_btn = BubbleButton(on_press=self.add_player,
@@ -49,7 +147,7 @@ class PlayerActions(Bubble, RootFinderMixin):
 
         panel_txt = self.ptxt.text
         web_txt = self.wtxt.text
-        r = requests.post(SCOREBOARD_LOCATION+'/control/pregister',
+        r = requests.post(self.scoreboard_address+'/control/pregister',
                           data={#'playerNum': self.player,
                                 'panelTxt': panel_txt,
                                 'webTxt': web_txt})
@@ -64,10 +162,10 @@ class PlayerActions(Bubble, RootFinderMixin):
         del self.wtxt
 
     def add_player(self, *args):
-        #r = requests.post(SCOREBOARD_LOCATION+'/control/pregister', json=)
+        #r = requests.post(self.scoreboard_address+'/control/pregister', json=)
 
         # build popup contents
-        box = BoxLayout(orientation='vertical')
+        box = BoxLayout(orientation='vertical', spacing=2)
         box.add_widget(Label(text='Full player name:'))
         self.wtxt = TextInput()
         box.add_widget(self.wtxt)
@@ -82,13 +180,13 @@ class PlayerActions(Bubble, RootFinderMixin):
         # build popup and show
         self.popup = Popup(title='Add player',
                            content=box,
-                           size_hint=(0.25, 0.25),
+                           size_hint=(0.4, 0.4),
                            on_dismiss=self._add_dismiss)
         self.find_root().kill_pbubb()
         self.popup.open()
 
     def remove_player(self, *args):
-        r = requests.post(SCOREBOARD_LOCATION+'/control/punregister',
+        r = requests.post(self.scoreboard_address+'/control/punregister',
                           data=('playerNumber={}'.format(self.player)))
 
         self.find_root().kill_pbubb()
@@ -97,7 +195,7 @@ class PlayerActions(Bubble, RootFinderMixin):
 
         if self.is_paired:
             # unpair, easy
-            r = requests.post(SCOREBOARD_LOCATION+'/control/runpair',
+            r = requests.post(self.scoreboard_address+'/control/runpair',
                               data=('playerNumber={}'.format(self.player)))
         else:
             pass
@@ -122,17 +220,28 @@ class RootWidget(FloatLayout):
         self.pbubb_player = None
         self.game_running = False
         self.game_paused = False
+        self.disconnected = True
 
+        self.scoreboard_address = kwargs['address']
         Clock.schedule_interval(self.refresh_status, 1)
 
     def disable_app(self):
-        self.disabled = True
+        #self.disabled = True
+        self.ids['gamectrltab'].disabled = True
+        self.ids['debugtab'].disabled = True
+        self.ids['saveddatatab'].disabled = True
+        self.ids['gamesetuptab'].disabled = True
+        self.disconnected = True
 
     def enable_app(self):
-        self.disabled = False
+        self.ids['gamectrltab'].disabled = False
+        self.ids['debugtab'].disabled = False
+        self.ids['saveddatatab'].disabled = False
+        self.ids['gamesetuptab'].disabled = False
+        self.disconnected = False
 
     def do_pause_unpause(self, *args):
-        r = requests.get(SCOREBOARD_LOCATION+'/control/pauseunpause')
+        r = requests.get(self.scoreboard_address+'/control/pauseunpause')
 
         try:
             status = r.json()
@@ -148,7 +257,7 @@ class RootWidget(FloatLayout):
             popup.open()
 
     def do_start_game(self, *args):
-        r = requests.get(SCOREBOARD_LOCATION+'/control/gbegin')
+        r = requests.get(self.scoreboard_address+'/control/gbegin')
 
         try:
             status = r.json()
@@ -164,7 +273,7 @@ class RootWidget(FloatLayout):
             popup.open()
 
     def do_end_game(self, *args):
-        r = requests.get(SCOREBOARD_LOCATION+'/control/gend')
+        r = requests.get(self.scoreboard_address+'/control/gend')
 
         try:
             status = r.json()
@@ -187,7 +296,7 @@ class RootWidget(FloatLayout):
 
     def do_remove_all(self, *args):
 
-        r = requests.get(SCOREBOARD_LOCATION+'/status/players')
+        r = requests.get(self.scoreboard_address+'/status/players')
 
         try:
             players = r.json()
@@ -198,7 +307,7 @@ class RootWidget(FloatLayout):
         headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
         for player in sorted(players)[::-1]:
             player_data = {'playerNumber' : player}
-            r = requests.post(SCOREBOARD_LOCATION+'/control/punregister', data=player_data, headers=headers)
+            r = requests.post(self.scoreboard_address+'/control/punregister', data=player_data, headers=headers)
 
             try:
                 status = r.json()
@@ -221,7 +330,7 @@ class RootWidget(FloatLayout):
         for p in range(0, player_num):
 
             player_data = {'panelTxt' : player_names[p], 'webTxt' : player_names[p]}
-            r = requests.post(SCOREBOARD_LOCATION+'/control/pregister', data=player_data, headers=headers)
+            r = requests.post(self.scoreboard_address+'/control/pregister', data=player_data, headers=headers)
 
             try:
                 response = r.json()
@@ -234,13 +343,13 @@ class RootWidget(FloatLayout):
             player_num = int(response['playerNum'])
 
             #force pairing
-            r = requests.get(SCOREBOARD_LOCATION+'/debug/fpair/{},{}'.format(player_num, player_num+1))
+            r = requests.get(self.scoreboard_address+'/debug/fpair/{},{}'.format(player_num, player_num+1))
 
     def force_pairing(self):
 
         for p in range(0, self.player_num):
             #force pairing
-            r = requests.get(SCOREBOARD_LOCATION+'/debug/fpair/{},{}'.format(p, p+1))
+            r = requests.get(self.scoreboard_address+'/debug/fpair/{},{}'.format(p, p+1))
 
     def do_sfx_play(self, * args):
 
@@ -250,7 +359,7 @@ class RootWidget(FloatLayout):
         else:
             sfx_name = self.sfx_reverse_list[self.ids['sfxname'].text]
 
-        r = requests.get(SCOREBOARD_LOCATION+'/debug/sfx/{}'.format(sfx_name))
+        r = requests.get(self.scoreboard_address+'/debug/sfx/{}'.format(sfx_name))
 
         try:
             status = r.json()
@@ -262,31 +371,31 @@ class RootWidget(FloatLayout):
             print 'Could not play SFX, got: {}'.format(status['error'])
 
     def do_test_score_1(self, *args):
-        r = requests.get(SCOREBOARD_LOCATION+'/debug/scoretest/0')
+        r = requests.get(self.scoreboard_address+'/debug/scoretest/0')
 
     def do_test_score_2(self, *args):
-        r = requests.get(SCOREBOARD_LOCATION+'/debug/scoretest/1')
+        r = requests.get(self.scoreboard_address+'/debug/scoretest/1')
 
     def do_test_score_3(self, *args):
-        r = requests.get(SCOREBOARD_LOCATION+'/debug/scoretest/2')
+        r = requests.get(self.scoreboard_address+'/debug/scoretest/2')
 
     def do_test_score_4(self, *args):
-        r = requests.get(SCOREBOARD_LOCATION+'/debug/scoretest/3')
+        r = requests.get(self.scoreboard_address+'/debug/scoretest/3')
 
     def do_announce(self, *args):
         heading = self.ids['ann_header'].text[:6]
         text = self.ids['ann_text'].text[:6]
 
-        r = requests.get(SCOREBOARD_LOCATION+'/debug/announce/{},{},{}'.format(heading, text, 2))
+        r = requests.get(self.scoreboard_address+'/debug/announce/{},{},{}'.format(heading, text, 2))
 
     def do_incr_score(self, pnum):
-        r = requests.get(SCOREBOARD_LOCATION+'/debug/sincr/{}'.format(pnum))
+        r = requests.get(self.scoreboard_address+'/debug/sincr/{}'.format(pnum))
 
     def do_decr_score(self, pnum):
-        r = requests.get(SCOREBOARD_LOCATION+'/debug/sdecr/{}'.format(pnum))
+        r = requests.get(self.scoreboard_address+'/debug/sdecr/{}'.format(pnum))
 
     def do_force_serve(self, pnum):
-        r = requests.get(SCOREBOARD_LOCATION+'/debug/pass')
+        r = requests.get(self.scoreboard_address+'/debug/pass')
 
     def do_set_score(self, player):
 
@@ -301,7 +410,7 @@ class RootWidget(FloatLayout):
             self.ids['setscore{}'.format(player)].text = ''
             return
 
-        r = requests.get(SCOREBOARD_LOCATION+'/debug/setscore/{},{}'.format(player, score))
+        r = requests.get(self.scoreboard_address+'/debug/setscore/{},{}'.format(player, score))
 
         try:
             response = r.json()
@@ -312,23 +421,23 @@ class RootWidget(FloatLayout):
             print 'Could not set score, returned {}'.format(response['error'])
 
     def do_set_turn(self, player):
-        r = requests.get(SCOREBOARD_LOCATION+'/debug/setturn/{}'.format(player))
+        r = requests.get(self.scoreboard_address+'/debug/setturn/{}'.format(player))
 
     def do_set_turn_1(self, *args):
-        r = requests.get(SCOREBOARD_LOCATION+'/debug/setturn/0')
+        r = requests.get(self.scoreboard_address+'/debug/setturn/0')
 
     def do_set_turn_2(self, *args):
-        r = requests.get(SCOREBOARD_LOCATION+'/debug/setturn/1')
+        r = requests.get(self.scoreboard_address+'/debug/setturn/1')
 
     def do_set_turn_3(self, *args):
-        r = requests.get(SCOREBOARD_LOCATION+'/debug/setturn/2')
+        r = requests.get(self.scoreboard_address+'/debug/setturn/2')
 
     def do_set_turn_4(self, *args):
-        r = requests.get(SCOREBOARD_LOCATION+'/debug/setturn/3')
+        r = requests.get(self.scoreboard_address+'/debug/setturn/3')
 
     def one_shot_refresh(self):
         try:
-            r = requests.get(SCOREBOARD_LOCATION+'/status/sfxlist')
+            r = requests.get(self.scoreboard_address+'/status/sfxlist')
             status = r.json()
         except:
             print 'error getting SFX List'
@@ -352,7 +461,7 @@ class RootWidget(FloatLayout):
 
         # get game persistance data
         try:
-            r = requests.get(SCOREBOARD_LOCATION+'/persist/game_list')
+            r = requests.get(self.scoreboard_address+'/persist/game_list')
             status = r.json()
         except:
             print 'error getting game persistance'
@@ -364,101 +473,14 @@ class RootWidget(FloatLayout):
         self.ids['gpersist'].disabled = False
 
     def refresh_status(self, *args):
+        #hacky hack
+        updater = PanelUpdater(address=self.scoreboard_address, root=self)
 
-        if self.stop_refreshing is True:
-            return
-
-        # try to contact scoreboard
-        try:
-            r = requests.get(SCOREBOARD_LOCATION+'/status/all', timeout=1)
-            status = r.json()
-            if self.disabled:
-                self.enable_app()
-                self.one_shot_refresh()
-        except (requests.exceptions.ConnectionError,
-                requests.exceptions.ConnectTimeout,
-                requests.exceptions.ReadTimeout):
-            # disable
-            self.disable_app()
-            return
-
-        #first look at board status
-        json_data = status['board']
-        if json_data['status'] == 'error':
-            self.ids['statuslabel'].text = 'Scoreboard ERROR'
-            return
-
-        #get game status
-        json_data = status['game']
-        if json_data['status'] == 'error':
-            self.ids['statuslabel'].text = 'Game ERROR'
-            return
-
-        server = -1
-        if json_data['game'] == 'started':
-            self.game_running = True
-            self.game_paused = False
-            self.ids['statuslabel'].text = 'Running'
-            server = int(json_data['serving'])
-            for i in range(0, 4):
-                self.ids['psettings{}'.format(i)].disabled = False
-                self.ids['pscore{}'.format(i)].disabled = False
-                self.ids['pindirect{}'.format(i)].disabled = False
-                self.ids['preferee{}'.format(i)].disabled = False
-        elif json_data['game'] == 'stopped' or json_data['game'] == 'paused':
-            self.game_running = False
-            if json_data['game'] == 'stopped':
-                self.ids['statuslabel'].text = 'Stopped'
-                self.game_paused = False
-            else:
-                self.ids['statuslabel'].text = 'Paused'
-                self.game_paused = True
-            for i in range(0, 4):
-                self.ids['psettings{}'.format(i)].disabled = False
-                self.ids['pname{}'.format(i)].disabled = False
-                self.ids['pscore{}'.format(i)].disabled = True
-                self.ids['pindirect{}'.format(i)].disabled = True
-                self.ids['preferee{}'.format(i)].disabled = True
-
-        json_data = status['players']
-        self.player_num = len(json_data)
-        self.registered_player_list = json_data
-        for i in range(0,4):
-            if str(i) in json_data:
-                self.ids['pname{}'.format(i)].text = json_data[str(i)]['web_txt']
-            else:
-                self.ids['pname{}'.format(i)].text = ''
-
-        json_data = status['scores']
-        if json_data['status'] == 'error':
-            for i in range(0,4):
-                self.ids['pscore{}'.format(i)].update_score('-')
-
-        for i in range(0,4):
-            if str(i) in json_data and i < self.player_num:
-                self.ids['pscore{}'.format(i)].update_score(str(json_data[str(i)]))
-                if int(json_data[str(i)]) == -10:
-                    self.ids['psettings{}'.format(i)].disabled = True
-            elif self.game_running is True:
-                self.ids['pscore{}'.format(i)].update_score('-')
-                self.ids['pname{}'.format(i)].disabled = True
-                self.ids['pindirect{}'.format(i)].disabled = True
-                self.ids['preferee{}'.format(i)].disabled = True
-
-        if server > -1:
-            player_name = self.ids['pname{}'.format(server)].text
-            self.ids['pname{}'.format(server)].text = '[color=ff0000]{}[/color]'.format(player_name)
-
-        json_data = status['timer']
-        if 'status' in json_data:
-            if json_data['status'] == 'error':
-                return
-
-        self.ids['timerlabel'].text ='{:0>2d}'.format(json_data['minutes']) + ':' + '{:0>2d}'.format(json_data['seconds'])
-
+        updater.start()
+        #updater.join()
 
     def register_scoring_event(self, evt_type, player):
-        r = requests.get(SCOREBOARD_LOCATION+'/control/scoreevt/{},{}'.format(player, evt_type))
+        r = requests.get(self.scoreboard_address+'/control/scoreevt/{},{}'.format(player, evt_type))
 
     # beware of very convoluted logic below
     def handle_player_button(self, player):
@@ -484,7 +506,8 @@ class RootWidget(FloatLayout):
                                        size=bubsize,
                                        is_registered=is_registered,
                                        is_paired=is_paired,
-                                       is_paused=self.game_paused)
+                                       is_paused=self.game_paused,
+                                       address=self.scoreboard_address)
             self.pbubb_open = False
             self.pbubb_player = player
         else:
@@ -516,13 +539,18 @@ class RootWidget(FloatLayout):
                 self.pbubb_open = True
                 self.add_widget(self.pbubb)
 
+    def set_scoreboard_address(self):
+        # do error checking?
+        self.scoreboard_address = 'http://{}:{}'.format(self.ids['scorebrdip'].text,
+                                                        self.ids['scorebrdport'].text)
+
 
 class SimpleboardDebugPanel(App):
 
     def __init__(self, *args, **kwargs):
         super(SimpleboardDebugPanel, self).__init__(*args, **kwargs)
 
-        self.root = RootWidget()
+        self.root = RootWidget(address=kwargs['address'])
 
     def build(self):
         return self.root
@@ -537,9 +565,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    SCOREBOARD_LOCATION = 'http://{}:{}'.format(args.address, args.port)
-
     Builder.load_file('panel.kv')
-    panel = SimpleboardDebugPanel()
+    panel = SimpleboardDebugPanel(address='http://{}:{}'.format(args.address, args.port))
 
     panel.run()
