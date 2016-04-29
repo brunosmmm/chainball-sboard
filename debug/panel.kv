@@ -45,9 +45,10 @@
                     BoxLayout:
                         #GameStatus
                         padding: 5
+                        spacing: 10
                         orientation: 'vertical'
                         BoxLayout:
-                            size_hint_y: 0.2
+                            size_hint_y: 0.1
                             orientation: 'horizontal'
                             Label:
                                 text: 'Game Status:'
@@ -55,7 +56,7 @@
                                 id: statuslabel
                                 text: ''
                         BoxLayout:
-                            size_hint_y: 0.2
+                            size_hint_y: 0.05
                             orientation: 'horizontal'
                             Label:
                                 text: 'Game Timer:'
@@ -63,7 +64,8 @@
                                 id: timerlabel
                                 text: '00:00'
                         BoxLayout:
-                            size_hint_y: 0.1
+                            padding: 5
+                            size_hint_y: 0.05
                             orientation: 'horizontal'
                             Label:
                                 text: 'Player'
