@@ -326,7 +326,11 @@ class WebBoard(object):
         players = {}
         for player in self.game.players:
             if self.game.players[player].registered:
-                players[str(player)] = self.game.players[player].panel_text
+                player_dict = {}
+                player_dict['panel_txt'] = self.game.players[player].panel_text
+                player_dict['web_txt'] = self.game.players[player].web_text
+                player_dict['remote_id'] = self.game.players[player].remote_id
+                players[str(player)] = player_dict
 
         return players
 
