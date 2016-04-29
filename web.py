@@ -1,6 +1,6 @@
 from bottle import route, run, template, static_file, request
 from game.playertxt import PlayerText
-from game.exceptions import PlayerNotRegisteredError, TooManyPlayersError, PlayerAlreadyPairedError, PlayerNotPairedError, GameRunningError, NotEnoughPlayersError, GameNotStartedError, GameAlreadyStarterError, GameAlreadyPausedError, GameNotPausedError
+from game.exceptions import PlayerNotRegisteredError, TooManyPlayersError, PlayerAlreadyPairedError, PlayerNotPairedError, GameRunningError, NotEnoughPlayersError, GameNotStartedError, GameAlreadyStarterError, GameAlreadyPausedError, GameNotPausedError, PlayerRemoteNotPaired
 import logging
 from game.persist import GamePersistData
 from announce.timer import TimerAnnouncement
@@ -48,7 +48,10 @@ class WebBoard(object):
     def begin_game(self):
         try:
             self.game.game_begin()
-        except (NotEnoughPlayersError, GameAlreadyStarterError) as e:
+        except (NotEnoughPlayersError,
+                GameAlreadyStarterError,
+                PlayerNotPairedError,
+                PlayerRemoteNotPaired) as e:
             self.logger.warning('Could not start game: {}'.format(e.message))
             return {'status' : 'error', 'error' : e.message}
 
@@ -352,6 +355,8 @@ class WebBoard(object):
     def get_game_status(self):
 
         if self.game.ongoing:
+            if self.game.paused:
+                return {'status': 'ok', 'game': 'paused'}
             return {'status' : 'ok', 'game' : 'started', 'serving' : self.game.active_player}
         else:
             return {'status' : 'ok', 'game' : 'stopped'}
