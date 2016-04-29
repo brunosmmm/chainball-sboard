@@ -33,7 +33,7 @@ class PlayerActions(Bubble, RootFinderMixin):
 
         self.add_btn = BubbleButton(on_press=self.add_player,
                                     text='Add player',
-                                    disabled=kwargs['is_registered'])
+                                    disabled=kwargs['is_registered'] or kwargs['is_paused'])
         self.rm_btn = BubbleButton(on_press=self.remove_player,
                                    text='Remove player',
                                    disabled=not kwargs['is_registered'] or kwargs['is_paused'])
@@ -50,7 +50,7 @@ class PlayerActions(Bubble, RootFinderMixin):
         panel_txt = self.ptxt.text
         web_txt = self.wtxt.text
         r = requests.post(SCOREBOARD_LOCATION+'/control/pregister',
-                          data={'playerNum': self.player,
+                          data={#'playerNum': self.player,
                                 'panelTxt': panel_txt,
                                 'webTxt': web_txt})
         # get status
@@ -196,7 +196,7 @@ class RootWidget(FloatLayout):
             return
 
         headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
-        for player in players:
+        for player in sorted(players)[::-1]:
             player_data = {'playerNumber' : player}
             r = requests.post(SCOREBOARD_LOCATION+'/control/punregister', data=player_data, headers=headers)
 
