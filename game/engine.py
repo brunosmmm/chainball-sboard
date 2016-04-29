@@ -258,6 +258,33 @@ class ChainballGame(object):
         raise TooManyPlayersError
 
 
+    def _reorganize_players(self):
+
+        for p_id, p_data in self.players.iteritems():
+            if p_data.registered is False:
+
+                # empty slot, move up other players if available
+                for p_num in range(p_id+1, 4):
+                    if self.players[p_num].registered:
+                        # move up
+                        p_data.web_text = self.players[p_num].web_text
+                        p_data.panel_text = self.players[p_num].panel_text
+                        p_data.remote_id = self.players[p_num].remote_id
+                        p_data.registered = True
+
+                        # register panel
+                        self.s_handler.register_player(p_id, p_data.panel_text)
+
+                        # unregister player that has been moved up
+                        self.players[p_num].web_text = None
+                        self.players[p_num].panel_text = None
+                        self.players[p_num].registered = False
+                        self.players[p_num].remote_id = None
+                        self.s_handler.unregister_player(p_num)
+
+                        # done
+                        break
+
     def unregister_players(self, players):
 
         if self.ongoing:
@@ -279,6 +306,8 @@ class ChainballGame(object):
             self.pair_handler.stop_tracking(self.players[player].remote_id)
             self.players[player].remote_id = None
             self.player_count -= 1
+
+        self._reorganize_players()
 
     def game_begin(self):
         self.logger.info('Starting game...')
