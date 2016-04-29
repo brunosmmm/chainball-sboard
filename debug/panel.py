@@ -1,9 +1,14 @@
 from kivy.app import App
 from kivy.uix.floatlayout import FloatLayout
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.button import Button
 from kivy.lang import Builder
 from kivy.clock import Clock
 from kivy.logger import Logger
 from kivy.uix.bubble import Bubble, BubbleButton
+from kivy.uix.popup import Popup
+from kivy.uix.label import Label
+from kivy.uix.textinput import TextInput
 import requests
 import logging
 import json
@@ -22,6 +27,8 @@ class PlayerActions(Bubble, RootFinderMixin):
         self.player = kwargs['player']
         self.pos = kwargs['position']
         self.size = kwargs['size']
+        self.is_paired = kwargs['is_paired']
+        self.game_paused = kwargs['is_paused']
         self.size_hint = (None, None)
 
         self.add_btn = BubbleButton(on_press=self.add_player,
@@ -29,17 +36,56 @@ class PlayerActions(Bubble, RootFinderMixin):
                                     disabled=kwargs['is_registered'])
         self.rm_btn = BubbleButton(on_press=self.remove_player,
                                    text='Remove player',
-                                   disabled=not kwargs['is_registered'])
+                                   disabled=not kwargs['is_registered'] or kwargs['is_paused'])
+        pair_txt = 'Unpair remote' if self.is_paired else 'Pair remote'
         self.pair_btn = BubbleButton(on_press=self.pair_remote,
-                                     text='Pair remote',
+                                     text=pair_txt,
                                      disabled=not kwargs['is_registered'])
         self.add_widget(self.add_btn)
         self.add_widget(self.rm_btn)
         self.add_widget(self.pair_btn)
 
+    def _register_player(self, *args):
+
+        panel_txt = self.ptxt.text
+        web_txt = self.wtxt.text
+        r = requests.post(SCOREBOARD_LOCATION+'/control/pregister',
+                          data={'playerNum': self.player,
+                                'panelTxt': panel_txt,
+                                'webTxt': web_txt})
+        # get status
+
+        # kill popup
+        self.popup.dismiss()
+
+    def _add_dismiss(self, *args):
+        del self.popup
+        del self.ptxt
+        del self.wtxt
+
     def add_player(self, *args):
         #r = requests.post(SCOREBOARD_LOCATION+'/control/pregister', json=)
+
+        # build popup contents
+        box = BoxLayout(orientation='vertical')
+        box.add_widget(Label(text='Full player name:'))
+        self.wtxt = TextInput()
+        box.add_widget(self.wtxt)
+        box.add_widget(Label(text='Panel display name:'))
+        self.ptxt = TextInput()
+        box.add_widget(self.ptxt)
+
+        addbut = Button(text='Add',
+                        on_press=self._register_player)
+        box.add_widget(addbut)
+
+        # build popup and show
+        self.popup = Popup(title='Add player',
+                           content=box,
+                           size_hint=(0.25, 0.25),
+                           on_dismiss=self._add_dismiss)
         self.find_root().kill_pbubb()
+        self.popup.open()
 
     def remove_player(self, *args):
         r = requests.post(SCOREBOARD_LOCATION+'/control/punregister',
@@ -48,6 +94,14 @@ class PlayerActions(Bubble, RootFinderMixin):
         self.find_root().kill_pbubb()
 
     def pair_remote(self, *args):
+
+        if self.is_paired:
+            # unpair, easy
+            r = requests.post(SCOREBOARD_LOCATION+'/control/runpair',
+                              data=('playerNumber={}'.format(self.player)))
+        else:
+            pass
+
         self.find_root().kill_pbubb()
 
 
@@ -67,6 +121,7 @@ class RootWidget(FloatLayout):
         self.pbubb_open = False
         self.pbubb_player = None
         self.game_running = False
+        self.game_paused = False
 
         Clock.schedule_interval(self.refresh_status, 1)
 
@@ -87,6 +142,10 @@ class RootWidget(FloatLayout):
 
         if status['status'] == 'error':
             print 'could not pause/unpause timer, got: {}'.format(status['error'])
+            popup = Popup(title='Error!',
+                          content=Label(text=status['error']),
+                          size_hint=(0.25,0.25))
+            popup.open()
 
     def do_start_game(self, *args):
         r = requests.get(SCOREBOARD_LOCATION+'/control/gbegin')
@@ -99,6 +158,10 @@ class RootWidget(FloatLayout):
 
         if status['status'] == 'error':
             print 'could not start game, got: {}'.format(status['error'])
+            popup = Popup(title='Error!',
+                          content=Label(text=status['error']),
+                          size_hint=(0.25,0.25))
+            popup.open()
 
     def do_end_game(self, *args):
         r = requests.get(SCOREBOARD_LOCATION+'/control/gend')
@@ -111,6 +174,10 @@ class RootWidget(FloatLayout):
 
         if status['status'] == 'error':
             print 'could not stop game, got: {}'.format(status['error'])
+            popup = Popup(title='Error!',
+                          content=Label(text=status['error']),
+                          size_hint=(0.25,0.25))
+            popup.open()
 
     def do_debug_setup2(self, *args):
         self._do_debug_setup(2)
@@ -330,6 +397,7 @@ class RootWidget(FloatLayout):
         server = -1
         if json_data['game'] == 'started':
             self.game_running = True
+            self.game_paused = False
             self.ids['statuslabel'].text = 'Running'
             server = int(json_data['serving'])
             for i in range(0, 4):
@@ -337,9 +405,14 @@ class RootWidget(FloatLayout):
                 self.ids['pscore{}'.format(i)].disabled = False
                 self.ids['pindirect{}'.format(i)].disabled = False
                 self.ids['preferee{}'.format(i)].disabled = False
-        elif json_data['game'] == 'stopped':
+        elif json_data['game'] == 'stopped' or json_data['game'] == 'paused':
             self.game_running = False
-            self.ids['statuslabel'].text = 'Stopped'
+            if json_data['game'] == 'stopped':
+                self.ids['statuslabel'].text = 'Stopped'
+                self.game_paused = False
+            else:
+                self.ids['statuslabel'].text = 'Paused'
+                self.game_paused = True
             for i in range(0, 4):
                 self.ids['psettings{}'.format(i)].disabled = False
                 self.ids['pname{}'.format(i)].disabled = False
@@ -349,10 +422,10 @@ class RootWidget(FloatLayout):
 
         json_data = status['players']
         self.player_num = len(json_data)
-        self.registered_player_list = json_data.keys()
+        self.registered_player_list = json_data
         for i in range(0,4):
             if str(i) in json_data:
-                self.ids['pname{}'.format(i)].text = json_data[str(i)]
+                self.ids['pname{}'.format(i)].text = json_data[str(i)]['web_txt']
             else:
                 self.ids['pname{}'.format(i)].text = ''
 
@@ -402,11 +475,16 @@ class RootWidget(FloatLayout):
             bubpos.append(butpos[0] + butsize[0]/2 - bubsize[0]/2)
             bubpos.append(butpos[1] - butsize[1]/2 + bubsize[1])
 
-            is_registered = str(player) in self.registered_player_list
+            is_registered = str(player) in self.registered_player_list.keys()
+            is_paired = False
+            if is_registered:
+                is_paired = self.registered_player_list[str(player)]['remote_id'] != None
             self.pbubb = PlayerActions(player=player,
                                        position=bubpos,
                                        size=bubsize,
-                                       is_registered=is_registered)
+                                       is_registered=is_registered,
+                                       is_paired=is_paired,
+                                       is_paused=self.game_paused)
             self.pbubb_open = False
             self.pbubb_player = player
         else:
