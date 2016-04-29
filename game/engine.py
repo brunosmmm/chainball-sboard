@@ -322,6 +322,9 @@ class ChainballGame(object):
             if self.players[player].remote_id == None and self.players[player].registered:
                 raise PlayerRemoteNotPaired('Player {} has no remote paired'.format(player))
 
+        # reorder players
+        self._reorganize_players()
+
         #clear scores and prepare data
         player_persist = {}
         for player in self.players:
