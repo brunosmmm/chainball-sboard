@@ -1,10 +1,13 @@
 import logging
 import time
-from score.constants import PlayerServeStates, PLAYER_SERVE_SCORE_TIMEOUT
+from score.constants import PlayerServeStates
+
 
 class PlayerScore(object):
 
-    def __init__(self, handler=None, player_id=None, remote_id=None, autoadv_cb=None):
+    def __init__(self, serve_timeout,
+                 handler=None, player_id=None,
+                 remote_id=None, autoadv_cb=None):
 
         self.initialized = False
 
@@ -30,6 +33,9 @@ class PlayerScore(object):
         # guard attribute score setting
         self.forcing_score = False
 
+        # serve timeout
+        self._serve_timeout = serve_timeout
+
     @classmethod
     def _score_offset(cls, score):
         return score + 10
@@ -46,8 +52,8 @@ class PlayerScore(object):
 
         super(PlayerScore, self).__setattr__(name, value)
 
-        #dont set values in __init__
-        if self.initialized == False:
+        # dont set values in __init__
+        if self.initialized is False:
             return
 
         if name == "is_turn":
@@ -112,7 +118,7 @@ class PlayerScore(object):
             return
 
         if self.serve_state == PlayerServeStates.SCORED:
-            if time.time() - self.score_start_timer > PLAYER_SERVE_SCORE_TIMEOUT:
+            if time.time() - self.score_start_timer > self._serve_timeout:
                 #autoadvance
                 self.logger.debug('Scoring window closed for player {}, advancing'.format(self.pid))
                 if self.autoadvance_callback:

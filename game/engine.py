@@ -14,8 +14,6 @@ from game.constants import GameTurnActions, MasterRemoteActions
 from game.sfxmapper import SFXMapping, SFXMappingLoadFailed, SFXUnknownEvent, SFXMappableEvents
 from game.config import ChainballGameConfiguration
 
-#remote pairing timeout in seconds
-GAME_PAIRING_TIMEOUT = 30
 
 class MasterRemote(object):
 
@@ -63,7 +61,10 @@ class ChainballGame(object):
         self.ptimer_handler = TimerHandler(self.game_timeout, self, False)
 
         #create player dictionary
-        self.players = dict([(x, PlayerScore(self.s_handler, x, autoadv_cb=self.game_pass_turn)) for x in range(4)])
+        self.players = dict([(x, PlayerScore(self.game_config.serve_timeout,
+                                             self.s_handler,
+                                             x,
+                                             autoadv_cb=self.game_pass_turn)) for x in range(4)])
         self.player_count = 0
 
         #game persistance
@@ -118,7 +119,7 @@ class ChainballGame(object):
         if self.m_remote.remote_id != None:
             raise MasterRemoteAlreadyPairedError('Already paired to {}'.format(self.m_remote.remote_id))
         #pair
-        self.pair_handler.start_pair("master")
+        self.pair_handler.start_pair("master", self.game_config.pair_timeout)
 
     def unpair_master(self):
 
@@ -137,7 +138,7 @@ class ChainballGame(object):
             raise PlayerAlreadyPairedError('Already paired to {}'.format(self.players[player].remote_id))
 
         #start pairing
-        self.pair_handler.start_pair(player)
+        self.pair_handler.start_pair(player, self.game_config.pair_timeout)
 
     def pair_end(self, player, remote_id):
 
@@ -644,7 +645,7 @@ class ChainballGame(object):
         player, other_player = self.players[players[0]], self.players[players[1]]
 
         #save temporary
-        temp_player = PlayerScore()
+        temp_player = PlayerScore(self.game_config.serve_timeout)
         temp_player.copy(self.players[players[0]])
         #temp_player.handler = None
         #temp_player.pid = player.pid

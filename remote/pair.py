@@ -1,6 +1,7 @@
 import time
 import logging
-from remote.constants import RemotePairStates, RemotePairFailureType, PAIRING_TIMEOUT
+from remote.constants import RemotePairStates, RemotePairFailureType
+
 
 class RemotePairHandler(object):
 
@@ -15,10 +16,10 @@ class RemotePairHandler(object):
         self.fail_reason = None
         self.pair_track = {}
 
-    def start_pair(self, player, timeout=PAIRING_TIMEOUT):
+    def start_pair(self, player, pair_timeout):
         self.logger.info('Pairing remote for player {}'.format(player))
         self.timer = time.time()
-        self.timeout = timeout
+        self.timeout = pair_timeout
         self.player_pair = player
         self.fail_reason = None
         self.state = RemotePairStates.RUNNING
