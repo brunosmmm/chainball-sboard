@@ -246,11 +246,11 @@ class RootWidget(FloatLayout):
         try:
             status = r.json()
         except:
-            print 'could not parse response'
+            print('could not parse response')
             return
 
         if status['status'] == 'error':
-            print 'could not pause/unpause timer, got: {}'.format(status['error'])
+            print('could not pause/unpause timer, got: {}'.format(status['error']))
             popup = Popup(title='Error!',
                           content=Label(text=status['error']),
                           size_hint=(0.25,0.25))
@@ -262,11 +262,11 @@ class RootWidget(FloatLayout):
         try:
             status = r.json()
         except:
-            print 'could not parse response'
+            print('could not parse response')
             return
 
         if status['status'] == 'error':
-            print 'could not start game, got: {}'.format(status['error'])
+            print('could not start game, got: {}'.format(status['error']))
             popup = Popup(title='Error!',
                           content=Label(text=status['error']),
                           size_hint=(0.25,0.25))
@@ -278,11 +278,11 @@ class RootWidget(FloatLayout):
         try:
             status = r.json()
         except:
-            print 'could not parse response'
+            print ('could not parse response')
             return
 
         if status['status'] == 'error':
-            print 'could not stop game, got: {}'.format(status['error'])
+            print ('could not stop game, got: {}'.format(status['error']))
             popup = Popup(title='Error!',
                           content=Label(text=status['error']),
                           size_hint=(0.25,0.25))
@@ -301,7 +301,7 @@ class RootWidget(FloatLayout):
         try:
             players = r.json()
         except Exception:
-            print 'could not remove players'
+            print ('could not remove players')
             return
 
         headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
@@ -312,11 +312,11 @@ class RootWidget(FloatLayout):
             try:
                 status = r.json()
             except Exception:
-                print 'Could not unregister player {}'.format(player)
+                print ('Could not unregister player {}'.format(player))
                 continue
 
             if status['status'] == 'error':
-                print 'Could not unregister player {}, got: {}'.format(player, status['error'])
+                print ('Could not unregister player {}, got: {}'.format(player, status['error']))
                 continue
 
     def _do_debug_setup(self, player_num):
@@ -337,7 +337,7 @@ class RootWidget(FloatLayout):
                 if response['status'] == 'error':
                     raise Exception
             except Exception:
-                print 'Could not setup successfully, returned: {}'.format(response['error'])
+                print ('Could not setup successfully, returned: {}'.format(response['error']))
                 continue
 
             player_num = int(response['playerNum'])
@@ -364,11 +364,11 @@ class RootWidget(FloatLayout):
         try:
             status = r.json()
         except:
-            print 'could not parse response'
+            print ('could not parse response')
             return
 
         if status['status'] == 'error':
-            print 'Could not play SFX, got: {}'.format(status['error'])
+            print ('Could not play SFX, got: {}'.format(status['error']))
 
     def do_test_score_1(self, *args):
         r = requests.get(self.scoreboard_address+'/debug/scoretest/0')
@@ -402,11 +402,11 @@ class RootWidget(FloatLayout):
         try:
             score = int(self.ids['pscore{}'.format(player)].text)
         except (TypeError, ValueError):
-            print 'Invalid score input'
+            print ('Invalid score input')
             return
 
         if score > 5 or score < -10:
-            print 'Invalid score input'
+            print ('Invalid score input')
             self.ids['setscore{}'.format(player)].text = ''
             return
 
@@ -418,7 +418,7 @@ class RootWidget(FloatLayout):
             return
 
         if response['status'] == 'error':
-            print 'Could not set score, returned {}'.format(response['error'])
+            print ('Could not set score, returned {}'.format(response['error']))
 
     def do_set_turn(self, player):
         r = requests.get(self.scoreboard_address+'/debug/setturn/{}'.format(player))
@@ -440,11 +440,11 @@ class RootWidget(FloatLayout):
             r = requests.get(self.scoreboard_address+'/status/sfxlist')
             status = r.json()
         except:
-            print 'error getting SFX List'
+            print ('error getting SFX List')
             return
 
         if status['status'] != 'ok':
-            print 'error getting SFX List'
+            print ('error getting SFX List')
             return
 
         self.sfx_list = status['sfx_list']
@@ -464,7 +464,7 @@ class RootWidget(FloatLayout):
             r = requests.get(self.scoreboard_address+'/persist/game_list')
             status = r.json()
         except:
-            print 'error getting game persistance'
+            print ('error getting game persistance')
             return
 
         self.game_persist_list = status['game_list']
