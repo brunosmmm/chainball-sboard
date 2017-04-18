@@ -356,10 +356,17 @@ class WebBoard(object):
 
         if self.game.ongoing:
             if self.game.paused:
-                return {'status': 'ok', 'game': 'paused'}
-            return {'status' : 'ok', 'game' : 'started', 'serving' : self.game.active_player}
+                return {'status': 'ok',
+                        'game': 'paused',
+                        'game_id' : self.game.g_persist.current_game_series}
+            return {'status' : 'ok',
+                    'game' : 'started',
+                    'serving' : self.game.active_player,
+                    'game_id' : self.game.g_persist.current_game_series}
         else:
-            return {'status' : 'ok', 'game' : 'stopped'}
+            return {'status' : 'ok',
+                    'game' : 'stopped',
+                    'game_id' : self.game.g_persist.current_game_series}
 
     def pause_unpause(self):
 

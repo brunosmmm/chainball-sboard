@@ -51,12 +51,14 @@ class PanelUpdater(Thread):
         json_data = status['game']
         if json_data['status'] == 'error':
             self.root.ids['statuslabel'].text = 'Game ERROR'
+            self.root.ids['gidlabel'].text = '???'
             return
 
         server = -1
         if json_data['game'] == 'started':
             self.root.game_running = True
             self.root.game_paused = False
+            self.root.ids['gidlabel'].text = str(json_data['game_id'])
             self.root.ids['statuslabel'].text = 'Running'
             server = int(json_data['serving'])
             for i in range(0, 4):
@@ -65,6 +67,7 @@ class PanelUpdater(Thread):
                 self.root.ids['pindirect{}'.format(i)].disabled = False
                 self.root.ids['preferee{}'.format(i)].disabled = False
         elif json_data['game'] == 'stopped' or json_data['game'] == 'paused':
+            self.root.ids['gidlabel'].text = str(json_data['game_id'])
             self.root.game_running = False
             if json_data['game'] == 'stopped':
                 self.root.ids['statuslabel'].text = 'Stopped'
