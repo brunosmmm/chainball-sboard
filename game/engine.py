@@ -584,7 +584,7 @@ class ChainballGame(object):
             return
 
         if self.paused or not self.ongoing:
-                return
+            return
 
         if self.players[player].current_score < 5 and self.players[player].score_diff < 2:
             self.players[player].current_score += 1
@@ -593,7 +593,17 @@ class ChainballGame(object):
             # update persistance data
             self.g_persist.update_current_score(player,
                                                 self.players[player].current_score,
-                                                forced_update=referee_event)
+                                                forced_update=referee_event,
+                                                game_time=self.get_running_time())
+
+    def game_force_score(self, player, score):
+        self.players[player].force_score(score)
+
+        if self.ongoing is True:
+            # update persistance data
+            self.g_persist.force_current_score(player,
+                                               score,
+                                               game_time=self.get_running_time())
 
     def game_set_score(self, player, score):
         self.players[player].current_score = score
@@ -601,7 +611,9 @@ class ChainballGame(object):
         if self.ongoing is True:
             # update persistance data
             self.g_persist.update_current_score(player,
-                                                score)
+                                                score,
+                                                forced_update=False,
+                                                game_time=self.get_running_time())
 
     def _game_decode_remote(self, message):
 

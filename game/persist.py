@@ -36,6 +36,7 @@ class GamePersistStates(object):
 
 class GameEventTypes(object):
     SCORE_CHANGE = 'SCORE_CHANGE'
+    SCORE_FORCED = 'SCORE_FORCED'
     COWOUT = 'COWOUT'
     GAME_END = 'GAME_END'
     GAME_PAUSE = 'GAME_PAUSE'
@@ -81,6 +82,23 @@ class GamePersistData(object):
         else:
             if self.data_change_handler:
                 self.data_change_handler()
+
+    def force_score(self, player, score, game_time=None):
+
+        if player not in self.player_data:
+            raise KeyError('Invalid Player')
+
+            if self.game_state == GamePersistStates.FINISHED:
+                raise CannotModifyScoresError('Game has finished')
+
+        old_score = self.player_data[player].score
+        self.player_data[player].update_score(score)
+
+        self.log_event(GameEventTypes.SCORE_FORCED,
+                       {'player': player,
+                        'old_score': old_score,
+                        'new_score': score,
+                        'gtime': game_time})
 
     def end_game(self, reason, winner, running_time, remaining_time):
 
@@ -200,6 +218,15 @@ class GamePersistance(object):
                                                               score,
                                                               forced_update,
                                                               game_time)
+        except:
+            self.logger.error('could not update score:'
+            'player {}, score: {}, forced: {}'.format(player, score, forced_update))
+
+    def force_current_score(self, player, score, game_time):
+        try:
+            self.game_history[self.current_game].force_score(player,
+                                                             score,
+                                                             game_time)
         except:
             pass
 
