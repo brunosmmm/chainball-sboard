@@ -5,6 +5,7 @@ import logging
 _SCORE_ANNOUNCE_INTVAL_DEFAULT = 5
 _PAIR_TIMEOUT_DEFAULT = 30
 _SERVE_TIMEOUT_DEFAULT = 3
+_GAME_DURATION_DEFAULT = 20
 
 
 class ChainballGameConfiguration(object):
@@ -15,6 +16,7 @@ class ChainballGameConfiguration(object):
         self.score_announce_interval = _SCORE_ANNOUNCE_INTVAL_DEFAULT
         self.pair_timeout = _PAIR_TIMEOUT_DEFAULT
         self.serve_timeout = _SERVE_TIMEOUT_DEFAULT
+        self.game_duration = _GAME_DURATION_DEFAULT
 
     def load_config(self, filename):
 
@@ -34,3 +36,6 @@ class ChainballGameConfiguration(object):
 
         if 'serveTimeout' in config_data:
             self.serve_timeout = int(config_data['serveTimeout'])
+
+        if 'gameDurationMinutes' in config_data:
+            self.game_duration = int(config_data['gameDurationMinutes'])

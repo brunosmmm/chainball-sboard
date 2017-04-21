@@ -341,8 +341,8 @@ class ChainballGame(object):
         self.paused = False
         self.game_set_active_player(0)
 
-        self.timer_handler.start(20)
-        self.ptimer_handler.start(20)
+        self.timer_handler.start(self.game_config.game_duration)
+        self.ptimer_handler.start(self.game_config.game_duration)
 
         self.timer_handler.announcement(TimerAnnouncement("Game", "START"), 2)
         self.logger.info('Game started')
