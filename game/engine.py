@@ -441,12 +441,13 @@ class ChainballGame(object):
 
         self.timer_handler.stop()
         self.ptimer_handler.stop()
-        self.ongoing = False
 
         self.g_persist.end_game(reason,
                                 winner,
                                 self.get_running_time(),
                                 self.get_remaining_time())
+
+        self.ongoing = False
         self.game_uuid = None
 
         self.logger.info('Game stopped')
