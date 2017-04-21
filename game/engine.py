@@ -559,7 +559,8 @@ class ChainballGame(object):
             #update persistance data
             self.g_persist.update_current_score(player,
                                                 self.players[player].current_score,
-                                                forced_update=referee_event)
+                                                forced_update=referee_event,
+                                                game_time=self.get_running_time())
 
             #check here if we have reached -10
             if self.players[player].current_score == -10:

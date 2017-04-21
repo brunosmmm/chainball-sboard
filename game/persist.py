@@ -63,7 +63,7 @@ class GamePersistData(object):
         #if self.data_change_handler:
         #    self.data_change_handler()
 
-    def update_score(self, player, score, forced_update=False):
+    def update_score(self, player, score, forced_update=False, game_time=None):
 
         if player not in self.player_data:
             raise KeyError('Invalid Player')
@@ -76,7 +76,8 @@ class GamePersistData(object):
         if forced_update is False:
             self.log_event(GameEventTypes.SCORE_CHANGE,
                            {'player': player,
-                            'new_score': score})
+                            'new_score': score,
+                            'gtime': game_time})
         else:
             if self.data_change_handler:
                 self.data_change_handler()
@@ -193,9 +194,12 @@ class GamePersistance(object):
         except:
             pass
 
-    def update_current_score(self, player, score, forced_update):
+    def update_current_score(self, player, score, forced_update, game_time):
         try:
-            self.game_history[self.current_game].update_score(player, score, forced_update)
+            self.game_history[self.current_game].update_score(player,
+                                                              score,
+                                                              forced_update,
+                                                              game_time)
         except:
             pass
 
