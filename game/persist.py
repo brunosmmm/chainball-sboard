@@ -81,11 +81,13 @@ class GamePersistData(object):
             if self.data_change_handler:
                 self.data_change_handler()
 
-    def end_game(self, reason, winner):
+    def end_game(self, reason, winner, running_time, remaining_time):
 
         self.game_state = GamePersistStates.FINISHED
         self.log_event(GameEventTypes.GAME_END, {'reason': reason,
-                                                 'winner': winner})
+                                                 'winner': winner,
+                                                 'gtime': running_time,
+                                                 'rtime': remaining_time})
         #if self.data_change_handler:
         #    self.data_change_handler()
 
@@ -175,9 +177,12 @@ class GamePersistance(object):
         except:
             pass
 
-    def end_game(self, reason, winner):
+    def end_game(self, reason, winner, running_time, remaining_time):
         try:
-            self.game_history[self.current_game].end_game(reason, winner)
+            self.game_history[self.current_game].end_game(reason,
+                                                          winner,
+                                                          running_time,
+                                                          remaining_time)
         except:
             pass
         self.current_game = None

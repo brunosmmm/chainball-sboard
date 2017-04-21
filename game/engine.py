@@ -443,7 +443,10 @@ class ChainballGame(object):
         self.ptimer_handler.stop()
         self.ongoing = False
 
-        self.g_persist.end_game(reason, winner)
+        self.g_persist.end_game(reason,
+                                winner,
+                                self.get_running_time(),
+                                self.get_remaining_time())
         self.game_uuid = None
 
         self.logger.info('Game stopped')
@@ -500,7 +503,8 @@ class ChainballGame(object):
         #create event in persistance
         if force_serve is True:
             self.g_persist.log_event(GameEventTypes.FORCE_SERVE,
-                                     {'player': int(self.active_player)})
+                                     {'player': int(self.active_player),
+                                      'gtime': self.get_running_time()})
 
         #announce score deltas
         self.announce_player_deltas(0)
@@ -560,7 +564,8 @@ class ChainballGame(object):
             if self.players[player].current_score == -10:
                 #player is out of the game
                 self.g_persist.log_event(GameEventTypes.COWOUT,
-                                         {'player': player})
+                                         {'player': player,
+                                          'gtime': self.get_running_time()})
                 #self.game_player_out(player)
                 return
 
@@ -713,37 +718,45 @@ class ChainballGame(object):
 
         if evt_type == 'deadball':
             self.g_persist.log_event(GameEventTypes.DEADBALL,
-                                     {'player': int(player)})
+                                     {'player': int(player),
+                                      'gtime': self.get_running_time()})
             self.game_pass_turn()
         elif evt_type == 'chainball':
             self.g_persist.log_event(GameEventTypes.CHAINBALL,
-                                     {'player': int(player)})
+                                     {'player': int(player),
+                                      'gtime': self.get_running_time()})
             self.game_increment_score(int(player), referee_event=True)
         elif evt_type == 'jailbreak':
             self.g_persist.log_event(GameEventTypes.JAILBREAK,
-                                     {'player': int(player)})
+                                     {'player': int(player),
+                                      'gtime': self.get_running_time()})
             self.game_increment_score(int(player), referee_event=True)
             self.game_increment_score(int(player), referee_event=True)
         elif evt_type == 'ratmeat':
             self.g_persist.log_event(GameEventTypes.RATMEAT,
-                                     {'player': int(player)})
+                                     {'player': int(player),
+                                      'gtime': self.get_running_time()})
             self.game_decrement_score(int(player), referee_event=True)
         elif evt_type == 'mudskipper':
             self.g_persist.log_event(GameEventTypes.MUDSKIPPER,
-                                     {'player': int(player)})
+                                     {'player': int(player),
+                                      'gtime': self.get_running_time()})
             self.game_decrement_score(int(player), referee_event=True)
         elif evt_type == 'sailormoon':
             self.g_persist.log_event(GameEventTypes.SAILORMOON,
-                                     {'player': int(player)})
+                                     {'player': int(player),
+                                      'gtime': self.get_running_time()})
             self.game_decrement_score(int(player), referee_event=True)
             self.game_decrement_score(int(player), referee_event=True)
         elif evt_type == 'doublefault':
             self.g_persist.log_event(GameEventTypes.DOUBLEFAULT,
-                                     {'player': int(player)})
+                                     {'player': int(player),
+                                      'gtime': self.get_running_time()})
             self.game_decrement_score(int(player), referee_event=True)
         elif evt_type == 'slowpoke':
             self.g_persist.log_event(GameEventTypes.SLOWPOKE,
-                                     {'player': int(player)})
+                                     {'player': int(player),
+                                      'gtime': self.get_running_time()})
             self.game_decrement_score(int(player), referee_event=True)
 
     def game_loop(self):
