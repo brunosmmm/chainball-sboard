@@ -143,6 +143,9 @@
                                     Button:
                                         text: 'DF'
                                         on_press: root.register_scoring_event('doublefault', 0)
+                                    Button:
+                                        text: 'SP'
+                                        on_press: root.register_scoring_event('slowpoke', 0)
                             BoxLayout:
                                 spacing: 10
                                 id: psettings1
@@ -196,6 +199,9 @@
                                     Button:
                                         text: 'DF'
                                         on_press: root.register_scoring_event('doublefault', 1)
+                                    Button:
+                                        text: 'SP'
+                                        on_press: root.register_scoring_event('slowpoke', 1)
                             BoxLayout:
                                 orientation: 'horizontal'
                                 id: psettings2
@@ -249,6 +255,9 @@
                                     Button:
                                         text: 'DF'
                                         on_press: root.register_scoring_event('doublefault', 2)
+                                    Button:
+                                        text: 'SP'
+                                        on_press: root.register_scoring_event('slowpoke', 2)
                             BoxLayout:
                                 orientation: 'horizontal'
                                 id: psettings3
@@ -302,6 +311,9 @@
                                     Button:
                                         text: 'DF'
                                         on_press: root.register_scoring_event('doublefault', 3)
+                                    Button:
+                                        text: 'SP'
+                                        on_press: root.register_scoring_event('slowpoke', 3)
         TabbedPanelItem:
             text: 'Game setup'
             id: gamesetuptab

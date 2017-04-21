@@ -722,6 +722,10 @@ class ChainballGame(object):
             self.g_persist.log_event(GameEventTypes.DOUBLEFAULT,
                                      {'player': int(player)})
             self.game_decrement_score(int(player), referee_event=True)
+        elif evt_type == 'slowpoke':
+            self.g_persist.log_event(GameEventTypes.SLOWPOKE,
+                                     {'player': int(player)})
+            self.game_decrement_score(int(player), referee_event=True)
 
     def game_loop(self):
 

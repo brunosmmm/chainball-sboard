@@ -48,6 +48,7 @@ class GameEventTypes(object):
     CHAINBALL = 'CHAINBALL'
     JAILBREAK = 'JAILBREAK'
     DOUBLEFAULT = 'DOUBLEFAULT'
+    SLOWPOKE = 'SLOWPOKE'
 
 class GamePersistData(object):
 
