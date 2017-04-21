@@ -204,7 +204,7 @@ class GamePersistance(object):
         # save game series number
         try:
             with open('data/persist/game.json', 'w') as f:
-                json.dump({'current_series': self.current_game_series}, f)
+                json.dump({'current_series': self.current_game_series}, f, indent=4)
         except:
             self.logger.error('Could not save overall game persistance state')
 
@@ -213,7 +213,7 @@ class GamePersistance(object):
         try:
             with open(file_name, 'w') as f:
                 #f.write(self.game_history[self.current_game].to_JSON())
-                json.dump(self.game_history[self.current_game].to_JSON(), f)
+                json.dump(self.game_history[self.current_game].to_JSON(), f, indent=4)
         except:
             self.logger.error('Could not save game persistance data')
             #raise
