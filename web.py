@@ -1,4 +1,4 @@
-from bottle import route, run, template, static_file, request
+from bottle import route, run, template, static_file, request, Response
 from game.playertxt import PlayerText
 from game.exceptions import PlayerNotRegisteredError, TooManyPlayersError, PlayerAlreadyPairedError, PlayerNotPairedError, GameRunningError, NotEnoughPlayersError, GameNotStartedError, GameAlreadyStarterError, GameAlreadyPausedError, GameNotPausedError, PlayerRemoteNotPaired
 import logging
@@ -412,6 +412,26 @@ class WebBoard(object):
         return {'status': 'ok',
                 'data': game_data}
 
+    def dump_game_readable(self, game_uuid):
+
+        game_data = self.dump_game_data(game_uuid)
+
+        if game_data['status'] == 'error':
+            return 'ERROR'
+        game_data = game_data['data']
+
+        #TODO add game number
+        player_data = game_data['player_data']
+        event_list = game_data['events']
+
+        return template('dump',
+                        player_data=player_data,
+                        event_list=event_list,
+                        internal_id=game_uuid,
+                        user_game_id=0)
+
+    def dump_game_range(self, start_)
+
     def score_evt(self, player, evt_type):
         self.game.scoring_evt(player, evt_type)
 
@@ -476,7 +496,8 @@ class WebBoard(object):
 
         #persistance
         route('/persist/game_list')(self.get_persist_list)
-        route('/persist/dump_game/<game_uuid>')(self.dump_game_data)
+        route('/persist/dump_raw/<game_uuid>')(self.dump_game_data)
+        route('/persist/dump_game/<game_uuid>')(self.dump_game_readable)
 
         if self.bind_all:
             bind_to = '0.0.0.0'
