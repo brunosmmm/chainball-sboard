@@ -430,7 +430,8 @@ class WebBoard(object):
                         internal_id=game_uuid,
                         user_game_id=0)
 
-    def dump_game_range(self, start_)
+    def dump_game_range(self, start_uuid, count):
+        pass
 
     def score_evt(self, player, evt_type):
         self.game.scoring_evt(player, evt_type)
