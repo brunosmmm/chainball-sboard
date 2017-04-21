@@ -500,7 +500,7 @@ class ChainballGame(object):
         #create event in persistance
         if force_serve is True:
             self.g_persist.log_event(GameEventTypes.FORCE_SERVE,
-                                     'player {}'.format(self.active_player))
+                                     {'player': int(self.active_player)})
 
         #announce score deltas
         self.announce_player_deltas(0)
