@@ -1,0 +1,43 @@
+{
+    "scoringEvents" :
+    {
+        "DEADBALL":
+        {
+            "scoreDelta": 0,
+            "friendlyName": "Dead Ball"
+        },
+        "MUDSKIPPER":
+        {
+            "scoreDelta": -1,
+            "friendlyName": "Mud Skipper"
+        },
+        "RATMEAT":
+        {
+            "scoreDelta": -1,
+            "friendlyName": "Rat Meat"
+        },
+        "SAILORMOON":
+        {
+            "scoreDelta": -2,
+            "friendlyName": "Sailor Moon"
+        },
+        "CHAINBALL":
+        {
+            "scoreDelta": 1,
+            "friendlyName": "Chain Ball"
+        },
+        "JAILBREAK":
+        {
+            "scoreDelta": 2,
+            "friendlyName": "Jailbreak"
+        },
+        "DOUBLEFAULT":
+        {
+            "scoreDelta": -2,
+            "friendlyName": "Double Fault"
+        }
+    },
+
+    "gameDurationMinutes": 20,
+    "serveTimeoutSeconds": 3
+}
