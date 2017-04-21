@@ -72,11 +72,13 @@ class GamePersistData(object):
             if self.game_state == GamePersistStates.FINISHED:
                 raise CannotModifyScoresError('Game has finished')
 
+        old_score = self.player_data[player].score
         self.player_data[player].update_score(score)
 
         if forced_update is False:
             self.log_event(GameEventTypes.SCORE_CHANGE,
                            {'player': player,
+                            'old_score': old_score,
                             'new_score': score,
                             'gtime': game_time})
         else:
