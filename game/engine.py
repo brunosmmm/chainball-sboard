@@ -347,6 +347,25 @@ class ChainballGame(object):
         self.timer_handler.announcement(TimerAnnouncement("Game", "START"), 2)
         self.logger.info('Game started')
 
+    def get_remaining_time(self):
+        """Get remaining time in seconds"""
+        if self.ongoing is False:
+            return None
+
+        minutes, seconds = self.timer_handler.get_remaining_time()
+
+        return minutes*60 + seconds
+
+    def get_running_time(self):
+        """Get running time in seconds"""
+        if self.ongoing is False:
+            return None
+
+        #duration in seconds
+        duration = self.game_config.game_duration*60
+
+        return duration - self.get_remaining_time()
+
     def find_high_score(self):
         winner_score = -10
         winner_player = 0

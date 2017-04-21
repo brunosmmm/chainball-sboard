@@ -216,8 +216,7 @@ class TimerHandler(object):
     def poweron_matrix(self):
         self.powered_off = False
 
-    def refresh_matrix(self):
-
+    def get_remaining_time(self):
         timer = self.timer_end - datetime.datetime.now()
 
         #wtf
@@ -228,7 +227,10 @@ class TimerHandler(object):
             hours, remainder = divmod(timer.seconds, 3600)
             minutes, seconds = divmod(remainder, 60)
 
-        self.draw(minutes, seconds)
+        return (minutes, seconds)
+
+    def refresh_matrix(self):
+        self.draw(*self.get_remaining_time())
 
     #hack hack hack hack
     def announcement(self, announcement, duration):
