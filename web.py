@@ -1,4 +1,4 @@
-from bottle import route, run, template, static_file, request, response, Response, HeaderDict
+from bottle import route, run, template, static_file, request, response, Response, HeaderDict, default_app, ServerAdapter
 from game.playertxt import PlayerText
 from game.exceptions import PlayerNotRegisteredError, TooManyPlayersError, PlayerAlreadyPairedError, PlayerNotPairedError, GameRunningError, NotEnoughPlayersError, GameNotStartedError, GameAlreadyStarterError, GameAlreadyPausedError, GameNotPausedError, PlayerRemoteNotPaired
 import logging
@@ -600,4 +600,5 @@ class WebBoard(object):
         else:
             bind_to = '127.0.0.1'
 
-        run(host=bind_to, port=self.port)
+        #better server
+        run(host=bind_to, port=self.port, server='cherrypy')
