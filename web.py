@@ -1,4 +1,4 @@
-from bottle import route, run, template, static_file, request, Response
+from bottle import route, run, template, static_file, request, response, Response, HeaderDict
 from game.playertxt import PlayerText
 from game.exceptions import PlayerNotRegisteredError, TooManyPlayersError, PlayerAlreadyPairedError, PlayerNotPairedError, GameRunningError, NotEnoughPlayersError, GameNotStartedError, GameAlreadyStarterError, GameAlreadyPausedError, GameNotPausedError, PlayerRemoteNotPaired
 import logging
@@ -425,14 +425,87 @@ class WebBoard(object):
         player_data = game_data['player_data']
         event_list = game_data['events']
 
-        return template('dump',
-                        player_data=player_data,
-                        event_list=event_list,
-                        internal_id=game_uuid,
-                        user_game_id=0)
+        #prevent exceptions
+        try:
+            ret = template('dump',
+                           player_data=player_data,
+                           event_list=event_list,
+                           internal_id=game_uuid,
+                           user_game_id=0,
+                           evt_info_gen=self.generate_event_info_field)
+        except Exception as ex:
+            self.logger.error('Caught exception in dump_game_readable: {}'.format(repr(ex)))
+            return Response('An error occured while processing this request', status=500)
+
+        return ret
 
     def dump_game_range(self, start_uuid, count):
-        pass
+        #dump a csv representation
+
+        def uuid_from_int(uuid):
+            return '{0:06d}'.format(uuid)
+
+        def timestamp_from_seconds(seconds):
+            return '{:02d}:{:02d}'.format(seconds/60, seconds%60)
+
+        # TODO: there are a lot of inconsistencies between player id, using both string
+        # and integers
+        def get_event_player(event, game):
+            if 'player' in event['evt_desc']:
+                id = event['evt_desc']['player']
+                return game['player_data'][str(id)]['display_name']
+            else:
+                return '-'
+
+        if start_uuid not in self.game.g_persist.game_history:
+            return Response(body='Game Identifier ID not found', status=500)
+
+        #check range
+
+        if uuid_from_int(int(start_uuid) + int(count) - 1) not in self.game.g_persist.game_history:
+            response.status = 500
+            return 'ERROR: Provided range is out of bounds'
+
+        #dump
+        game_dumps = []
+        for uuid in range(int(start_uuid), int(start_uuid)+int(count)):
+            game_dump = []
+
+            #re-use json data for consistency between dump modes
+            game_info = self.dump_game_data(uuid_from_int(uuid))['data']
+
+            #manually construct a bunch of lists
+            game_dump.append(['INTERNAL_GAME_ID', uuid])
+            game_dump.append(['USER_GAME_ID', 0]) #TODO: 0 is a placeholder
+            # first "table"
+            game_dump.append(['PLAYER_ID', 'PLAYER_NAME', 'PLAYER_SCORE'])
+            # dump player info
+            for player_id, player_data in sorted(game_info['player_data'].iteritems()):
+                game_dump.append([str(int(player_id)+1),
+                                  player_data['display_name'],
+                                  player_data['score']])
+            # second table
+            game_dump.append(['EVENT_TYPE', 'EVENT_TIMESTAMP', 'EVENT_PLAYER', 'EVENT_INFO'])
+            for event in game_info['events']:
+                game_dump.append([event['evt_type'],
+                                  timestamp_from_seconds(event['evt_desc']['gtime']),
+                                  get_event_player(event, game_info),
+                                  self.generate_event_info_field(event)])
+
+            #add everything together
+            game_dumps.extend(game_dump)
+
+        #make one big csv file
+        csv_lines = [','.join([str(y) for y in x]) for x in game_dumps]
+        csv_all = '\n'.join(csv_lines)
+
+        #headers = {}
+        response.headers['Content-Type'] = 'text/csv; charset=UTF-8'
+        response.headers['Content-Disposition'] = 'attachment; '\
+                                                  'filename=cbot_dump_{}_{}.csv'.format(start_uuid,
+                                                                                        uuid_from_int(int(start_uuid)+int(count)))
+
+        return csv_all
 
     def score_evt(self, player, evt_type):
         self.game.scoring_evt(player, evt_type)
@@ -444,6 +517,26 @@ class WebBoard(object):
     def get_remote_data(self):
         return {'status': 'ok',
                 'remote_data': PERSISTENT_REMOTE_DATA.get_remote_persist()}
+
+    def generate_event_info_field(self, event):
+
+        if 'evt_desc' not in event:
+            raise KeyError('not valid')
+
+        event_type = event['evt_type']
+        event_desc = event['evt_desc']
+
+        if event_type in ('SCORE_FORCED', 'SCORE_CHANGE'):
+            #information is score delta
+            ret = 'OLD = {}; NEW = {} ({:+d})'.format(event_desc['old_score'],
+                                                      event_desc['new_score'],
+                                                      event_desc['new_score']-event_desc['old_score'])
+        elif event_type == 'GAME_END':
+            ret = event_desc['reason']
+        else:
+            ret = '-'
+
+        return ret
 
     def run(self):
 
@@ -500,6 +593,7 @@ class WebBoard(object):
         route('/persist/game_list')(self.get_persist_list)
         route('/persist/dump_raw/<game_uuid>')(self.dump_game_data)
         route('/persist/dump_game/<game_uuid>')(self.dump_game_readable)
+        route('/persist/dump_range/<start_uuid>,<count>')(self.dump_game_range)
 
         if self.bind_all:
             bind_to = '0.0.0.0'
