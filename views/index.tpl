@@ -75,11 +75,28 @@
       }
       }
       });
+
+      $.ajax({
+      method: "GET",
+      url: "/status/game",
+      success: function(result) {
+      if (result.status == "ok")
+      {
+      setServer(result.serving);
+      }
+      }
+      });
       //window.location.reload(true);
+      }
+
+      function setServer(player)
+      {
+      $("#pline-"+player).addClass("playerscoreactive");
       }
 
       function setScore(player, score)
       {
+      $("#pline-"+player).removeClass("playerscoreactive");
       $("#pscore-"+player).text(score);
       }
     </script>
@@ -116,7 +133,7 @@
                   <ul class="cute">
                     %for player in gameData.players.values():
                     %if player.registered:
-                    <li class="playerscore {{'playerscoreactive' if player.is_turn else ''}}"><p style="float:left;">{{"{}".format(player.web_text)}}</p> <p style="float:right;" id="pscore-{{player.pid}}">{{"{}".format(player.current_score)}}</p></li>
+                    <li id="pline-{{player.pid}}" class="playerscore {{'playerscoreactive' if player.is_turn else ''}}"><p style="float:left;">{{"{}".format(player.web_text)}}</p> <p style="float:right;" id="pscore-{{player.pid}}">{{"{}".format(player.current_score)}}</p></li>
                     <br>
                     %end
                     %end
