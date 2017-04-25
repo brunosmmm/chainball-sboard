@@ -37,7 +37,7 @@
       function startGame()
       {
       $("#game-status").load("/control/gbegin");
-      location.reload();
+      location.reload(true);
       }
 
       function stopGame()
@@ -61,26 +61,26 @@
 
       function refreshScores()
       {
-      //$.ajax({
-      //method: "GET",
-      //url: "/status/scores",
-      //success: function(result) {
-      //if (result.status == "ok")
-      //{
-      //$.each(result, function(key, val) {
-      //if (key != "status") {
-      //setScore(key, val);
-      //}
-      //});
-      //}
-      //}
-      //});
-      window.location.reload(true);
+      $.ajax({
+      method: "GET",
+      url: "/status/scores",
+      success: function(result) {
+      if (result.status == "ok")
+      {
+      $.each(result, function(key, val) {
+      if (key != "status") {
+      setScore(key, val);
+      }
+      });
+      }
+      }
+      });
+      //window.location.reload(true);
       }
 
       function setScore(player, score)
       {
-       $("#pscore-"+player).text(score);
+      $("#pscore-"+player).text(score);
       }
     </script>
 
@@ -116,7 +116,7 @@
                   <ul class="cute">
                     %for player in gameData.players.values():
                     %if player.registered:
-                    <li class="playerscore {{'playerscoreactive' if player.is_turn else ''}}"><p style="float:left;" id="pscore-{{player}}">{{"{}".format(player.web_text)}}</p> <p style="float:right;">{{"{}".format(player.current_score)}}</p></li>
+                    <li class="playerscore {{'playerscoreactive' if player.is_turn else ''}}"><p style="float:left;">{{"{}".format(player.web_text)}}</p> <p style="float:right;" id="pscore-{{player.pid}}">{{"{}".format(player.current_score)}}</p></li>
                     <br>
                     %end
                     %end
