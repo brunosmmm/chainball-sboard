@@ -36,7 +36,8 @@
     <script>
       function startGame()
       {
-        $("#game-status").load("/control/gbegin");
+      $("#game-status").load("/control/gbegin");
+      location.reload();
       }
 
       function stopGame()
