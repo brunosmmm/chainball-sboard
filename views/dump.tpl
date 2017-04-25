@@ -34,7 +34,7 @@ EVENT LIST
     <th> EVENT </th>
     <th> TIME </th>
     <th> PLAYER </th>
-   <!-- <th> INFO </th> -->
+    <th> INFO </th>
   </tr>
   %game_end_evt = None
   %for event in event_list:
@@ -46,7 +46,7 @@ EVENT LIST
     <td> {{event['evt_type']}} </td>
     <td> {{evt_time}} </td>
     <td> {{player_data[str(pnum)]['display_name']}} </td>
-   <!-- <td> - </td> -->
+    <td> - </td>
   </tr>
   %elif event['evt_type'] == 'GAME_END':
   %game_end_evt = event
@@ -54,7 +54,7 @@ EVENT LIST
     <td> GAME END </td>
     <td> {{evt_time}} </td>
     <td> - </td>
-   <!-- <td> {{'REASON = {}'.format(event['evt_desc']['reason'])}} </td> -->
+    <td> {{evt_info_gen(event)}} </td>
   </tr>
   %end
   %end
