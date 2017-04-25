@@ -344,6 +344,9 @@ class ChainballGame(object):
         self.timer_handler.start(self.game_config.game_duration)
         self.ptimer_handler.start(self.game_config.game_duration)
 
+        #confirm start
+        self.g_persist.start_game(self.get_remaining_time())
+
         self.timer_handler.announcement(TimerAnnouncement("Game", "START"), 2)
         self.logger.info('Game started')
 

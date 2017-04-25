@@ -38,6 +38,7 @@ class GameEventTypes(object):
     SCORE_CHANGE = 'SCORE_CHANGE'
     SCORE_FORCED = 'SCORE_FORCED'
     COWOUT = 'COWOUT'
+    GAME_START = 'GAME_START'
     GAME_END = 'GAME_END'
     GAME_PAUSE = 'GAME_PAUSE'
     GAME_UNPAUSE = 'GAME_UNPAUSE'
@@ -101,6 +102,11 @@ class GamePersistData(object):
                         'old_score': old_score,
                         'new_score': score,
                         'gtime': game_time})
+
+    def start_game(self, remaining_time):
+        #doesnt change the current status for now, but i think it should
+        self.log_event(GameEventTypes.GAME_START, {'rtime': remaining_time,
+                                                   'gtime': 0})
 
     def end_game(self, reason, winner, running_time, remaining_time):
 
@@ -195,6 +201,12 @@ class GamePersistance(object):
         try:
             self.game_history[self.current_game].log_event(evt_type,
                                                            evt_desc)
+        except:
+            pass
+
+    def start_game(self, remaining_time):
+        try:
+            self.game_history[self.current_game].start_game(remaining_time)
         except:
             pass
 
