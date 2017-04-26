@@ -6,6 +6,7 @@ from game.persist import GamePersistData
 from announce.timer import TimerAnnouncement
 from remote.persistence import PERSISTENT_REMOTE_DATA
 import time
+import json
 
 class WebBoard(object):
 
@@ -485,9 +486,11 @@ class WebBoard(object):
             game_info = self.dump_game_data(uuid_from_int(uuid))['data']
 
             #manually construct a bunch of lists
-            game_dump.append(['INTERNAL_GAME_ID', uuid])
-            game_dump.append(['USER_GAME_ID', 0]) #TODO: 0 is a placeholder
+            game_dump.append(['GAME_INFO'])
+            game_dump.append(['INTERNAL_GAME_ID', 'USER_GAME_ID'])
+            game_dump.append([uuid, 0]) #TODO: 0 is a placeholder
             # first "table"
+            game_dump.append(['PLAYER_LIST'])
             game_dump.append(['PLAYER_ID', 'PLAYER_NAME', 'PLAYER_SCORE'])
             # dump player info
             for player_id, player_data in sorted(game_info['player_data'].iteritems()):
@@ -495,12 +498,24 @@ class WebBoard(object):
                                   player_data['display_name'],
                                   player_data['score']])
             # second table
+            game_dump.append(['EVENT_LIST'])
             game_dump.append(['EVENT_TYPE', 'EVENT_TIMESTAMP', 'EVENT_PLAYER', 'EVENT_INFO'])
+            game_end_rtime = None
             for event in game_info['events']:
+                if event['evt_type'] == 'GAME_END':
+                    #store remaining time
+                    game_end_rtime = event['evt_desc']['rtime']
+
                 game_dump.append([event['evt_type'],
                                   timestamp_from_seconds(event['evt_desc']['gtime']),
                                   get_event_player(event, game_info),
                                   self.generate_event_info_field(event)])
+
+            #dump miscellaneous
+            game_dump.append(['MISC'])
+            if game_end_rtime is not None:
+                game_dump.append(['FINAL_CLOCK'])
+                game_dump.append([timestamp_from_seconds(game_end_rtime)])
 
             #add everything together
             game_dumps.extend(game_dump)
@@ -517,6 +532,19 @@ class WebBoard(object):
 
         return csv_all
 
+    def dump_fmt(self):
+
+        ret = None
+        with open('conf/game_dump_fmt.json', 'r') as f:
+            ret = {}
+            ret['fmt'] = json.load(f)
+            ret['status'] = 'ok'
+
+        if ret is None:
+            return {'status': 'error'}
+
+        return ret
+
     def score_evt(self, player, evt_type):
         self.game.scoring_evt(player, evt_type)
 
@@ -530,6 +558,7 @@ class WebBoard(object):
 
     def generate_event_info_field(self, event):
 
+        print ('in generate_event_info_field')
         if 'evt_desc' not in event:
             raise KeyError('not valid')
 
@@ -544,6 +573,7 @@ class WebBoard(object):
         elif event_type == 'GAME_END':
             ret = event_desc['reason']
         else:
+            print('not generating info, event type is "{}"'.format(event_type))
             ret = '-'
 
         return ret
@@ -604,6 +634,7 @@ class WebBoard(object):
         route('/persist/dump_raw/<game_uuid>')(self.dump_game_data)
         route('/persist/dump_game/<game_uuid>')(self.dump_game_readable)
         route('/persist/dump_range/<start_uuid>,<count>')(self.dump_game_range)
+        route('/persist/dump_fmt')(self.dump_fmt)
 
         if self.bind_all:
             bind_to = '0.0.0.0'
