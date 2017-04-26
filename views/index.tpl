@@ -37,7 +37,7 @@
       function startGame()
       {
       $("#game-status").load("/control/gbegin");
-      location.reload(true);
+      window.location.reload(true);
       }
 
       function stopGame()
@@ -63,40 +63,32 @@
       {
       $.ajax({
       method: "GET",
-      url: "/status/scores",
-      success: function(result) {
-      if (result.status == "ok")
-      {
-      $.each(result, function(key, val) {
-      if (key != "status") {
-      setScore(key, val);
-      }
-      });
-      }
-      }
-      });
-
-      $.ajax({
-      method: "GET",
       url: "/status/game",
       success: function(result) {
-      if (result.status == "ok")
-      {
-      setServer(result.serving);
-      }
-      }
+                if (result.status == "ok") {
+                  if (result.game != "stopped") {
+                    $.each(result.scores,
+                      function(key, val) {
+                        if (key != "status") {
+                          setScore(key, val, result.serving);
+                        }
+                      });
+                  }
+                }
+               }
       });
-      //window.location.reload(true);
       }
 
-      function setServer(player)
+      function setScore(player, score, serving)
+      {
+      if (serving != player) {
+      $("#pline-"+player).removeClass("playerscoreactive");
+      }
+      else
       {
       $("#pline-"+player).addClass("playerscoreactive");
       }
 
-      function setScore(player, score)
-      {
-      $("#pline-"+player).removeClass("playerscoreactive");
       $("#pscore-"+player).text(score);
       }
     </script>

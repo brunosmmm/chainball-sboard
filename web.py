@@ -294,6 +294,14 @@ class WebBoard(object):
 
         return {'status' : 'ok'}
 
+    def _get_scores(self):
+        score_dict = {}
+        if self.game.ongoing:
+            for player in self.game.players:
+                score_dict[str(player)] = self.game.players[player].current_score
+
+        return score_dict
+
     def get_scores(self):
 
         score_dict = {'status' : 'ok'}
@@ -359,11 +367,13 @@ class WebBoard(object):
             if self.game.paused:
                 return {'status': 'ok',
                         'game': 'paused',
-                        'game_id' : self.game.g_persist.current_game_series}
+                        'game_id' : self.game.g_persist.current_game_series,
+                        'scores': self._get_scores()}
             return {'status' : 'ok',
                     'game' : 'started',
                     'serving' : self.game.active_player,
-                    'game_id' : self.game.g_persist.current_game_series}
+                    'game_id' : self.game.g_persist.current_game_series,
+                    'scores': self._get_scores()}
         else:
             return {'status' : 'ok',
                     'game' : 'stopped',
