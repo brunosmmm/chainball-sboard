@@ -44,6 +44,9 @@
       data: { webTxt : webtxt, panelTxt: paneltxt },
       dataType: "json"
       });
+      setTimeout(function(){
+      window.location.reload(true);
+      });
       }
 
       function unregisterPlayer(player)
