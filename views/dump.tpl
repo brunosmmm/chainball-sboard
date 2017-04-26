@@ -46,7 +46,7 @@ EVENT LIST
     <td> {{event['evt_type']}} </td>
     <td> {{evt_time}} </td>
     <td> {{player_data[str(pnum)]['display_name']}} </td>
-    <td> - </td>
+    <td> {{evt_info_gen(event)}} </td>
   </tr>
   %elif event['evt_type'] == 'GAME_END':
   %game_end_evt = event
