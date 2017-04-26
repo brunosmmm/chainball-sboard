@@ -558,7 +558,6 @@ class WebBoard(object):
 
     def generate_event_info_field(self, event):
 
-        print ('in generate_event_info_field')
         if 'evt_desc' not in event:
             raise KeyError('not valid')
 
@@ -573,7 +572,6 @@ class WebBoard(object):
         elif event_type == 'GAME_END':
             ret = event_desc['reason']
         else:
-            print('not generating info, event type is "{}"'.format(event_type))
             ret = '-'
 
         return ret
