@@ -311,6 +311,10 @@ class ChainballGame(object):
         self._reorganize_players()
 
     def game_begin(self):
+
+        #flush remote message queue for good measure
+        self.rf_handler.flush_message_queue()
+
         self.logger.info('Starting game...')
         if self.ongoing:
             raise GameAlreadyStarterError('Game is running')

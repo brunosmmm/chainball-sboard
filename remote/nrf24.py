@@ -214,6 +214,10 @@ class NRF24Handler(StoppableThread):
     def receive_message(self):
         return self.msg_q.get()
 
+    def flush_message_queue(self):
+        while self.message_pending():
+            _ = self._receive_message()
+
     def run(self):
 
         #poll continuously to detect reception
