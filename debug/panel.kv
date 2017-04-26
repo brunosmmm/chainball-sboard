@@ -410,6 +410,12 @@
                     disabled: True
                     text: '-'
                     size_hint_y: 0.1
+                    on_text: root.get_persist_data(self.text)
+                Label:
+                    id: persistshow
+                    disabled: True
+                    text: ''
+                    size_hint_y: 0.9
 
         TabbedPanelItem:
             text: 'Scoreboard'

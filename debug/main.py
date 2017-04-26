@@ -13,6 +13,8 @@ import requests
 import argparse
 from threading import Thread
 from miscui import ScoreSpinner, RootFinderMixin
+import csv
+import texttable
 
 class PanelUpdater(Thread):
 
@@ -546,6 +548,92 @@ class RootWidget(FloatLayout):
         # do error checking?
         self.scoreboard_address = 'http://{}:{}'.format(self.ids['scorebrdip'].text,
                                                         self.ids['scorebrdport'].text)
+
+    def get_persist_data(self, uuid):
+        return
+        #retrieve CSV data from game persistance
+        persist_url = self.scoreboard_address + '/persist/dump_range/{},1'.format(uuid)
+
+        csv_data = None
+        with requests.Session() as sess:
+            fmt = sess.get(self.scoreboard_address + '/persist/dump_fmt').json()
+            data = sess.get(persist_url)
+            decoded_data = data.content.decode('utf-8')
+
+            csv_data = csv.reader(decoded_data.splitlines(), delimiter=',')
+
+        if csv_data is not None:
+
+            tables = {}
+
+            fmt = fmt['fmt']
+            position = 0
+            current_section = None
+            section_position = -1
+            section_ended = True
+            for line in csv_data:
+                if current_section is not None:
+                    current_fmt = fmt['sections'][current_section]
+                if len(line) == 1:
+                    if line[0] in fmt['sections']:
+
+                        #section length check
+                        if section_position > -1 and section_position <\
+                           current_fmt['min_length']:
+                            print ('Section is too short')
+                            raise IOError('error')
+
+                        print ('found section: {}'.format(line[0]))
+                        current_section = line[0]
+                        section_position = 0
+                        position += 1
+                        #create table
+                        tables[line[0]] = texttable.Texttable()
+                        continue
+                    else:
+                        print ('Illegal section: {}'.format(line[0]))
+                else:
+                    if section_position > -1:
+                        #inside section
+                        if section_position == 0:
+                            #section headers
+                            print ('found section "{}"'
+                                   ' headers: {}'.format(current_section,
+                                                         line))
+                            #insert into table
+                            tables[current_section].add_row(line)
+                            if current_fmt['max_length'] == 1:
+                                section_position = -1
+                                position += 1
+                            else:
+                                section_position += 1
+                                position += 1
+
+                            continue
+                        else:
+                            current_fmt = fmt['sections'][current_section]
+                            #add more
+                            tables[current_section].add_row(line)
+                            if section_position < current_fmt['max_length']:
+                                section_position += 1
+                                position += 1
+                            else:
+                                section_position = -1
+                                position += 1
+
+                            continue
+
+            #self.ids['persistshow'].text = csv_data.replace(',', '\t')
+            #table = texttable.Texttable()
+            #table.add_rows(csv_data)
+            one_big_label = ''
+            for section, table in tables.iteritems():
+                if table is not None:
+                    table_draw = table.draw()
+                    if table_draw is not None:
+                        one_big_label += table.draw()
+            self.ids['persistshow'].text = one_big_label
+
 
 
 class SimpleboardDebugPanel(App):
