@@ -37,7 +37,9 @@
       function startGame()
       {
       $("#game-status").load("/control/gbegin");
+      setTimeout(function(){
       window.location.reload(true);
+      });
       }
 
       function stopGame()
