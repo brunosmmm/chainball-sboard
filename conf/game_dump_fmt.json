@@ -1,0 +1,71 @@
+{
+    "sections" : {
+        "GAME_INFO" : {
+            "friendly_title": "Game Information",
+            "friendly_desc" : "General Game Information",
+            "min_length": 1,
+            "max_length": 1,
+            "fields": {
+                "INTERNAL_GAME_ID": {
+                    "friendly_title": "Internal Game ID",
+                    "friendly_desc": "Internally used, persistent game ID"
+                },
+                "USER_GAME_ID": {
+                    "friendly_title": "User Game ID",
+                    "friendly_desc": "User-assigned game ID"
+                }
+            }
+        },
+        "PLAYER_LIST" : {
+            "friendly_title": "Player List",
+            "friendly_desc": "List of Players in this game",
+            "min_length": 2,
+            "max_length": 4,
+            "fields": {
+                "PLAYER_ID": {
+                    "friendly_title": "Player",
+                    "friendly_desc": "Player number"
+                },
+                "PLAYER_NAME": {
+                    "friendly_title": "Name",
+                    "friendly_desc": "Player's display name"
+                },
+                "PLAYER_SCORE": {
+                    "friendly_title": "Score",
+                    "friendly_desc": "Player's score"
+                }
+            }
+        },
+        "EVENT_LIST": {
+            "friendly_title": "Event List",
+            "friendly_desc": "List of Events that occurred",
+            "min_length": 1,
+            "max_length": -1,
+            "fields": {
+                "EVENT_TYPE": {
+                    "friendly_name": "Type",
+                    "friendly_desc": "Type of event"
+                },
+                "EVENT_TIMESTAMP": {
+                    "friendly_name": "Clock",
+                    "friendly_desc": "Scoreboard clock at event"
+                },
+                "EVENT_PLAYER": {
+                    "friendly_name": "Player",
+                    "friendly_desc": "Player assigned to event"
+                },
+                "EVENT_INFO": {
+                    "friendly_name": "Info",
+                    "friendly_desc": "Extra information on event"
+                }
+            }
+        },
+        "MISC": {
+            "friendly_title": "Miscellaneous information",
+            "friendly_desc": "Other relevant data",
+            "min_length": 0,
+            "max_length": 1,
+            "fields": null
+        }
+    }
+}
