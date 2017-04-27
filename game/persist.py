@@ -54,16 +54,24 @@ class GameEventTypes(object):
 
 class GamePersistData(object):
 
-    def __init__(self, players, handler):
+    def __init__(self, players, handler, current_series):
         #initialize scores
         self.player_data = players
         self.game_state = GamePersistStates.RUNNING
         self.start_time = datetime.datetime.now()
         self.data_change_handler = handler
         self.events = []
+        self.internal_game_id = current_series
+        self.user_game_id = None
 
         #if self.data_change_handler:
         #    self.data_change_handler()
+
+    def assign_user_id(self, user_id):
+        self.user_game_id = user_id
+
+        if self.data_change_handler:
+            self.data_change_handler()
 
     def update_score(self, player, score, forced_update=False, game_time=None):
 
@@ -150,6 +158,13 @@ class GamePersistData(object):
         json_dict['events'] = self.events
 
         json_dict['player_data'] = player_dict
+
+        game_data = {}
+        game_data['internal_id'] = self.internal_game_id
+        game_data['user_id'] = self.user_game_id
+
+        json_dict['game_data'] = game_data
+
         return json_dict
 
 class GamePersistance(object):
@@ -192,7 +207,9 @@ class GamePersistance(object):
         game_uuid = '{s:06d}'.format(s=self.current_game_series)
         self.current_game_series += 1
         self.current_game = game_uuid
-        self.game_history[game_uuid] = GamePersistData(players, self.save_current_data)
+        self.game_history[game_uuid] = GamePersistData(players,
+                                                       self.save_current_data,
+                                                       self.current_game_series)
         self.save_current_data()
 
         return game_uuid
@@ -262,3 +279,15 @@ class GamePersistance(object):
         except:
             self.logger.error('Could not save game persistance data')
             #raise
+
+    def assign_user_id(self, user_id):
+        try:
+            self.game_history[self.current_game].assign_user_id(user_id)
+        except:
+            self.logger.error('Could not assign user id to game')
+
+    def get_current_user_id(self):
+        try:
+            return self.game_history[self.current_game].user_game_id
+        except:
+            return None

@@ -151,6 +151,22 @@ class WebBoard(object):
 
         return {'status' : 'OK', 'playerNum' : player}
 
+    def assign_uid(self):
+        uid_data = request.POST
+
+        if 'game_id' not in uid_data:
+            return {'status': 'error', 'error': 'missing game id'}
+
+        if 'user_id' not in uid_data:
+            return {'status': 'error', 'error': 'missing user id'}
+
+        try:
+            self.game.g_persist.assign_user_id(uid_data['user_id'])
+        except Exception as ex:
+            return {'status': 'error', 'error': 'internal error'}
+
+        return {'status': 'ok'}
+
     def debug_setup(self):
         try:
             player = self.game.next_player_num()
@@ -369,16 +385,19 @@ class WebBoard(object):
                 return {'status': 'ok',
                         'game': 'paused',
                         'game_id' : self.game.g_persist.current_game_series,
+                        'user_id' : self.game.g_persist.get_current_user_id(),
                         'scores': self._get_scores()}
             return {'status' : 'ok',
                     'game' : 'started',
                     'serving' : self.game.active_player,
                     'game_id' : self.game.g_persist.current_game_series,
+                    'user_id' : self.game.g_persist.get_current_user_id(),
                     'scores': self._get_scores()}
         else:
             return {'status' : 'ok',
                     'game' : 'stopped',
-                    'game_id' : self.game.g_persist.current_game_series}
+                    'game_id' : self.game.g_persist.current_game_series,
+                    'user_id' : self.game.g_persist.get_current_user_id()}
 
     def pause_unpause(self):
 
@@ -432,7 +451,7 @@ class WebBoard(object):
             return 'ERROR'
         game_data = game_data['data']
 
-        #TODO add game number
+        user_id = game_data['game_data']['user_id']
         player_data = game_data['player_data']
         event_list = game_data['events']
 
@@ -442,7 +461,7 @@ class WebBoard(object):
                            player_data=player_data,
                            event_list=event_list,
                            internal_id=game_uuid,
-                           user_game_id=0,
+                           user_game_id=user_id,
                            evt_info_gen=self.generate_event_info_field)
         except Exception as ex:
             self.logger.error('Caught exception in dump_game_readable: {}'.format(repr(ex)))
@@ -488,7 +507,7 @@ class WebBoard(object):
             #manually construct a bunch of lists
             game_dump.append(['GAME_INFO'])
             game_dump.append(['INTERNAL_GAME_ID', 'USER_GAME_ID'])
-            game_dump.append([uuid, 0]) #TODO: 0 is a placeholder
+            game_dump.append([uuid, game_info['game_data']['user_id']])
             # first "table"
             game_dump.append(['PLAYER_LIST'])
             game_dump.append(['PLAYER_ID', 'PLAYER_NAME', 'PLAYER_SCORE'])
@@ -633,6 +652,7 @@ class WebBoard(object):
         route('/persist/dump_game/<game_uuid>')(self.dump_game_readable)
         route('/persist/dump_range/<start_uuid>,<count>')(self.dump_game_range)
         route('/persist/dump_fmt')(self.dump_fmt)
+        route('/persist/assign_uid', method="POST")(self.assign_uid)
 
         if self.bind_all:
             bind_to = '0.0.0.0'
