@@ -397,7 +397,8 @@ class WebBoard(object):
             return {'status' : 'ok',
                     'game' : 'stopped',
                     'game_id' : self.game.g_persist.current_game_series,
-                    'user_id' : self.game.g_persist.get_current_user_id()}
+                    'user_id' : self.game.g_persist.get_current_user_id(),
+                    'can_start': self.game.game_can_start()}
 
     def pause_unpause(self):
 
@@ -575,6 +576,9 @@ class WebBoard(object):
         return {'status': 'ok',
                 'remote_data': PERSISTENT_REMOTE_DATA.get_remote_persist()}
 
+    def get_can_start(self):
+        return {'status': 'ok', 'can_start': self.game.game_can_start()}
+
     def generate_event_info_field(self, event):
 
         if 'evt_desc' not in event:
@@ -645,6 +649,7 @@ class WebBoard(object):
         route("/status/all")(self.get_all_status)
         route('/status/sfxlist')(self.get_sfx_list)
         route('/status/remotedata')(self.get_remote_data)
+        route('/status/can_start')(self.get_can_start)
 
         #persistance
         route('/persist/game_list')(self.get_persist_list)
