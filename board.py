@@ -32,10 +32,16 @@ if __name__ == "__main__":
     logger = logging.getLogger('sboard')
 
     #publish
-    avahi_service = ZeroconfService(name='Chainball Scoreboard',
-                                    port=args.port,
-                                    stype='_http._tcp')
-    avahi_service.publish()
+    published = False
+    try:
+        avahi_service = ZeroconfService(name='Chainball Scoreboard',
+                                        port=args.port,
+                                        stype='_http._tcp')
+        avahi_service.publish()
+        published = True
+    except:
+        pass
+
 
     logger.info("Scoreboard Starting")
 
@@ -76,4 +82,5 @@ if __name__ == "__main__":
     #web_server.start()
 
     game_wrapper.stop()
-    avahi_service.unpublish()
+    if published:
+        avahi_service.unpublish()
