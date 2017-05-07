@@ -49,8 +49,10 @@ class GameEventTypes(object):
     SAILORMOON = 'SAILORMOON'
     CHAINBALL = 'CHAINBALL'
     JAILBREAK = 'JAILBREAK'
+    FAULT = 'FAULT'
     DOUBLEFAULT = 'DOUBLEFAULT'
     SLOWPOKE = 'SLOWPOKE'
+    SERVE_ADVANCE = 'SERVE_ADVANCE'
 
 class GamePersistData(object):
 
