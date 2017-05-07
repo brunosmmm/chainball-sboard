@@ -13,6 +13,7 @@ if __name__ == "__main__":
     def _handle_signal(*args):
         exit(0)
 
+    #Parse Command Line arguments
     parser = argparse.ArgumentParser()
     parser.add_argument('--nohw', action='store_true', help='hardware not present, development only')
     parser.add_argument('--port', help='web interface port', default=80)
@@ -31,7 +32,7 @@ if __name__ == "__main__":
 
     logger = logging.getLogger('sboard')
 
-    #publish
+    #publish as service
     published = False
     try:
         avahi_service = ZeroconfService(name='Chainball Scoreboard',
@@ -48,7 +49,8 @@ if __name__ == "__main__":
     signal.signal(signal.SIGTERM, _handle_signal)
 
     class GameWrapper(StoppableThread):
-
+        """ Main Game Thread
+        """
         def __init__(self, virtual_hw):
             super(GameWrapper, self).__init__()
             #create game object
@@ -77,10 +79,8 @@ if __name__ == "__main__":
 
     #spawn web server
     webScoreBoard.run()
-    #web_server = threading.Thread(target=webScoreBoard.run)
-    #web_server.daemon = True
-    #web_server.start()
 
+    #done, cleanup and exit
     game_wrapper.stop()
     if published:
         avahi_service.unpublish()
