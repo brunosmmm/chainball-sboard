@@ -44,7 +44,7 @@ class ScoreHandler(StoppableThread):
                                               rtscts=True,
                                               dsrdtr=True)
         except IOError:
-            print "Can't open serial port"
+            print ("Can't open serial port")
             raise
 
         #event queue
