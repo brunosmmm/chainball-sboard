@@ -11,6 +11,11 @@
             "scoreDelta": -1,
             "friendlyName": "Mud Skipper"
         },
+        "SLOWPOKE":
+        {
+            "scoreDelta": -1,
+            "friendlyName": "Slowpoke"
+        },
         "BALL_HIT":
         {
             "scoreDelta": -1,
