@@ -36,6 +36,11 @@
             "scoreDelta": 2,
             "friendlyName": "Jailbreak"
         },
+        "FAULT":
+        {
+            "scoreDelta": 0,
+            "friendlyName": "Fault"
+        },
         "DOUBLEFAULT":
         {
             "scoreDelta": -2,
