@@ -754,7 +754,7 @@ class ChainballGame(object):
             self.game_increment_score(int(player), referee_event=True)
             self.game_increment_score(int(player), referee_event=True)
         elif evt_type == 'ratmeat':
-            self.g_persist.log_event(GameEventTypes.RATMEAT,
+            self.g_persist.log_event(GameEventTypes.BALL_HIT,
                                      {'player': int(player),
                                       'gtime': self.get_running_time()})
             self.game_decrement_score(int(player), referee_event=True)

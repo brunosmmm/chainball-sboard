@@ -11,10 +11,10 @@
             "scoreDelta": -1,
             "friendlyName": "Mud Skipper"
         },
-        "RATMEAT":
+        "BALL_HIT":
         {
             "scoreDelta": -1,
-            "friendlyName": "Rat Meat"
+            "friendlyName": "Hit by ball"
         },
         "SAILORMOON":
         {
