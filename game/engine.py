@@ -21,7 +21,8 @@ class MasterRemote(object):
         self.remote_id = None
 
 class ChainballGame(object):
-
+    """ Game engine
+    """
     def __init__(self, virtual_hw=False):
 
         self.logger = logging.getLogger('sboard.game')
@@ -89,6 +90,9 @@ class ChainballGame(object):
 
         #sound effects
         self.sfx_handler = GameSFXHandler()
+
+        #other variables
+        self._current_fault_count = 0
 
     def post_init(self):
 
@@ -336,6 +340,7 @@ class ChainballGame(object):
             if self.players[player].registered:
                 self.game_set_score(player, 0)
                 player_persist[player] = PlayerPersistData(self.players[player].panel_text, self.players[player].web_text)
+                self.players[player].reset_serve()
 
         #create persistance data
         self.game_uuid = self.g_persist.new_record(player_persist)
@@ -386,10 +391,6 @@ class ChainballGame(object):
     def game_timeout(self):
 
         self.logger.info('Game has run out of time')
-        #winner_player = self.find_high_score()
-
-        #self.s_handler.set_turn(winner_player)
-        #self.announce_end(winner_player)
         self.game_end(reason='TIMEOUT',
                       winner=self.find_high_score())
 
@@ -492,11 +493,6 @@ class ChainballGame(object):
                 self.timer_handler.announcement(TimerAnnouncement(self.players[p].panel_text,
                                                                   '{:+1d}'.format(self.players[p].score_diff)),
                                                 2)
-                #self.timer_handler.player_announcement(TimerAnnouncement('',
-                #                                                         '{:+1d} -> {:+1d}'.format(self.players[p].score_diff,
-                #                                                                                   self.players[p].current_score)),
-                #                                       5,
-                #                                       p)
 
     def game_pass_turn(self, force_serve=False):
 
@@ -516,25 +512,26 @@ class ChainballGame(object):
 
         #announce score deltas
         self.announce_player_deltas(0)
-        #self.timer_handler.announcement(TimerAnnouncement(self.players[self.active_player].panel_text,
-        #                                                  '{:+1d}'.format(self.players[self.active_player].score_diff)), 2)
 
-
+        next_player = None
         for p in range(self.active_player + 1, self.player_count):
             if self.players[p].current_score != -10:
                 self.game_set_active_player(p)
-                return
+                next_player = p
+                break
 
-        #reaching here, begin at player 0 score
-        for p in range(0, self.active_player):
-            if self.players[p].current_score != -10:
-                self.game_set_active_player(p)
-                return
+        if next_player is None:
+            #reaching here, begin at player 0 score
+            for p in range(0, self.active_player):
+                if self.players[p].current_score != -10:
+                    self.game_set_active_player(p)
+                    next_player = p
+                    break
 
-        #if self.active_player < self.player_count - 1:
-        #    self.game_set_active_player(self.active_player + 1)
-        #else:
-        #    self.game_set_active_player(0)
+        if force_serve is False:
+            self.g_persist.log_event(GameEventTypes.SERVE_ADVANCE,
+                                     {'player': int(p),
+                                      'gtime': self.get_running_time()})
 
     def game_player_out(self, player):
         #play sound here, announce
@@ -577,10 +574,6 @@ class ChainballGame(object):
                                           'gtime': self.get_running_time()})
                 #self.game_player_out(player)
                 return
-
-        #TODO IF A PLAYER HITS -10 HES OUT OF THE GAME, PLAY SOUND - OK
-        #TODO AT GAME END, PLAY SOUND - OK
-        #TODO ADVANCE SERVE AUTOMATICALLY - OK
 
     def game_increment_score(self, player, referee_event=False):
 
@@ -647,10 +640,6 @@ class ChainballGame(object):
         if not self.ongoing:
             return
 
-        #if message.remote_id != self.players[self.active_player].remote_id:
-        #    self.logger.debug('Ignored message from other player remote')
-        #    return
-
         if self.paused:
             return
 
@@ -692,34 +681,9 @@ class ChainballGame(object):
         #save temporary
         temp_player = PlayerScore(self.game_config.serve_timeout)
         temp_player.copy(self.players[players[0]])
-        #temp_player.handler = None
-        #temp_player.pid = player.pid
-        #temp_player.current_score = player.current_score
-        #temp_player.is_turn = player.is_turn
-        #temp_player.web_text = player.web_text
-        #temp_player.panel_text = player.panel_text
-        #temp_player.remote_id = player.remote_id
 
-        #swap one
-        #player.pid = None
-        #player.pid = other_player.pid
-        #player.current_score = None
-        #player.current_score = other_player.current_score
-        #player.is_turn = None
-        #player.is_turn = other_player.is_turn
-        #player.web_text = other_player.web_text[:]
-        #player.panel_text = other_player.panel_text[:]
-        #player.remote_id = None
-        #player.remote_id = other_player.remote_id
         self.players[players[0]].copy(self.players[players[1]])
         self.players[players[1]].copy(temp_player)
-        #swap the other
-        #other_player.pid = temp_player.pid
-        #other_player.current_score = temp_player.current_score
-        #other_player.is_turn = temp_player.is_turn
-        #other_player.web_text = temp_player.web_text[:]
-        #other_player.panel_text = temp_player.panel_text[:]
-        #other_player.remote_id = temp_player.remote_id
 
     def announce_end(self, winner):
         self.do_announcement(TimerAnnouncement(self.players[winner].panel_text,
@@ -769,6 +733,19 @@ class ChainballGame(object):
                                       'gtime': self.get_running_time()})
             self.game_decrement_score(int(player), referee_event=True)
             self.game_decrement_score(int(player), referee_event=True)
+        elif evt_type == 'fault':
+            if self._current_fault_count == 0:
+                self.g_persist.log_event(GameEventTypes.FAULT,
+                                         {'player': int(player),
+                                          'gtime': self.get_running_time()})
+                self._current_fault_count = 1
+            elif self._current_fault_count == 1:
+                self.g_persist.log_event(GameEventTypes.DOUBLEFAULT,
+                                         {'player': int(player),
+                                          'gtime': self.get_running_time()})
+                self.game_decrement_score(int(player), referee_event=True)
+                #reset count immediately
+                self._current_fault_count = 0
         elif evt_type == 'doublefault':
             self.g_persist.log_event(GameEventTypes.DOUBLEFAULT,
                                      {'player': int(player),
@@ -848,8 +825,3 @@ class ChainballGame(object):
                                                                          '{:+1d}'.format(self.players[p].current_score), callback),
                                                        5,
                                                        p)
-
-
-
-        #throttle game loop
-        #time.sleep(0.01)
