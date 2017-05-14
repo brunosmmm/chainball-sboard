@@ -1,8 +1,20 @@
+"""Player text."""
+
+
 class PlayerText(object):
+    """Player text and display storage."""
 
     def __init__(self, panel_txt, web_txt=None):
+        """Initialize.
 
-        if panel_txt == None:
+        Args
+        ----
+        panel_txt: str
+           Player name as displayed in panels
+        web_txt: str
+           Complete player name displayed in web interface
+        """
+        if panel_txt is None:
             raise ValueError('Display name cannot be empty')
         else:
             if len(panel_txt) == 0:
