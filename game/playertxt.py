@@ -20,7 +20,7 @@ class PlayerText(object):
             if len(panel_txt) == 0:
                 raise ValueError('Display name cannot be empty')
 
-        if web_txt:
+        if web_txt is not None:
             if len(web_txt) > 0:
                 self.web_txt = web_txt
         else:
