@@ -116,7 +116,7 @@ class GamePersistData(object):
         """
         self.user_game_id = user_id
 
-        if self.data_change_handler:
+        if self.data_change_handler is not None:
             self.data_change_handler()
 
     def update_score(self, player, score, forced_update=False, game_time=None):
@@ -149,7 +149,7 @@ class GamePersistData(object):
                             'new_score': score,
                             'gtime': game_time})
         else:
-            if self.data_change_handler:
+            if self.data_change_handler is not None:
                 self.data_change_handler()
 
     def force_score(self, player, score, game_time=None):
@@ -241,7 +241,7 @@ class GamePersistData(object):
                             'evt_desc': evt_desc,
                             'evt_time': str(datetime.datetime.now())})
 
-        if save is True and self.data_change_handler:
+        if save is True and self.data_change_handler is not None:
             self.data_change_handler()
 
     def to_JSON(self):
