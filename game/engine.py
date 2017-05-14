@@ -31,7 +31,7 @@ class ChainballGame(object):
         self.rf_handler = NRF24Handler(fake_hw=virtual_hw)
 
         #load remote mapping configuration file
-        self.remote_mapping = RemoteMapping(self.logger)
+        self.remote_mapping = RemoteMapping('rm_map')
         try:
             self.remote_mapping.load_config('conf/remotemap.json')
         except RemoteMappingLoadFailed:

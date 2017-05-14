@@ -4,6 +4,7 @@
 from game.constants import GameTurnActions, MasterRemoteActions
 import re
 import json
+import logging
 
 
 class RemoteMappingLoadFailed(Exception):
@@ -21,7 +22,7 @@ class RemoteMapping(object):
                       "PASS": GameTurnActions.PASS_TURN}
     MASTER_ACTIONS = {"PAUSE": MasterRemoteActions.PAUSE_UNPAUSE_CLOCK}
 
-    def __init__(self, logger):
+    def __init__(self, logger_name):
         """Initialize.
 
         Args
@@ -29,7 +30,7 @@ class RemoteMapping(object):
         logger: str
             Logger name
         """
-        self.logger = logger
+        self.logger = logging.getLogger(logger_name)
         self.player_mapping = {}
         self.master_mapping = {}
 
