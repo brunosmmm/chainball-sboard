@@ -80,8 +80,8 @@ class GamePersistData(object):
         if player not in self.player_data:
             raise KeyError('Invalid Player')
 
-            if self.game_state == GamePersistStates.FINISHED:
-                raise CannotModifyScoresError('Game has finished')
+        if self.game_state == GamePersistStates.FINISHED:
+            raise CannotModifyScoresError('Game has finished')
 
         old_score = self.player_data[player].score
         self.player_data[player].update_score(score)
@@ -101,8 +101,8 @@ class GamePersistData(object):
         if player not in self.player_data:
             raise KeyError('Invalid Player')
 
-            if self.game_state == GamePersistStates.FINISHED:
-                raise CannotModifyScoresError('Game has finished')
+        if self.game_state == GamePersistStates.FINISHED:
+            raise CannotModifyScoresError('Game has finished')
 
         old_score = self.player_data[player].score
         self.player_data[player].update_score(score)
