@@ -185,11 +185,18 @@ class GamePersistance(object):
 
         # load current game number
         try:
-            with open('data/persist/game.json', 'r') as f:
-                persist_data = json.load(f)
-                self.current_game_series = persist_data['current_series']
+            f = open('data/persist/game.json', 'r')
+            persist_data = json.load(f)
+            self.current_game_series = persist_data['current_series']
         except:
             self.logger.error('Could not load overall game persistance data')
+            return
+
+        try:
+            flist = listdir('./'+self.path)
+        except:
+            self.logger.error('Could not load individual game persistances')
+            return
 
         for f in listdir('./'+self.path):
             if isfile(join('./'+self.path, f)):
