@@ -1,3 +1,5 @@
+"""Load configuration file."""
+
 import json
 import logging
 
@@ -9,8 +11,10 @@ _GAME_DURATION_DEFAULT = 20
 
 
 class ChainballGameConfiguration(object):
-    def __init__(self):
+    """Configuration loader class."""
 
+    def __init__(self):
+        """Initialize."""
         self.logger = logging.getLogger('sboard.config')
 
         self.score_announce_interval = _SCORE_ANNOUNCE_INTVAL_DEFAULT
