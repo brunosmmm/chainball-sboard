@@ -40,6 +40,7 @@ class SFXMapping(object):
         filename: str
            Path to configuration file
         """
+        new_mapping = {}
         try:
             sfx_map_file = open(filename)
             sfx_map = json.loads(sfx_map_file.read())
@@ -55,7 +56,10 @@ class SFXMapping(object):
             if key not in self.MAPPABLE_EVENTS:
                 continue
 
-            self.mapping[self.MAPPABLE_EVENTS[key]] = value
+            new_mapping[self.MAPPABLE_EVENTS[key]] = value
+
+        # if successful
+        self.mapping = new_mapping
 
     def get_sfx(self, sfx):
         """Get SFX by event.
