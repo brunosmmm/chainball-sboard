@@ -195,7 +195,7 @@
               <!-- INSERT SOME KIND OF SEPARATOR HERE -->
               <ul class="menu">
                 %any = False
-                %for playerNumber, player in gameData.players.iteritems():
+                %for playerNumber, player in gameData.players.items():
                 %if player.registered:
                 <li class="item1"><a href="#"><span class="s1"> </span>{{player.web_text}}</a>
                   <ul class="cute" style="display: none;">

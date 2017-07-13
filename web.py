@@ -513,7 +513,7 @@ class WebBoard(object):
             game_dump.append(['PLAYER_LIST'])
             game_dump.append(['PLAYER_ID', 'PLAYER_NAME', 'PLAYER_SCORE'])
             # dump player info
-            for player_id, player_data in sorted(game_info['player_data'].iteritems()):
+            for player_id, player_data in sorted(game_info['player_data'].items()):
                 game_dump.append([str(int(player_id)+1),
                                   player_data['display_name'],
                                   player_data['score']])

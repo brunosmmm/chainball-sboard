@@ -251,7 +251,7 @@ class GamePersistData(object):
         json_dict['game_state'] = GamePersistStates.NAMES[self.game_state]
         player_dict = {}
 
-        for player_num, player_data in self.player_data.iteritems():
+        for player_num, player_data in self.player_data.items():
             player_dict[str(player_num)] = player_data.get_data()
 
         json_dict['events'] = self.events

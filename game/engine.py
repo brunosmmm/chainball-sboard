@@ -265,7 +265,7 @@ class ChainballGame(object):
 
     def _reorganize_players(self):
 
-        for p_id, p_data in self.players.iteritems():
+        for p_id, p_data in self.players.items():
             if p_data.registered is False:
 
                 # empty slot, move up other players if available

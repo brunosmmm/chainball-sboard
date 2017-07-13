@@ -52,7 +52,7 @@ class SFXMapping(object):
         if "sfxmap" not in sfx_map:
             raise SFXMappingLoadFailed('Configuration is invalid')
 
-        for key, value in sfx_map['sfxmap'].iteritems():
+        for key, value in sfx_map['sfxmap'].items():
             if key not in self.MAPPABLE_EVENTS:
                 continue
 

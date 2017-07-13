@@ -64,7 +64,7 @@ class RemoteMapping(object):
         self.master_mapping = {}
 
         # load player mapping
-        for button, mapping in remote_map['playerMapping'].iteritems():
+        for button, mapping in remote_map['playerMapping'].items():
             m = re.match(r"btn([0-9]+)", button)
 
             if m is not None:
@@ -89,7 +89,7 @@ class RemoteMapping(object):
                 raise RemoteMappingIllegalError('illegal button')
 
         # load master mapping
-        for button, mapping in remote_map['masterMapping'].iteritems():
+        for button, mapping in remote_map['masterMapping'].items():
             m = re.match(r"btn([0-9]+)", button)
 
             if m is not None:
