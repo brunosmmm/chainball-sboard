@@ -15,6 +15,7 @@ class RemoteMappingLoadFailed(Exception):
 
 class RemoteMappingIllegalError(Exception):
     """File has illegal syntax."""
+
     pass
 
 
