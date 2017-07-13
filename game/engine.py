@@ -418,7 +418,7 @@ class ChainballGame(object):
             raise GameNotPausedError('game is not paused')
 
         # check if all remotes are paired
-        for p_id, p_data in self.players.iteritems():
+        for p_id, p_data in self.players.items():
             if p_data.registered and p_data.remote_id is None:
                 # registered but unpaired
                 raise PlayerRemoteNotPaired('Player {} has no remote paired'.format(p_id))
