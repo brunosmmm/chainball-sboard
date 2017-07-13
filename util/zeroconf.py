@@ -1,5 +1,12 @@
 import dbus
-import avahi
+
+try:
+    import avahi
+    _NO_AVAHI = False
+except ImportError:
+    # will not work in the basic virtualenv
+    _NO_AVAHI = True
+
 
 class ZeroconfService(object):
     """A simple class to publish a network service with zeroconf using
@@ -17,12 +24,14 @@ class ZeroconfService(object):
         self.text = text
 
     def publish(self, ipv4_only=True):
+        if _NO_AVAHI is True:
+            return
         bus = dbus.SystemBus()
         server = dbus.Interface(
                          bus.get_object(
                                  avahi.DBUS_NAME,
                                  avahi.DBUS_PATH_SERVER),
-                        avahi.DBUS_INTERFACE_SERVER)
+                         avahi.DBUS_INTERFACE_SERVER)
 
         g = dbus.Interface(
                     bus.get_object(avahi.DBUS_NAME,
@@ -34,7 +43,7 @@ class ZeroconfService(object):
         else:
             proto = avahi.PROTO_UNSPEC
 
-        g.AddService(avahi.IF_UNSPEC, proto ,dbus.UInt32(0),
+        g.AddService(avahi.IF_UNSPEC, proto, dbus.UInt32(0),
                      self.name, self.stype, self.domain, self.host,
                      dbus.UInt16(self.port), self.text)
 
@@ -42,4 +51,6 @@ class ZeroconfService(object):
         self.group = g
 
     def unpublish(self):
+        if _NO_AVAHI is True:
+            return
         self.group.Reset()
