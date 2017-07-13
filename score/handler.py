@@ -6,7 +6,11 @@ import threading
 import serial
 from score.constants import PlayerScoreCommands, PlayerScoreConstraints
 from score.exceptions import TextTooBigError
-import Queue
+try:
+    import Queue
+except ImportError:
+    # python3
+    import queue as Queue
 import os, pty
 
 class ScoreUpdateEventTypes(object):

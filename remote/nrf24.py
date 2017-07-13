@@ -1,6 +1,9 @@
 import time
 from util.threads import StoppableThread
-import Queue
+try:
+    import Queue
+except ImportError:
+    import queue as Queue
 import remote.nrf24const as rf
 import logging
 
