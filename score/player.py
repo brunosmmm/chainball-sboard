@@ -1,14 +1,17 @@
+"""Player data structures."""
+
 import logging
 import time
 from score.constants import PlayerServeStates
 
 
 class PlayerScore(object):
+    """Player score."""
 
     def __init__(self, serve_timeout,
                  handler=None, player_id=None,
                  remote_id=None, autoadv_cb=None):
-
+        """Initialize."""
         self.initialized = False
 
         self.logger = logging.getLogger('sboard.score_{}'.format(player_id))
@@ -41,6 +44,7 @@ class PlayerScore(object):
         return score + 10
 
     def copy(self, other_player):
+        """Copy player data."""
         self.current_score = other_player.current_score
         self.is_turn = other_player.is_turn
         self.web_text = other_player.web_text[:]
@@ -49,7 +53,7 @@ class PlayerScore(object):
         self.pid = other_player.pid
 
     def __setattr__(self, name, value):
-
+        """Set attributes."""
         super(PlayerScore, self).__setattr__(name, value)
 
         # dont set values in __init__
@@ -71,6 +75,7 @@ class PlayerScore(object):
                 self.handler.register_player(self.pid, self.panel_text)
 
     def force_score(self, new_score):
+        """Force player score."""
         self.forcing_score = True
         self.current_score = new_score
         self.forcing_score = False
@@ -82,33 +87,43 @@ class PlayerScore(object):
                 # enforce scoring window, pass serve automatically
                 self.start_score()
             else:
-                self.logger.debug('Forcing player {} score to {}'.format(self.pid, self.current_score))
+                self.logger.debug('Forcing player {} score to {}'
+                                  .format(self.pid, self.current_score))
 
     def show_text(self, text):
+        """Show text at assigned panel."""
         self.handler.set_panel_text(self.pid, text)
 
     def restore_text(self):
+        """Restore original text."""
         self.handler.set_panel_text(self.pid, self.panel_text)
 
     def start_serve(self):
+        """Mark as serving."""
         self.logger.debug('Player {} serving'.format(self.pid))
         self.serve_state = PlayerServeStates.SERVING
 
     def end_serve(self):
-        if self.serve_state == PlayerServeStates.SERVING or self.serve_state == PlayerServeStates.SCORED:
+        """Serve done."""
+        if self.serve_state == PlayerServeStates.SERVING or\
+           self.serve_state == PlayerServeStates.SCORED:
             self.serve_state = PlayerServeStates.FINISHED
 
     def start_score(self):
+        """Start score window."""
         if self.serve_state != PlayerServeStates.SCORED:
-            self.logger.debug('Player {} scored; scoring window closes in 3 seconds'.format(self.pid))
+            self.logger.debug('Player {} scored; scoring window'
+                              ' closes in 3 seconds'.format(self.pid))
             self.score_start_timer = time.time()
             self.serve_state = PlayerServeStates.SCORED
 
     def reset_serve(self):
+        """Reset serve state."""
         self.serve_state = PlayerServeStates.IDLE
         self.score_start_timer = None
 
     def handle_serve(self):
+        """Serve state machine logic."""
         if self.serve_state == PlayerServeStates.IDLE:
             return
 
@@ -119,8 +134,9 @@ class PlayerScore(object):
 
         if self.serve_state == PlayerServeStates.SCORED:
             if time.time() - self.score_start_timer > self._serve_timeout:
-                #autoadvance
-                self.logger.debug('Scoring window closed for player {}, advancing'.format(self.pid))
+                # autoadvance
+                self.logger.debug('Scoring window closed for '
+                                  'player {}, advancing'.format(self.pid))
                 if self.autoadvance_callback:
                     self.autoadvance_callback()
                 self.serve_state = PlayerServeStates.FINISHED
