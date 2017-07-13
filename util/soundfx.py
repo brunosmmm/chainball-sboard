@@ -33,7 +33,12 @@ class GameSFXHandler(object):
         self.state = GameSFXHandlerStates.IDLE
         self.current_fx = None
 
-        pygame.mixer.init(frequency=44100)
+        try:
+            pygame.mixer.init(frequency=44100)
+            self._has_audio = True
+        except pygame.error:
+            self.logger.error('Failed to acquire audio device.')
+            self._has_audio = False
 
         #build library
         self.fx_dict = {}
@@ -50,14 +55,16 @@ class GameSFXHandler(object):
             self.logger.error('Invalid SFX library configuration file')
             return
 
-        self.fx_dict = dict([(x, pygame.mixer.Sound(sfx_config['sfxpath']+'/'+y['file'])) for x, y in sfx_config['sfxlib'].iteritems()])
+        self.fx_dict = dict([(x, pygame.mixer.Sound(sfx_config['sfxpath']+'/'+y['file'])) for x, y in sfx_config['sfxlib'].items()])
 
-        self.fx_desc = dict([(x, y['description']) for x, y in sfx_config['sfxlib'].iteritems()])
+        self.fx_desc = dict([(x, y['description']) for x, y in sfx_config['sfxlib'].items()])
 
         self.logger.debug('loaded {} SFX files'.format(len(self.fx_dict)))
 
     def play_fx(self, fx):
-
+        if self._has_audio is False:
+            self.logger.warning('no audio device, cannot play sfx')
+            return
         #return
         if fx in self.fx_dict:
             self.current_fx = GameSoundEffect(self.fx_dict[fx])
