@@ -1,3 +1,5 @@
+"""Score display handler."""
+
 import time
 import logging
 import struct
@@ -11,9 +13,13 @@ try:
 except ImportError:
     # python3
     import queue as Queue
-import os, pty
+import os
+import pty
+
 
 class ScoreUpdateEventTypes(object):
+    """Update event types."""
+
     SCORE_UPD = 1
     SET_TURN = 2
     SET_MODE = 3
@@ -21,26 +27,33 @@ class ScoreUpdateEventTypes(object):
     TURN_OFF = 5
     BLINK_SCORE = 6
 
+
 class ScoreUpdateEvent(object):
+    """Update event."""
 
     def __init__(self, upd_type, data):
+        """Initialize."""
         self.upd_type = upd_type
         self.data = data
 
+
 class ScoreHandler(StoppableThread):
+    """Score handler."""
 
     def __init__(self, serial_port, serial_baud=38400, virt_hw=False):
+        """Initialize."""
         super(ScoreHandler, self).__init__()
 
         self.serial_port = serial_port
         self.serial_baud = serial_baud
         self.logger = logging.getLogger('sboard.scoreHandler')
 
-        #open serial connection
+        # open serial connection
         self.logger.debug('Opening serial port: {}'.format(self.serial_port))
         try:
-            if virt_hw == False:
-                self.ser_port = serial.Serial(self.serial_port, self.serial_baud)
+            if virt_hw is False:
+                self.ser_port = serial.Serial(self.serial_port,
+                                              self.serial_baud)
             else:
                 self.master_port, self.slave_port = pty.openpty()
                 self.ser_port = serial.Serial(os.ttyname(self.slave_port),
@@ -48,13 +61,13 @@ class ScoreHandler(StoppableThread):
                                               rtscts=True,
                                               dsrdtr=True)
         except IOError:
-            print ("Can't open serial port")
+            print("Can't open serial port")
             raise
 
-        #event queue
+        # event queue
         self.evt_q = Queue.Queue()
 
-        #running flag
+        # running flag
         self.is_running = threading.Event()
 
     def _write_score(self, player, score):
@@ -108,15 +121,17 @@ class ScoreHandler(StoppableThread):
 
     @classmethod
     def check_score_bounds(cls, score):
+        """Verify if score is valid."""
         if score < -10 or score > 5:
             return False
 
         return True
 
     def blink_start(self, player, fast=False):
+        """Start blinking player score."""
         self.logger.debug('Setting player {} score to blink'.format(player))
 
-        #enable blinking
+        # enable blinking
         bitfield = 0x01
         if fast:
             bitfield |= 0x02
@@ -125,9 +140,11 @@ class ScoreHandler(StoppableThread):
                                         [player, bitfield]))
 
     def blink_stop(self, player, enable=True):
-        self.logger.debug('Stopping score blinking for player {}'.format(player))
+        """Stop blinking."""
+        self.logger.debug('Stopping score blinking for player {}'
+                          .format(player))
 
-        #disable blinking
+        # disable blinking
         bitfield = 0x00
         if enable:
             bitfield |= 0x04
@@ -136,69 +153,66 @@ class ScoreHandler(StoppableThread):
                                         [player, bitfield]))
 
     def update_score(self, player, score):
-        self.logger.info('Updating player {} score to {}'.format(player, score))
+        """Update score."""
+        self.logger.info('Updating player {} score to {}'.format(player,
+                                                                 score))
         if not self.check_score_bounds(score):
             raise ValueError('Invalid score value')
 
         self.evt_q.put(ScoreUpdateEvent(ScoreUpdateEventTypes.SCORE_UPD,
                                         [player, score + 10]))
-        #self.process_queue()
 
     def set_turn(self, player):
+        """Set active turn."""
         self.logger.info('Switching to player {} turn'.format(player))
         self.evt_q.put(ScoreUpdateEvent(ScoreUpdateEventTypes.SET_TURN,
                                         [player]))
 
-    #backwards compatibility
+    # backwards compatibility
     def register_player(self, player, text):
+        """Register player."""
         self.set_panel_text(player, text)
 
-    #set panel text
     def set_panel_text(self, player, text):
-
-        #if self.is_running.isSet():
-        #    raise IOError('Cannot change player text while running')
+        """Set display panel text."""
         if text is None:
             return
 
         if len(text) > PlayerScoreConstraints.LARGE_TEXT_MAX_LEN:
-            #set mode 0
             if len(text) > PlayerScoreConstraints.SMALL_TEXT_MAX_LEN:
                 raise TextTooBigError('Player text is too big')
-            #self._set_mode(player, 0)
             self.evt_q.put(ScoreUpdateEvent(ScoreUpdateEventTypes.SET_MODE,
-                                        [player, 0]))
+                                            [player, 0]))
         else:
-            #set mode 1
-            #self._set_mode(player, 1)
             self.evt_q.put(ScoreUpdateEvent(ScoreUpdateEventTypes.SET_MODE,
-                                        [player, 1]))
+                                            [player, 1]))
 
-        #write text
-        #self._set_text(player, text)
+        # write text
         self.evt_q.put(ScoreUpdateEvent(ScoreUpdateEventTypes.SET_TEXT,
-                                    [player, text]))
+                                        [player, text]))
 
     def unregister_player(self, player):
+        """Unregister player."""
         self.evt_q.put(ScoreUpdateEvent(ScoreUpdateEventTypes.TURN_OFF,
-                                    [player]))
+                                        [player]))
 
     def process_queue(self):
+        """Process display command queue."""
         if not self.evt_q.empty():
 
             evt = self.evt_q.get()
 
             if evt.upd_type == ScoreUpdateEventTypes.SCORE_UPD:
                 if len(evt.data) != 2:
-                    #ignore
+                    # ignore
                     return
 
-                #set score
+                # set score
                 self._write_score(*evt.data)
 
             elif evt.upd_type == ScoreUpdateEventTypes.SET_TURN:
                 if len(evt.data) != 1:
-                    #ignore
+                    # ignore
                     return
 
                 self._set_turn(evt.data[0])
@@ -228,10 +242,10 @@ class ScoreHandler(StoppableThread):
                 self._set_blink(*evt.data)
 
     def run(self):
-
-        #initialize
+        """Run thread."""
+        # initialize
         self._clear_score(0xFF)
-        #set turn to inexistent player
+        # set turn to inexistent player
         self._set_turn(0xFE)
 
         self.is_running.set()
@@ -245,5 +259,5 @@ class ScoreHandler(StoppableThread):
 
             self.process_queue()
 
-            #throttle cycle
+            # throttle cycle
             time.sleep(0.01)
