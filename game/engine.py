@@ -89,7 +89,12 @@ class ChainballGame(object):
         self.m_remote = MasterRemote()
 
         #sound effects
-        self.sfx_handler = GameSFXHandler()
+        try:
+            self.sfx_handler = GameSFXHandler()
+        except Exception as ex:
+            raise
+            self.logger.error('Failed to initialize SFX handler with: {}'
+                              .format(ex))
 
         #other variables
         self._current_fault_count = 0
