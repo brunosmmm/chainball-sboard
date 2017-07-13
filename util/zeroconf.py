@@ -1,3 +1,5 @@
+"""Zeroconf services."""
+
 import dbus
 
 try:
@@ -9,13 +11,11 @@ except ImportError:
 
 
 class ZeroconfService(object):
-    """A simple class to publish a network service with zeroconf using
-    avahi.
-
-    """
+    """Publish a network service with zeroconf using avahi."""
 
     def __init__(self, name, port, stype="_http._tcp",
                  domain="", host="", text=""):
+        """Initialize."""
         self.name = name
         self.stype = stype
         self.domain = domain
@@ -24,6 +24,7 @@ class ZeroconfService(object):
         self.text = text
 
     def publish(self, ipv4_only=True):
+        """Publish service."""
         if _NO_AVAHI is True:
             return
         bus = dbus.SystemBus()
@@ -51,6 +52,7 @@ class ZeroconfService(object):
         self.group = g
 
     def unpublish(self):
+        """Unpublish service."""
         if _NO_AVAHI is True:
             return
         self.group.Reset()
