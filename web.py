@@ -1,6 +1,15 @@
-from bottle import route, run, template, static_file, request, response, Response, HeaderDict, default_app, ServerAdapter
+"""Scoreboard web interface."""
+
+from bottle import (route, run, template, static_file, request,
+                    response, Response)
 from game.playertxt import PlayerText
-from game.exceptions import PlayerNotRegisteredError, TooManyPlayersError, PlayerAlreadyPairedError, PlayerNotPairedError, GameRunningError, NotEnoughPlayersError, GameNotStartedError, GameAlreadyStarterError, GameAlreadyPausedError, GameNotPausedError, PlayerRemoteNotPaired
+from game.exceptions import (PlayerNotRegisteredError, TooManyPlayersError,
+                             PlayerAlreadyPairedError, PlayerNotPairedError,
+                             GameRunningError, NotEnoughPlayersError,
+                             GameNotStartedError, GameAlreadyStarterError,
+                             GameAlreadyPausedError, GameNotPausedError,
+                             PlayerRemoteNotPaired)
+from remote.constants import RemotePairFailureType
 import logging
 from game.persist import GamePersistData
 from announce.timer import TimerAnnouncement
