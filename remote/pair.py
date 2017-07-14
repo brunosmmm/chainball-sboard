@@ -1,4 +1,4 @@
-"""Pairing handler.r"""
+"""Pairing handler."""
 
 import time
 import logging
