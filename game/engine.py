@@ -90,6 +90,7 @@ class ChainballGame(object):
         self.paused = False
         self.error = False
         self.score_display_ended = True
+        self._next_uid = None
 
         # start rf handler
         self.rf_handler.start()
@@ -382,7 +383,8 @@ class ChainballGame(object):
                 self.players[player].reset_serve()
 
         # create persistance data
-        self.game_uuid = self.g_persist.new_record(player_persist)
+        self.game_uuid = self.g_persist.new_record(player_persist,
+                                                   self._next_uid)
 
         # flag game start
         self.ongoing = True
@@ -397,6 +399,14 @@ class ChainballGame(object):
 
         self.timer_handler.announcement(TimerAnnouncement("Game", "START"), 2)
         self.logger.info('Game started')
+
+    def set_game_uid(self, game_uid):
+        """Set game uid."""
+        if self.ongoing is False:
+            # set next game's uid.
+            self._next_uid = game_uid
+        else:
+            self.g_persist.assign_user_id(game_uid)
 
     def get_remaining_time(self):
         """Get remaining time in seconds."""
@@ -499,6 +509,7 @@ class ChainballGame(object):
 
         self.ongoing = False
         self.game_uuid = None
+        self._next_uid = None
 
         self.logger.info('Game stopped')
 

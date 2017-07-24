@@ -181,7 +181,7 @@ class WebBoard(object):
             return {'status': 'error', 'error': 'missing user id'}
 
         try:
-            self.game.g_persist.assign_user_id(uid_data['user_id'])
+            self.game.set_game_uid(uid_data['user_id'])
         except Exception:
             return {'status': 'error', 'error': 'internal error'}
 
