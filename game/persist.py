@@ -3,8 +3,8 @@
 import json
 import datetime
 import logging
-from os import listdir
-from os.path import isfile, join
+from os import listdir, makedirs
+from os.path import isfile, join, isdir
 
 
 class CannotModifyScoresError(Exception):
@@ -83,7 +83,7 @@ class GameEventTypes(object):
 class GamePersistData(object):
     """Game persistance data structures."""
 
-    def __init__(self, players, handler, current_series):
+    def __init__(self, players, handler, current_series, game_uid=None):
         """Initialize.
 
         Args
@@ -101,7 +101,7 @@ class GamePersistData(object):
         self.data_change_handler = handler
         self.events = []
         self.internal_game_id = current_series
-        self.user_game_id = None
+        self.user_game_id = game_uid
 
         # if self.data_change_handler:
         #     self.data_change_handler()
@@ -289,9 +289,17 @@ class GamePersistance(object):
 
     def load_history(self):
         """Load all games saved previously."""
+        # check if path exists, if not, create.
+        if not isdir(join('.', self.path)):
+            # path does not exist!
+            try:
+                makedirs(join('.', self.path))
+            except OSError:
+                self.logger.error('Could not create persistance folder.')
+
         # load current game number
         try:
-            f = open('data/persist/game.json', 'r')
+            f = open(join(self.path, 'game.json'), 'r')
             persist_data = json.load(f)
             self.current_game_series = persist_data['current_series']
         except:
@@ -320,7 +328,7 @@ class GamePersistance(object):
 
                 self.game_history[file_uuid] = game_data
 
-    def new_record(self, players):
+    def new_record(self, players, game_uid=None):
         """Create new game record.
 
         Args
@@ -334,7 +342,8 @@ class GamePersistance(object):
         self.game_history[game_uuid] =\
             GamePersistData(players,
                             self.save_current_data,
-                            self.current_game_series)
+                            self.current_game_series,
+                            game_uid)
         self.save_current_data()
 
         return game_uuid
@@ -449,7 +458,7 @@ class GamePersistance(object):
         try:
             if self._test_mode is True:
                 raise
-            with open('data/persist/game.json', 'w') as f:
+            with open(join(self.path, 'game.json'), 'w') as f:
                 json.dump({'current_series': self.current_game_series},
                           f,
                           indent=4)
