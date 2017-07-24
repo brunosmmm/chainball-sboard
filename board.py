@@ -43,8 +43,9 @@ if __name__ == "__main__":
                                         stype='_http._tcp')
         avahi_service.publish()
         published = True
-    except:
-        pass
+    except Exception as ex:
+        logger.error('failed to publish scoreboard service: {}'
+                     .format(ex))
 
     logger.info("Scoreboard Starting")
 
