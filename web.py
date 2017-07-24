@@ -150,14 +150,16 @@ class WebBoard(object):
                 player = self.game.next_player_num()
             else:
                 player = int(player_data['playerNum'])
-            self.game.register_players(
-                {player: PlayerText(player_data['panelTxt'],
-                                    player_data['webTxt'])})
+            player_entry = {player: PlayerText(player_data['panelTxt'],
+                                               player_data['webTxt'])}
+            self.game.register_players(player_entry)
+            self.logger.info('Registering player: {}'.format(player_entry))
         except TooManyPlayersError:
-            self.logger.debug('Could not register player:'
+            self.logger.error('Could not register player:'
                               ' too many players active')
             return {'status': 'error', 'error': 'Cant register player'}
         except TypeError:
+            self.logger.error('Error occurred while registering player')
             return {'status': 'error', 'error': 'Invalid player input'}
         except ValueError:
             self.logger.debug('Could not register player {}: invalid text'
@@ -165,7 +167,10 @@ class WebBoard(object):
             return {'status': 'error', 'error': 'Invalid player texts'}
         except GameRunningError as e:
             return {'status': 'error', 'error': e.message}
-        except KeyError:
+        except KeyError as e:
+            self.logger.error('Could not register player {}:'
+                              ' malformed request'.format(player))
+            self.logger.debug('exception dump: {}'.format(e))
             return {'status': 'error', 'error': 'Malformed request'}
 
         return {'status': 'OK', 'playerNum': player}

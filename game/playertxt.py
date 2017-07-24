@@ -27,3 +27,7 @@ class PlayerText(object):
             self.web_txt = panel_txt
 
         self.panel_txt = panel_txt
+
+    def __repr__(self):
+        """Dump representation."""
+        return '{}, {}'.format(self.panel_txt, self.web_txt)
