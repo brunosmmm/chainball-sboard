@@ -6,8 +6,10 @@ from game.persist import (PlayerPersistData,
 
 import os
 
+
 class TestError(Exception):
     pass
+
 
 def test_config():
 
@@ -16,6 +18,7 @@ def test_config():
 
     # fail on purpose
     config.load_config('nonexistent_file')
+
 
 def test_persist():
 
@@ -36,10 +39,10 @@ def test_persist():
     g.update_score(player=0, score=1, forced_update=True, game_time=300)
 
     try:
-       g.force_score(player=1, score=0)
-       raise TestError
+        g.force_score(player=1, score=0)
+        raise TestError
     except KeyError:
-       pass
+        pass
 
     g.force_score(player=0, score=0, game_time=300)
     g.start_game(remaining_time=1200)
@@ -81,4 +84,4 @@ def test_persist():
                                  game_time=300)
     persist.force_current_score(player=0, score=0, game_time=300)
     persist.assign_user_id('id')
-    x = persist.get_current_user_id()
+    persist.get_current_user_id()
