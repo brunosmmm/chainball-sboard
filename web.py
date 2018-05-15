@@ -380,7 +380,7 @@ class WebBoard(object):
         """Set serve turn."""
         try:
             p = int(player)
-        except TypeError:
+        except (TypeError, ValueError):
             return {'status': 'error', 'error': 'malformed request'}
 
         self.game.game_set_active_player(p)
