@@ -470,7 +470,7 @@ class WebBoard(object):
     def get_persist_list(self):
         """Get saved game list."""
         game_list = []
-        game_list = self.game.g_persist.game_history.keys()
+        game_list = list(self.game.g_persist.game_history.keys())
 
         return {'game_list': game_list}
 
