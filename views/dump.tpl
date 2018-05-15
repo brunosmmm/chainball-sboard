@@ -18,7 +18,7 @@ PLAYER LIST
     <th> NAME </th>
     <th> SCORE </th>
   </tr>
-  %for player_num in sorted(player_data.iterkeys()):
+  %for player_num in sorted(list(player_data.keys())):
   %pnum = str(int(player_num)+1)
     <tr>
       <td> {{pnum}} </td>
@@ -39,7 +39,7 @@ EVENT LIST
   %game_end_evt = None
   %for event in event_list:
   %gtime = event['evt_desc']['gtime']
-  %evt_time = '{:02d}:{:02d}'.format(gtime/60, gtime%60)
+  %evt_time = '{:02}:{:02}'.format(int(gtime/60), int(gtime%60))
   %if 'player' in event['evt_desc']:
   %pnum = event['evt_desc']['player']
   <tr>
@@ -63,6 +63,6 @@ EVENT LIST
 %if game_end_evt is not None:
 REMAINING TIME AT END <br>
 %rtime = game_end_evt['evt_desc']['rtime']
-{{'{:02d}:{:02d}'.format(rtime/60, rtime%60)}}
+{{'{:02}:{:02}'.format(int(rtime/60), int(rtime%60))}}
 %end
 </body>
