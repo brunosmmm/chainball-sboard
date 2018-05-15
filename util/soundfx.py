@@ -5,6 +5,7 @@ import pygame
 import logging
 import time
 import json
+import os
 
 
 class GameSoundEffect(threading.Thread):
@@ -67,12 +68,15 @@ class GameSFXHandler(object):
 
         self.fx_dict = {}
         for name, sfx in sfx_config['sfxlib'].items():
-            try:
-                self.fx_dict[name] = pygame.mixer.Sound(sfx_config['sfxpath'] +
-                                                        '/' + sfx['file'])
-            except pygame.error:
-                self.logger.error('failed to load SFX file: {}'
-                                  .format(sfx['file']))
+            path = os.path.join(os.getcwd(),
+                                sfx_config['sfxpath'],
+                                sfx['file'])
+            if self._has_audio:
+                try:
+                    self.fx_dict[name] = pygame.mixer.Sound(path)
+                except pygame.error:
+                    self.logger.error('failed to load SFX file: {}'
+                                      .format(sfx['file']))
 
         self.fx_desc = dict([(x, y['description'])
                              for x, y in sfx_config['sfxlib'].items()])
