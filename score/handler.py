@@ -71,52 +71,52 @@ class ScoreHandler(StoppableThread):
         self.is_running = threading.Event()
 
     def _write_score(self, player, score):
-        buf = struct.pack('cccc',
-                          chr(player),
-                          chr(PlayerScoreCommands.SCORE),
-                          chr(score),
-                          chr(PlayerScoreCommands.TERM))
+        buf = struct.pack('4s',
+                          bytes([player,
+                                 PlayerScoreCommands.SCORE,
+                                 score,
+                                 PlayerScoreCommands.TERM]))
         self.ser_port.write(buf)
 
     def _clear_score(self, player):
         self.logger.debug('issuing CLR to player {}'.format(player))
-        buf = struct.pack('ccc',
-                          chr(player),
-                          chr(PlayerScoreCommands.CLR),
-                          chr(PlayerScoreCommands.TERM))
+        buf = struct.pack('3s',
+                          bytes([player,
+                                 PlayerScoreCommands.CLR,
+                                 PlayerScoreCommands.TERM]))
         self.ser_port.write(buf)
 
     def _set_turn(self, player):
-        buf = struct.pack('ccc',
-                          chr(player),
-                          chr(PlayerScoreCommands.TURN),
-                          chr(PlayerScoreCommands.TERM))
+        buf = struct.pack('3s',
+                          bytes([player,
+                                 PlayerScoreCommands.TURN,
+                                 PlayerScoreCommands.TERM]))
         self.ser_port.write(buf)
 
     def _set_text(self, player, text):
         self.logger.debug('setting text: player {} -> {}'.format(player, text))
         buf = struct.pack('ccc{}sc'.format(len(text)),
-                          chr(player),
-                          chr(PlayerScoreCommands.DATA),
-                          chr(len(text)),
-                          text,
-                          chr(PlayerScoreCommands.TERM))
+                          bytes([player]),
+                          bytes([PlayerScoreCommands.DATA]),
+                          bytes([len(text)]),
+                          text.encode(),
+                          bytes([PlayerScoreCommands.TERM]))
         self.ser_port.write(buf)
 
     def _set_mode(self, player, mode):
-        buf = struct.pack('cccc',
-                          chr(player),
-                          chr(PlayerScoreCommands.MODE),
-                          chr(mode),
-                          chr(PlayerScoreCommands.TERM))
+        buf = struct.pack('4s',
+                          bytes([player,
+                                 PlayerScoreCommands.MODE,
+                                 mode,
+                                 PlayerScoreCommands.TERM]))
         self.ser_port.write(buf)
 
     def _set_blink(self, player, bitfield):
         buf = struct.pack('cccc',
-                          chr(player),
-                          chr(PlayerScoreCommands.BLINK),
-                          chr(bitfield),
-                          chr(PlayerScoreCommands.TERM))
+                          bytes([player,
+                                 PlayerScoreCommands.BLINK,
+                                 bitfield,
+                                 PlayerScoreCommands.TERM]))
         self.ser_port.write(buf)
 
     @classmethod
