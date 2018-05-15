@@ -94,25 +94,28 @@ class MatrixControllerSerial(object):
         else:
             to_send = [msg]
 
-        msg_buf = ''
+        msg_buf = bytes()
         for message in to_send:
-            section = ''
-            section += struct.pack('c', chr(message.command))
+            section = bytes()
+            section += struct.pack('c', bytes([message.command]))
 
             for part in message.data:
                 if isinstance(part, int):
-                    section += struct.pack('c', chr(part & 0xFF))
+                    section += struct.pack('c', bytes([part & 0xFF]))
                 elif isinstance(part, str):
-                    section += struct.pack('c', chr(len(part)))
-                    section += part
+                    section += struct.pack('c', bytes([len(part)]))
+                    section += part.encode()
                 elif isinstance(part, Color):
                     r, g, b = part.to_list()
-                    section += struct.pack('ccc', chr(r), chr(g), chr(b))
+                    section += struct.pack('ccc', bytes([r]),
+                                           bytes([g]),
+                                           bytes([b]))
                 elif isinstance(part, bool):
-                    section += struct.pack('c', chr(1) if part else chr(0))
+                    section += struct.pack('c', bytes([1]) if part
+                                           else bytes([0]))
 
-            section = struct.pack('c', chr(len(section)+2)) + section
-            section += struct.pack('c', '\xFF')
+            section = struct.pack('c', bytes([len(section)+2])) + section
+            section += struct.pack('c', bytes([0xFF]))
 
             msg_buf += section
 
