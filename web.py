@@ -508,6 +508,7 @@ class WebBoard(object):
         except Exception as ex:
             self.logger.error('Caught exception in dump_game_readable: {}'
                               .format(repr(ex)))
+            raise
             return Response('An error occured while processing this request',
                             status=500)
 
@@ -519,7 +520,7 @@ class WebBoard(object):
             return '{0:06d}'.format(uuid)
 
         def timestamp_from_seconds(seconds):
-            return '{:02d}:{:02d}'.format(seconds / 60, seconds % 60)
+            return '{:02}:{:02}'.format(int(seconds / 60), int(seconds % 60))
 
         # TODO: there are a lot of inconsistencies between player id, using
         # both strings and integers

@@ -12,7 +12,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <script type="application/x-javascript"> addEventListener("load", function() { setTimeout(hideURLbar, 0); }, false); function hideURLbar(){ window.scrollTo(0,1); } </script>
     <link href="/css/bootstrap.css" rel='stylesheet' type='text/css' />
-    <link href="/css/style.css" rel='stylesheet' type='text/css' />
+    <link href="/css/style.css?bump=1" rel='stylesheet' type='text/css' />
     <script src="/js/jquery.min.js"></script>
     <script>$(document).ready(function(c) {
       $('.sky-close').on('click', function(c){
@@ -47,6 +47,22 @@
       $.ajax({
       method: "GET",
       url: "/control/gend"
+      });
+      }
+
+      function setTurn(playerNum)
+      {
+      $.ajax({
+      method: "GET",
+      url: "/debug/setturn/"+playerNum
+      });
+      }
+
+      function scoringEvt(playerNum, evtType)
+      {
+      $.ajax({
+      method: "GET",
+      url: "/control/scoreevt/"+playerNum+","+evtType
       });
       }
 
@@ -127,7 +143,56 @@
                   <ul class="cute">
                     %for player in gameData.players.values():
                     %if player.registered:
-                    <li id="pline-{{player.pid}}" class="playerscore {{'playerscoreactive' if player.is_turn else ''}}"><p style="float:left;">{{"{}".format(player.web_text)}}</p> <p style="float:right;" id="pscore-{{player.pid}}">{{"{}".format(player.current_score)}}</p></li>
+                    <li id="pline-{{player.pid}}" class="playerscore {{'playerscoreactive' if player.is_turn else ''}}">
+                      <p style="float:left;" onclick="setTurn({{player.pid}})">{{"{}".format(player.web_text)}}</p>
+                      <div class="referee">
+                      <table>
+                        <tr>
+                          <td>
+                            <form>
+                              <input type="submit" onclick="scoringEvt({{player.pid}}, 'doublefault')" value="DF">
+                            </form>
+                          </td>
+                          <td>
+                            <form>
+                              <input type="submit" onclick="scoringEvt({{player.pid}}, 'sailormoon')" value="SM">
+                            </form>
+                          </td>
+                          <td>
+                            <form>
+                              <input type="submit" onclick="scoringEvt({{player.pid}}, 'ratmeat')" value="SH">
+                            </form>
+                          </td>
+                          <td>
+                            <form>
+                              <input type="submit" onclick="scoringEvt({{player.pid}}, 'mudskipper')" value="MS">
+                            </form>
+                          </td>
+                          <td>
+                            <form>
+                              <input type="submit" onclick="scoringEvt({{player.pid}}, 'slowpoke')" value="SP">
+                            </form>
+                          </td>
+                          <td>
+                            <form>
+                              <input type="submit" onclick="scoringEvt({{player.pid}}, 'deadball')" value="DB">
+                            </form>
+                          </td>
+                          <td>
+                            <form>
+                              <input type="submit" onclick="scoringEvt({{player.pid}}, 'chainball')" value="CB">
+                            </form>
+                          </td>
+                          <td>
+                            <form>
+                              <input type="submit" onclick="scoringEvt({{player.pid}}, 'jailbreak')" value="JB">
+                            </form>
+                          </td>
+                        <tr>
+                      </table>
+                      </div>
+                      <p style="float:right;" id="pscore-{{player.pid}}">{{"{}".format(player.current_score)}}</p>
+                    </li>
                     <br>
                     %end
                     %end

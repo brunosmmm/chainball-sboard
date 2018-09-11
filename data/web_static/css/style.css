@@ -466,6 +466,61 @@ body a:hover{
     -moz-border-radius: 5px;
     -ms-border-radius: 5px;
 }
+.referee {
+    padding-bottom: 0px;
+    margin-left: 5%;
+    float: left;
+}
+.referee table {
+    padding-bottom: 6px;
+}
+.referee th, td {
+    padding: 6px;
+    width: 60px;
+    height: 20px;
+}
+.referee form input[type=submit] {
+	  color: #fff;
+	  padding: 4xpx 0px;
+	  font-size: 16px;
+	  cursor: pointer;
+	  font-weight: 400;
+	  border: none;
+	  background: #dd5555;
+	  outline: none;
+	  width: 100%;
+    height: 60%;
+	  border-radius: 5px;
+	  -webkit-border-radius: 5px;
+	  -o-border-radius: 5px;
+	  -moz-border-radius: 5px;
+	  -ms-border-radius: 5px;
+}
+.referee form input[type=submit]:hover{
+	  background: #82ca9c;
+	  transition: 0.5s all ease;
+	  -webkit-transition: 0.5s all ease;
+	  -moz-transition: 0.5s all ease;
+	  -o-transition: 0.5s all ease;
+	  -ms-transition: 0.5s all ease;
+}
+.referee form input[type=submit]:disabled{
+    color: #fff;
+    padding: 13px 0px;
+    font-size: 16px;
+    cursor: pointer;
+    font-weight: 400;
+    border: none;
+    background: #ccc;
+    cursor: default;
+    outline: none;
+    width: 73%;
+    border-radius: 5px;
+    -webkit-border-radius: 5px;
+    -o-border-radius: 5px;
+    -moz-border-radius: 5px;
+    -ms-border-radius: 5px;
+}
 .forgot{
 	margin-top:8%;
 }
