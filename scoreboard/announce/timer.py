@@ -4,7 +4,7 @@ import datetime
 import logging
 from collections import deque
 
-from scoreborad.announce.matrixser import Color, MatrixControllerSerial
+from scoreboard.announce.matrixser import Color, MatrixControllerSerial
 
 
 class AnnouncementKind(object):
