@@ -2,6 +2,7 @@
 
 import json
 import logging
+import os
 import pkg_resources
 import time
 
@@ -53,7 +54,7 @@ class WebBoard(object):
                 "scoreboard", "data/web_static"
             )
         except pkg_resources.DistributionNotFound:
-            pass
+            self.static_file_path = ""
 
     def quit(self):
         """Initialize."""
@@ -69,29 +70,43 @@ class WebBoard(object):
         """Game setup template."""
         return template("psetup", gameData=self.game)
 
+    def referee(self):
+        """Game setup template."""
+        return template("referee", gameData=self.game)
+
     def example(self):
         """Show base layout template."""
         return template("base")
 
     def jsFiles(self, filename):
         """Retrieve .js files."""
-        return static_file(filename, root="data/web_static/js")
+        return static_file(
+            filename, root=os.path.join(self.static_file_path, "js")
+        )
 
     def cssFiles(self, filename):
         """Retrieve css files."""
-        return static_file(filename, root="data/web_static/css")
+        return static_file(
+            filename, root=os.path.join(self.static_file_path, "css")
+        )
 
     def imgFiles(self, filename):
         """Retrieve image files."""
-        return static_file(filename, root="data/web_static/images")
+        return static_file(
+            filename, root=os.path.join(self.static_file_path, "images")
+        )
 
     def fontFiles(self, filename):
         """Retrieve font files."""
-        return static_file(filename, root="data/web_static/fonts")
+        return static_file(
+            filename, root=os.path.join(self.static_file_path, "fonts")
+        )
 
     def staticFiles(self, filename):
         """Retrieve other files."""
-        return static_file(filename, root="data/web_static")
+        return static_file(
+            filename, root=os.path.join(self.static_file_path, "web_static")
+        )
 
     def begin_game(self):
         """Start game."""
@@ -732,10 +747,12 @@ class WebBoard(object):
         route("/")(self.index)
         route("/index.html")(self.index)
         route("/setup")(self.setup)
+        route("/referee")(self.referee)
         route("/js/<filename:re:.*\.js>")(self.jsFiles)
         route("/css/<filename:re:.*\.css>")(self.cssFiles)
         route("/images/<filename:re:.*\.(jpg|png|gif|ico)>")(self.imgFiles)
         route("/fonts/<filename:re:.*\.(eot|ttf|woff|svg)>")(self.fontFiles)
+        route("/webfonts/<filename:re:.*\.(eot|ttf|woff|svg)>")(self.fontFiles)
 
         # control
         route("/control/gbegin")(self.begin_game)
