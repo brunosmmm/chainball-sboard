@@ -39,4 +39,4 @@ class RemotePersistence(object):
         return self.remote_list
 
 
-PERSISTENT_REMOTE_DATA = RemotePersistence("data/persist/remote.json")
+PERSISTENT_REMOTE_DATA = RemotePersistence("userdata/persist/remote.json")
