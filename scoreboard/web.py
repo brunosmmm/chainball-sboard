@@ -2,6 +2,7 @@
 
 import json
 import logging
+import pkg_resources
 import time
 
 from bottle import (
@@ -12,6 +13,7 @@ from bottle import (
     run,
     static_file,
     template,
+    TEMPLATE_PATH,
 )
 from scoreboard.announce.timer import TimerAnnouncement
 from scoreboard.game.exceptions import (
@@ -42,6 +44,16 @@ class WebBoard(object):
         self.game = game_handler
         self.bind_all = bind_all
         self.logger = logging.getLogger("sboard.web")
+        try:
+            views = pkg_resources.resource_filename("scoreboard", "views")
+            # distribution found!
+            TEMPLATE_PATH.insert(0, views)
+
+            self.static_file_path = pkg_resources.resource_filename(
+                "scoreboard", "data/web_static"
+            )
+        except pkg_resources.DistributionNotFound:
+            pass
 
     def quit(self):
         """Initialize."""
