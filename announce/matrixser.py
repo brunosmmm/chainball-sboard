@@ -57,13 +57,13 @@ class MatrixControllerSerial(object):
 
     def __init__(self, serport):
         """Initialize."""
-        self.logger = logging.getLogger('sboard.matrixSer')
+        self.logger = logging.getLogger("sboard.matrixSer")
 
         try:
             self.ser_port = serial.Serial(serport, 115200)
             time.sleep(3)
         except:
-            self.logger.warning('Timer matrix not present')
+            self.logger.warning("Timer matrix not present")
             self.ser_port = None
 
         self.do_group = None
@@ -97,25 +97,22 @@ class MatrixControllerSerial(object):
         msg_buf = bytes()
         for message in to_send:
             section = bytes()
-            section += struct.pack('c', bytes([message.command]))
+            section += struct.pack("c", bytes([message.command]))
 
             for part in message.data:
                 if isinstance(part, int):
-                    section += struct.pack('c', bytes([part & 0xFF]))
+                    section += struct.pack("c", bytes([part & 0xFF]))
                 elif isinstance(part, str):
-                    section += struct.pack('c', bytes([len(part)]))
+                    section += struct.pack("c", bytes([len(part)]))
                     section += part.encode()
                 elif isinstance(part, Color):
                     r, g, b = part.to_list()
-                    section += struct.pack('ccc', bytes([r]),
-                                           bytes([g]),
-                                           bytes([b]))
+                    section += struct.pack("ccc", bytes([r]), bytes([g]), bytes([b]))
                 elif isinstance(part, bool):
-                    section += struct.pack('c', bytes([1]) if part
-                                           else bytes([0]))
+                    section += struct.pack("c", bytes([1]) if part else bytes([0]))
 
-            section = struct.pack('c', bytes([len(section)+2])) + section
-            section += struct.pack('c', bytes([0xFF]))
+            section = struct.pack("c", bytes([len(section) + 2])) + section
+            section += struct.pack("c", bytes([0xFF]))
 
             msg_buf += section
 
@@ -129,8 +126,7 @@ class MatrixControllerSerial(object):
 
     def putText(self, color, x, y, text, font, clear=False):
         """Draw text in the matrix."""
-        message = SerialMessage(CommandType.TEXT, [
-            x, y, color, text, font, clear])
+        message = SerialMessage(CommandType.TEXT, [x, y, color, text, font, clear])
         self._send_message(message)
 
     def fill(self, color):

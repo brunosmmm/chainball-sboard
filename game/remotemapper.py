@@ -23,9 +23,11 @@ class RemoteMapping(object):
     """Mapping logic class."""
 
     # configuration file name mapping
-    PLAYER_ACTIONS = {"INCR": GameTurnActions.INCREASE_SCORE,
-                      "DECR": GameTurnActions.DECREASE_SCORE,
-                      "PASS": GameTurnActions.PASS_TURN}
+    PLAYER_ACTIONS = {
+        "INCR": GameTurnActions.INCREASE_SCORE,
+        "DECR": GameTurnActions.DECREASE_SCORE,
+        "PASS": GameTurnActions.PASS_TURN,
+    }
     MASTER_ACTIONS = {"PAUSE": MasterRemoteActions.PAUSE_UNPAUSE_CLOCK}
 
     def __init__(self, logger_name):
@@ -53,67 +55,64 @@ class RemoteMapping(object):
             remote_map = json.load(remote_map_file)
             remote_map_file.close()
         except IOError:
-            self.logger.error('Could not open remote '
-                              'mapping configuration file')
+            self.logger.error("Could not open remote " "mapping configuration file")
             raise RemoteMappingLoadFailed
 
         if "playerMapping" not in remote_map:
-            raise RemoteMappingLoadFailed('Invalid remote configuration!')
+            raise RemoteMappingLoadFailed("Invalid remote configuration!")
 
         # clear previous mapping
         self.player_mapping = {}
         self.master_mapping = {}
 
         # load player mapping
-        for button, mapping in remote_map['playerMapping'].items():
+        for button, mapping in remote_map["playerMapping"].items():
             m = re.match(r"btn([0-9]+)", button)
 
             if m is not None:
                 if int(m.group(1)) > 2:
                     # invalid button
-                    raise RemoteMappingIllegalError('illegal'
-                                                    ' button:'
-                                                    ' "{}"'.format(m.group(1)))
+                    raise RemoteMappingIllegalError(
+                        "illegal" " button:" ' "{}"'.format(m.group(1))
+                    )
 
                 if mapping not in self.PLAYER_ACTIONS:
                     # invalid mapping
-                    raise RemoteMappingIllegalError('illegal'
-                                                    ' action:'
-                                                    ' "{}"'.format(mapping))
+                    raise RemoteMappingIllegalError(
+                        "illegal" " action:" ' "{}"'.format(mapping)
+                    )
 
                 # map button to action
-                self.player_mapping[int(m.group(1))] =\
-                    self.PLAYER_ACTIONS[mapping]
+                self.player_mapping[int(m.group(1))] = self.PLAYER_ACTIONS[mapping]
 
             else:
                 # invalid entry
-                raise RemoteMappingIllegalError('illegal button')
+                raise RemoteMappingIllegalError("illegal button")
 
         # load master mapping
-        for button, mapping in remote_map['masterMapping'].items():
+        for button, mapping in remote_map["masterMapping"].items():
             m = re.match(r"btn([0-9]+)", button)
 
             if m is not None:
                 if int(m.group(1)) > 2:
                     # invalid button
-                    raise RemoteMappingIllegalError('illegal'
-                                                    ' button:'
-                                                    ' "{}"'.format(m.group(1)))
+                    raise RemoteMappingIllegalError(
+                        "illegal" " button:" ' "{}"'.format(m.group(1))
+                    )
 
                 if mapping not in self.MASTER_ACTIONS:
                     # invalid mapping
-                    raise RemoteMappingIllegalError('illegal'
-                                                    ' action:'
-                                                    ' "{}"'.format(mapping))
+                    raise RemoteMappingIllegalError(
+                        "illegal" " action:" ' "{}"'.format(mapping)
+                    )
 
                 # map button to action
-                self.master_mapping[int(m.group(1))] =\
-                    self.MASTER_ACTIONS[mapping]
+                self.master_mapping[int(m.group(1))] = self.MASTER_ACTIONS[mapping]
 
             else:
                 # invalid entry
-                raise RemoteMappingIllegalError('illegal button')
+                raise RemoteMappingIllegalError("illegal button")
 
         # check that we have all necessary mappings
         if len(self.player_mapping) < 3:
-            raise RemoteMappingLoadFailed('Player remote mapping is invalid!')
+            raise RemoteMappingLoadFailed("Player remote mapping is invalid!")

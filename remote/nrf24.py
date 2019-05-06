@@ -2,6 +2,7 @@
 
 import time
 from util.threads import StoppableThread
+
 try:
     import Queue
 except ImportError:
@@ -26,7 +27,7 @@ class NRF24Chip(object):
 
     def __init__(self, bus, select, message_cb=None, fake_hw=False):
         """Initialize."""
-        self.logger = logging.getLogger('sboard.nrf24')
+        self.logger = logging.getLogger("sboard.nrf24")
         self.fake_hw = fake_hw
 
         if fake_hw is False:
@@ -39,12 +40,10 @@ class NRF24Chip(object):
             try:
                 self.spi_dev.open(bus, select)
                 self.spi_dev.max_speed_hz = 2000000
-                self.logger.debug('CS active HIGH = {}'
-                                  .format(self.spi_dev.cshigh))
-                self.logger.debug('Speed = {}'
-                                  .format(self.spi_dev.max_speed_hz))
+                self.logger.debug("CS active HIGH = {}".format(self.spi_dev.cshigh))
+                self.logger.debug("Speed = {}".format(self.spi_dev.max_speed_hz))
             except IOError:
-                self.logger.error('Cant open SPI device')
+                self.logger.error("Cant open SPI device")
                 raise
 
             # setup CE pin
@@ -87,8 +86,9 @@ class NRF24Chip(object):
     @_hw_comm_delay
     def read_regdata(self, reg_num, read_size):
         """Read multi word register data."""
-        dummy_write = [(rf.CMD_R_REG | reg_num) & 0xFF] +\
-                      [0x00 for x in range(read_size)]
+        dummy_write = [(rf.CMD_R_REG | reg_num) & 0xFF] + [
+            0x00 for x in range(read_size)
+        ]
         return self.spi_dev.xfer2(dummy_write)
 
     @_hw_comm_delay
@@ -127,26 +127,24 @@ class NRF24Chip(object):
 
     def tx_powerup(self):
         """Go into TX mode."""
-        self.write_reg(rf.REG_CONFIG,
-                       rf.EN_CRC | rf.CRCO | rf.PWR_UP | rf.PRIM_TX)
+        self.write_reg(rf.REG_CONFIG, rf.EN_CRC | rf.CRCO | rf.PWR_UP | rf.PRIM_TX)
 
     def rx_powerup(self):
         """Go into RX mode."""
-        self.write_reg(rf.REG_CONFIG,
-                       rf.EN_CRC | rf.CRCO | rf.PWR_UP | rf.PRIM_RX)
+        self.write_reg(rf.REG_CONFIG, rf.EN_CRC | rf.CRCO | rf.PWR_UP | rf.PRIM_RX)
 
     def initialize(self, addr, channel):
         """Initialize chip."""
         if self.fake_hw:
             return
 
-        self.logger.debug('initializing with parameters:'
-                          ' addr = {}; channel = {}'.format(addr,
-                                                            channel))
+        self.logger.debug(
+            "initializing with parameters:"
+            " addr = {}; channel = {}".format(addr, channel)
+        )
         self.clr_ce()
 
-        self.write_reg(rf.REG_RF_SETUP,
-                       rf.RF_SETUP_RF_PWR_6 | rf.RF_SETUP_RF_DR_250)
+        self.write_reg(rf.REG_RF_SETUP, rf.RF_SETUP_RF_PWR_6 | rf.RF_SETUP_RF_DR_250)
         self.write_reg(rf.REG_RX_PW_P0, NRF_PAYLOAD_SIZE)
         self.write_reg(rf.REG_RF_CH, channel)
 
@@ -155,9 +153,9 @@ class NRF24Chip(object):
 
         # quick sanity check!
         read_back = self.read_regdata(rf.REG_RX_ADDR_P0, 5)
-        self.logger.debug('reading address back: {}'.format(read_back[1:]))
+        self.logger.debug("reading address back: {}".format(read_back[1:]))
         if cmp(read_back[1:], addr):
-            self.logger.debug('communication not reliable')
+            self.logger.debug("communication not reliable")
 
         self.write_reg(rf.REG_EN_RXADDR, rf.EN_RXADDR_ERX_P0)
 
@@ -176,14 +174,14 @@ class NRF24Chip(object):
         if status & rf.STATUS_RX_DR:
             # receive payload
             payload = self.rx_payload()
-            self.logger.debug('incoming transmission, len = {}'
-                              .format(len(payload)-1))
+            self.logger.debug(
+                "incoming transmission, len = {}".format(len(payload) - 1)
+            )
             # callback
             if self.msg_cb:
                 self.msg_cb(payload[1:])
 
-            self.reset_irq(rf.STATUS_RX_DR | rf.STATUS_TX_DS |
-                           rf.STATUS_MAX_RT)
+            self.reset_irq(rf.STATUS_RX_DR | rf.STATUS_TX_DS | rf.STATUS_MAX_RT)
 
         if status & rf.STATUS_TX_DS:
             self.reset_irq(rf.STATUS_TX_DS)
@@ -194,8 +192,9 @@ class NRF24Chip(object):
         while self.read_reg(rf.REG_FIFO_STATUS) & 0x01 == 0:
             # receive payload
             payload = self.rx_payload()
-            self.logger.debug('incoming payload from FIFO, len = {}'
-                              .format(len(payload)-1))
+            self.logger.debug(
+                "incoming payload from FIFO, len = {}".format(len(payload) - 1)
+            )
 
             if self.msg_cb:
                 self.msg_cb(payload[1:])
@@ -221,7 +220,7 @@ class NRF24Handler(StoppableThread):
         super(NRF24Handler, self).__init__()
 
         # logging
-        self.logger = logging.getLogger('sboard.remote')
+        self.logger = logging.getLogger("sboard.remote")
 
         # create SPI device
         self.chip = NRF24Chip(0, 0, self._message_callback, fake_hw=fake_hw)
@@ -234,18 +233,16 @@ class NRF24Handler(StoppableThread):
 
     def initialize_hardware(self):
         """Initialize HW."""
-        self.logger.debug('Initializing NRF24 HW')
+        self.logger.debug("Initializing NRF24 HW")
         self.chip.initialize(self.ADDRESS, self.CHANNEL)
 
     def _message_callback(self, payload):
         # process payload
         try:
-            self.logger.debug('Received payload, length is {}'
-                              .format(len(payload)))
+            self.logger.debug("Received payload, length is {}".format(len(payload)))
 
         except TypeError:
-            self.logger.debug('Payload is wrong type, dump: {}'
-                              .format(payload))
+            self.logger.debug("Payload is wrong type, dump: {}".format(payload))
         self.msg_q.put(NRF24Message(payload))
 
     def message_pending(self):

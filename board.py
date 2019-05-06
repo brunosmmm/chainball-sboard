@@ -16,36 +16,37 @@ if __name__ == "__main__":
 
     # Parse Command Line arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument('--nohw', action='store_true',
-                        help='hardware not present, development only')
-    parser.add_argument('--port', help='web interface port', default=80)
+    parser.add_argument(
+        "--nohw", action="store_true", help="hardware not present, development only"
+    )
+    parser.add_argument("--port", help="web interface port", default=80)
 
     args = parser.parse_args()
 
     # main loop
-    logging.basicConfig(level=logging.DEBUG,
-                        filename='scoreboard.log',
-                        filemode='w',
-                        format='%(asctime)s - %(name)s -'
-                        ' %(levelname)s - %(message)s')
+    logging.basicConfig(
+        level=logging.DEBUG,
+        filename="scoreboard.log",
+        filemode="w",
+        format="%(asctime)s - %(name)s -" " %(levelname)s - %(message)s",
+    )
 
     console = logging.StreamHandler()
     console.setLevel(logging.INFO)
-    logging.getLogger('').addHandler(console)
+    logging.getLogger("").addHandler(console)
 
-    logger = logging.getLogger('sboard')
+    logger = logging.getLogger("sboard")
 
     # publish as service
     published = False
     try:
-        avahi_service = ZeroconfService(name='Chainball Scoreboard',
-                                        port=args.port,
-                                        stype='_http._tcp')
+        avahi_service = ZeroconfService(
+            name="Chainball Scoreboard", port=args.port, stype="_http._tcp"
+        )
         avahi_service.publish()
         published = True
     except Exception as ex:
-        logger.error('failed to publish scoreboard service: {}'
-                     .format(ex))
+        logger.error("failed to publish scoreboard service: {}".format(ex))
 
     logger.info("Scoreboard Starting")
 

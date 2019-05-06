@@ -8,6 +8,7 @@ import threading
 import serial
 from score.constants import PlayerScoreCommands, PlayerScoreConstraints
 from score.exceptions import TextTooBigError
+
 try:
     import Queue
 except ImportError:
@@ -46,20 +47,21 @@ class ScoreHandler(StoppableThread):
 
         self.serial_port = serial_port
         self.serial_baud = serial_baud
-        self.logger = logging.getLogger('sboard.scoreHandler')
+        self.logger = logging.getLogger("sboard.scoreHandler")
 
         # open serial connection
-        self.logger.debug('Opening serial port: {}'.format(self.serial_port))
+        self.logger.debug("Opening serial port: {}".format(self.serial_port))
         try:
             if virt_hw is False:
-                self.ser_port = serial.Serial(self.serial_port,
-                                              self.serial_baud)
+                self.ser_port = serial.Serial(self.serial_port, self.serial_baud)
             else:
                 self.master_port, self.slave_port = pty.openpty()
-                self.ser_port = serial.Serial(os.ttyname(self.slave_port),
-                                              self.serial_baud,
-                                              rtscts=True,
-                                              dsrdtr=True)
+                self.ser_port = serial.Serial(
+                    os.ttyname(self.slave_port),
+                    self.serial_baud,
+                    rtscts=True,
+                    dsrdtr=True,
+                )
         except IOError:
             print("Can't open serial port")
             raise
@@ -71,52 +73,51 @@ class ScoreHandler(StoppableThread):
         self.is_running = threading.Event()
 
     def _write_score(self, player, score):
-        buf = struct.pack('4s',
-                          bytes([player,
-                                 PlayerScoreCommands.SCORE,
-                                 score,
-                                 PlayerScoreCommands.TERM]))
+        buf = struct.pack(
+            "4s",
+            bytes([player, PlayerScoreCommands.SCORE, score, PlayerScoreCommands.TERM]),
+        )
         self.ser_port.write(buf)
 
     def _clear_score(self, player):
-        self.logger.debug('issuing CLR to player {}'.format(player))
-        buf = struct.pack('3s',
-                          bytes([player,
-                                 PlayerScoreCommands.CLR,
-                                 PlayerScoreCommands.TERM]))
+        self.logger.debug("issuing CLR to player {}".format(player))
+        buf = struct.pack(
+            "3s", bytes([player, PlayerScoreCommands.CLR, PlayerScoreCommands.TERM])
+        )
         self.ser_port.write(buf)
 
     def _set_turn(self, player):
-        buf = struct.pack('3s',
-                          bytes([player,
-                                 PlayerScoreCommands.TURN,
-                                 PlayerScoreCommands.TERM]))
+        buf = struct.pack(
+            "3s", bytes([player, PlayerScoreCommands.TURN, PlayerScoreCommands.TERM])
+        )
         self.ser_port.write(buf)
 
     def _set_text(self, player, text):
-        self.logger.debug('setting text: player {} -> {}'.format(player, text))
-        buf = struct.pack('ccc{}sc'.format(len(text)),
-                          bytes([player]),
-                          bytes([PlayerScoreCommands.DATA]),
-                          bytes([len(text)]),
-                          text.encode(),
-                          bytes([PlayerScoreCommands.TERM]))
+        self.logger.debug("setting text: player {} -> {}".format(player, text))
+        buf = struct.pack(
+            "ccc{}sc".format(len(text)),
+            bytes([player]),
+            bytes([PlayerScoreCommands.DATA]),
+            bytes([len(text)]),
+            text.encode(),
+            bytes([PlayerScoreCommands.TERM]),
+        )
         self.ser_port.write(buf)
 
     def _set_mode(self, player, mode):
-        buf = struct.pack('4s',
-                          bytes([player,
-                                 PlayerScoreCommands.MODE,
-                                 mode,
-                                 PlayerScoreCommands.TERM]))
+        buf = struct.pack(
+            "4s",
+            bytes([player, PlayerScoreCommands.MODE, mode, PlayerScoreCommands.TERM]),
+        )
         self.ser_port.write(buf)
 
     def _set_blink(self, player, bitfield):
-        buf = struct.pack('cccc',
-                          bytes([player,
-                                 PlayerScoreCommands.BLINK,
-                                 bitfield,
-                                 PlayerScoreCommands.TERM]))
+        buf = struct.pack(
+            "cccc",
+            bytes(
+                [player, PlayerScoreCommands.BLINK, bitfield, PlayerScoreCommands.TERM]
+            ),
+        )
         self.ser_port.write(buf)
 
     @classmethod
@@ -129,44 +130,44 @@ class ScoreHandler(StoppableThread):
 
     def blink_start(self, player, fast=False):
         """Start blinking player score."""
-        self.logger.debug('Setting player {} score to blink'.format(player))
+        self.logger.debug("Setting player {} score to blink".format(player))
 
         # enable blinking
         bitfield = 0x01
         if fast:
             bitfield |= 0x02
 
-        self.evt_q.put(ScoreUpdateEvent(ScoreUpdateEventTypes.BLINK_SCORE,
-                                        [player, bitfield]))
+        self.evt_q.put(
+            ScoreUpdateEvent(ScoreUpdateEventTypes.BLINK_SCORE, [player, bitfield])
+        )
 
     def blink_stop(self, player, enable=True):
         """Stop blinking."""
-        self.logger.debug('Stopping score blinking for player {}'
-                          .format(player))
+        self.logger.debug("Stopping score blinking for player {}".format(player))
 
         # disable blinking
         bitfield = 0x00
         if enable:
             bitfield |= 0x04
 
-        self.evt_q.put(ScoreUpdateEvent(ScoreUpdateEventTypes.BLINK_SCORE,
-                                        [player, bitfield]))
+        self.evt_q.put(
+            ScoreUpdateEvent(ScoreUpdateEventTypes.BLINK_SCORE, [player, bitfield])
+        )
 
     def update_score(self, player, score):
         """Update score."""
-        self.logger.info('Updating player {} score to {}'.format(player,
-                                                                 score))
+        self.logger.info("Updating player {} score to {}".format(player, score))
         if not self.check_score_bounds(score):
-            raise ValueError('Invalid score value')
+            raise ValueError("Invalid score value")
 
-        self.evt_q.put(ScoreUpdateEvent(ScoreUpdateEventTypes.SCORE_UPD,
-                                        [player, score + 10]))
+        self.evt_q.put(
+            ScoreUpdateEvent(ScoreUpdateEventTypes.SCORE_UPD, [player, score + 10])
+        )
 
     def set_turn(self, player):
         """Set active turn."""
-        self.logger.info('Switching to player {} turn'.format(player))
-        self.evt_q.put(ScoreUpdateEvent(ScoreUpdateEventTypes.SET_TURN,
-                                        [player]))
+        self.logger.info("Switching to player {} turn".format(player))
+        self.evt_q.put(ScoreUpdateEvent(ScoreUpdateEventTypes.SET_TURN, [player]))
 
     # backwards compatibility
     def register_player(self, player, text):
@@ -180,21 +181,21 @@ class ScoreHandler(StoppableThread):
 
         if len(text) > PlayerScoreConstraints.LARGE_TEXT_MAX_LEN:
             if len(text) > PlayerScoreConstraints.SMALL_TEXT_MAX_LEN:
-                raise TextTooBigError('Player text is too big')
-            self.evt_q.put(ScoreUpdateEvent(ScoreUpdateEventTypes.SET_MODE,
-                                            [player, 0]))
+                raise TextTooBigError("Player text is too big")
+            self.evt_q.put(
+                ScoreUpdateEvent(ScoreUpdateEventTypes.SET_MODE, [player, 0])
+            )
         else:
-            self.evt_q.put(ScoreUpdateEvent(ScoreUpdateEventTypes.SET_MODE,
-                                            [player, 1]))
+            self.evt_q.put(
+                ScoreUpdateEvent(ScoreUpdateEventTypes.SET_MODE, [player, 1])
+            )
 
         # write text
-        self.evt_q.put(ScoreUpdateEvent(ScoreUpdateEventTypes.SET_TEXT,
-                                        [player, text]))
+        self.evt_q.put(ScoreUpdateEvent(ScoreUpdateEventTypes.SET_TEXT, [player, text]))
 
     def unregister_player(self, player):
         """Unregister player."""
-        self.evt_q.put(ScoreUpdateEvent(ScoreUpdateEventTypes.TURN_OFF,
-                                        [player]))
+        self.evt_q.put(ScoreUpdateEvent(ScoreUpdateEventTypes.TURN_OFF, [player]))
 
     def process_queue(self):
         """Process display command queue."""

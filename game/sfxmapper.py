@@ -25,8 +25,10 @@ class SFXMappableEvents(object):
 class SFXMapping(object):
     """Mapping logic."""
 
-    MAPPABLE_EVENTS = {"gameEnd": SFXMappableEvents.GAME_END,
-                       "cowOut": SFXMappableEvents.COW_OUT}
+    MAPPABLE_EVENTS = {
+        "gameEnd": SFXMappableEvents.GAME_END,
+        "cowOut": SFXMappableEvents.COW_OUT,
+    }
 
     def __init__(self):
         """Initialize."""
@@ -46,13 +48,14 @@ class SFXMapping(object):
             sfx_map = json.loads(sfx_map_file.read())
             sfx_map_file.close()
         except IOError:
-            raise SFXMappingLoadFailed('Could not open '
-                                       'sfx mapping configuration file')
+            raise SFXMappingLoadFailed(
+                "Could not open " "sfx mapping configuration file"
+            )
 
         if "sfxmap" not in sfx_map:
-            raise SFXMappingLoadFailed('Configuration is invalid')
+            raise SFXMappingLoadFailed("Configuration is invalid")
 
-        for key, value in sfx_map['sfxmap'].items():
+        for key, value in sfx_map["sfxmap"].items():
             if key not in self.MAPPABLE_EVENTS:
                 continue
 

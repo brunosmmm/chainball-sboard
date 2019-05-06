@@ -15,7 +15,7 @@ class ChainballGameConfiguration(object):
 
     def __init__(self):
         """Initialize."""
-        self.logger = logging.getLogger('sboard.config')
+        self.logger = logging.getLogger("sboard.config")
 
         self.score_announce_interval = _SCORE_ANNOUNCE_INTVAL_DEFAULT
         self.pair_timeout = _PAIR_TIMEOUT_DEFAULT
@@ -31,23 +31,21 @@ class ChainballGameConfiguration(object):
            Configuration file path
         """
         try:
-            with open(filename, 'r') as f:
+            with open(filename, "r") as f:
                 config_data = json.load(f)
         except:
-            self.logger.warning('Could not load configuration file,'
-                                'using defaults')
+            self.logger.warning("Could not load configuration file," "using defaults")
             config_data = {}
 
         # load stuff
-        if 'scoreAnnounceInterval' in config_data:
-            self.score_announce_interval =\
-                int(config_data['scoreAnnounceInterval'])
+        if "scoreAnnounceInterval" in config_data:
+            self.score_announce_interval = int(config_data["scoreAnnounceInterval"])
 
-        if 'pairTimeout' in config_data:
-            self.pair_timeout = int(config_data['pairTimeout'])
+        if "pairTimeout" in config_data:
+            self.pair_timeout = int(config_data["pairTimeout"])
 
-        if 'serveTimeout' in config_data:
-            self.serve_timeout = int(config_data['serveTimeout'])
+        if "serveTimeout" in config_data:
+            self.serve_timeout = int(config_data["serveTimeout"])
 
-        if 'gameDurationMinutes' in config_data:
-            self.game_duration = int(config_data['gameDurationMinutes'])
+        if "gameDurationMinutes" in config_data:
+            self.game_duration = int(config_data["gameDurationMinutes"])

@@ -11,13 +11,13 @@ class RemotePersistence(object):
         self.pfile = persistence_file
 
         try:
-            with open(persistence_file, 'r') as f:
+            with open(persistence_file, "r") as f:
                 self.remote_list = json.load(f)
         except:
             self.remote_list = {}
 
     def _do_save(self):
-        with open(self.pfile, 'w') as f:
+        with open(self.pfile, "w") as f:
             json.dump(self.remote_list, f)
 
     def is_known(self, remote_id):
@@ -39,4 +39,4 @@ class RemotePersistence(object):
         return self.remote_list
 
 
-PERSISTENT_REMOTE_DATA = RemotePersistence('data/persist/remote.json')
+PERSISTENT_REMOTE_DATA = RemotePersistence("data/persist/remote.json")

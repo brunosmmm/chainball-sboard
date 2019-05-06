@@ -16,12 +16,12 @@ class RemoteDecoder(object):
     def decode(cls, message):
         """Decode message."""
         buf = "".join([chr(x) for x in message])
-        remote_id = struct.unpack_from('I', buf, 0)[0]
+        remote_id = struct.unpack_from("I", buf, 0)[0]
         command = message[4]
         command_data = message[5]
 
         if remote_id == 0:
-            raise IOError('Invalid message')
+            raise IOError("Invalid message")
 
         # persistence hack
         if PERSISTENT_REMOTE_DATA.is_known(remote_id):
@@ -40,8 +40,7 @@ class RemoteDecoder(object):
     def __repr__(self):
         """Dump strings."""
         if self.command == RemoteCommands.BATT:
-            return "remote({}): BATT -> {}%".format(hex(self.remote_id),
-                                                    self.cmd_data)
+            return "remote({}): BATT -> {}%".format(hex(self.remote_id), self.cmd_data)
 
         ret = "remote({}): BTN({}) ".format(hex(self.remote_id), self.cmd_data)
 

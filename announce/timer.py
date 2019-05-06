@@ -30,12 +30,12 @@ class TimerHandler(object):
     def __init__(self, timer_end=None, chainball_game=None, rgbmat=True):
         """Initialize."""
         if rgbmat:
-            self.logger = logging.getLogger('sboard.timer')
+            self.logger = logging.getLogger("sboard.timer")
         else:
-            self.logger = logging.getLogger('sboard.ptimer')
+            self.logger = logging.getLogger("sboard.ptimer")
 
         if rgbmat:
-            self.matCli = MatrixControllerSerial('/dev/ttyUSB0')
+            self.matCli = MatrixControllerSerial("/dev/ttyUSB0")
             self.matCli.clear()
         else:
             self.matCli = None
@@ -119,9 +119,10 @@ class TimerHandler(object):
                 self.game.players[self.a_player].show_text(self.a_msg.text)
             td = datetime.datetime.now() - self.a_start
             if td.seconds >= self.a_duration:
-                self.logger.debug('Announcement ends: delta = {},'
-                                  ' duration = {}'.format(td.seconds,
-                                                          self.a_duration))
+                self.logger.debug(
+                    "Announcement ends: delta = {},"
+                    " duration = {}".format(td.seconds, self.a_duration)
+                )
 
                 if self.a_kind == AnnouncementKind.PLAYER_PANEL:
                     # restore player text
@@ -160,11 +161,11 @@ class TimerHandler(object):
     def draw(self, minutes, seconds):
         """Draw timer text."""
         if minutes > 9:
-            m_r = int(0.425*(1200 - (minutes*60 + seconds)))
+            m_r = int(0.425 * (1200 - (minutes * 60 + seconds)))
             m_g = 255
         else:
             m_r = 255
-            m_g = int(0.425*(minutes*60 + seconds))
+            m_g = int(0.425 * (minutes * 60 + seconds))
 
         min_str = "{:0>2d}".format(minutes)
         sec_str = "{:0>2d}".format(seconds)
@@ -180,8 +181,7 @@ class TimerHandler(object):
         if m_g < 0:
             m_g = 0
 
-        self.matCli.putText(Color(m_r, m_g, 0), 0, 1, min_str[0], 2,
-                            clear=True)
+        self.matCli.putText(Color(m_r, m_g, 0), 0, 1, min_str[0], 2, clear=True)
         self.matCli.putText(Color(m_r, m_g, 0), 11, 1, min_str[1], 2)
         self.matCli.putText(Color(255, 0, 0), 21, 0, sec_str, 1)
         self.matCli.end_screen()
@@ -191,7 +191,7 @@ class TimerHandler(object):
         self.matCli.begin_screen()
 
         xoff = 1
-        text = '{:^6}'.format(self.a_msg.heading)
+        text = "{:^6}".format(self.a_msg.heading)
         for c in text:
             self.matCli.putText(Color(255, 255, 255), xoff, 0, c, 1)
             xoff += 5
@@ -199,7 +199,7 @@ class TimerHandler(object):
         if len(self.a_msg.text) > 0:
             xoff = 1
             # format
-            text = '{:^6}'.format(self.a_msg.text)
+            text = "{:^6}".format(self.a_msg.text)
             for c in text:
                 self.matCli.putText(Color(0, 255, 255), xoff, 8, c, 1)
                 xoff += 5
@@ -236,18 +236,19 @@ class TimerHandler(object):
     # hack hack hack hack
     def announcement(self, announcement, duration):
         """Do announcement."""
-        self.logger.debug('queuing announcement')
+        self.logger.debug("queuing announcement")
         self.a_queue.append([announcement, duration, -1])
 
     def player_announcement(self, announcement, duration, player_number):
         """Do announcement on player panels."""
-        self.logger.debug('queuing player announcement')
+        self.logger.debug("queuing player announcement")
         self.a_queue.append([announcement, duration, player_number])
 
     def _announcement(self, announcement, duration, player_panel):
 
-        self.logger.debug('Announcing: {} -> {}'.format(announcement.heading,
-                                                        announcement.text))
+        self.logger.debug(
+            "Announcing: {} -> {}".format(announcement.heading, announcement.text)
+        )
 
         if player_panel > -1:
             self.a_kind = AnnouncementKind.PLAYER_PANEL

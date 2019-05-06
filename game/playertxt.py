@@ -15,10 +15,10 @@ class PlayerText(object):
            Complete player name displayed in web interface
         """
         if panel_txt is None:
-            raise ValueError('Display name cannot be empty')
+            raise ValueError("Display name cannot be empty")
         else:
             if len(panel_txt) == 0:
-                raise ValueError('Display name cannot be empty')
+                raise ValueError("Display name cannot be empty")
 
         if web_txt is not None:
             if len(web_txt) > 0:
@@ -30,4 +30,4 @@ class PlayerText(object):
 
     def __repr__(self):
         """Dump representation."""
-        return '{}, {}'.format(self.panel_txt, self.web_txt)
+        return "{}, {}".format(self.panel_txt, self.web_txt)

@@ -10,7 +10,7 @@ class RemotePairHandler(object):
 
     def __init__(self, fail_cb=None, success_cb=None):
         """Initialize."""
-        self.logger = logging.getLogger('sboard.pairHandler')
+        self.logger = logging.getLogger("sboard.pairHandler")
         self.state = RemotePairStates.IDLE
         self.player_pair = None
         self.timer = None
@@ -22,7 +22,7 @@ class RemotePairHandler(object):
 
     def start_pair(self, player, pair_timeout):
         """Start remote pairing."""
-        self.logger.info('Pairing remote for player {}'.format(player))
+        self.logger.info("Pairing remote for player {}".format(player))
         self.timer = time.time()
         self.timeout = pair_timeout
         self.player_pair = player
@@ -53,8 +53,9 @@ class RemotePairHandler(object):
                 self.state = RemotePairStates.ERROR
                 self.fail_reason = RemotePairFailureType.ALREADY_PAIRED
                 if self.fail_callback:
-                    self.fail_callback(self.player_pair,
-                                       RemotePairFailureType.ALREADY_PAIRED)
+                    self.fail_callback(
+                        self.player_pair, RemotePairFailureType.ALREADY_PAIRED
+                    )
             else:
                 # track pairing
                 self.pair_track[message.remote_id] = self.player_pair
@@ -81,5 +82,4 @@ class RemotePairHandler(object):
                 self.fail_reason = RemotePairFailureType.TIMEOUT
                 # failure callback
                 if self.fail_callback:
-                    self.fail_callback(self.player_pair,
-                                       RemotePairFailureType.TIMEOUT)
+                    self.fail_callback(self.player_pair, RemotePairFailureType.TIMEOUT)

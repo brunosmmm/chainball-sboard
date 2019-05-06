@@ -8,13 +8,18 @@ from score.constants import PlayerServeStates
 class PlayerScore(object):
     """Player score."""
 
-    def __init__(self, serve_timeout,
-                 handler=None, player_id=None,
-                 remote_id=None, autoadv_cb=None):
+    def __init__(
+        self,
+        serve_timeout,
+        handler=None,
+        player_id=None,
+        remote_id=None,
+        autoadv_cb=None,
+    ):
         """Initialize."""
         self.initialized = False
 
-        self.logger = logging.getLogger('sboard.score_{}'.format(player_id))
+        self.logger = logging.getLogger("sboard.score_{}".format(player_id))
 
         self.handler = handler
         self.pid = player_id
@@ -87,8 +92,9 @@ class PlayerScore(object):
                 # enforce scoring window, pass serve automatically
                 self.start_score()
             else:
-                self.logger.debug('Forcing player {} score to {}'
-                                  .format(self.pid, self.current_score))
+                self.logger.debug(
+                    "Forcing player {} score to {}".format(self.pid, self.current_score)
+                )
 
     def show_text(self, text):
         """Show text at assigned panel."""
@@ -100,20 +106,24 @@ class PlayerScore(object):
 
     def start_serve(self):
         """Mark as serving."""
-        self.logger.debug('Player {} serving'.format(self.pid))
+        self.logger.debug("Player {} serving".format(self.pid))
         self.serve_state = PlayerServeStates.SERVING
 
     def end_serve(self):
         """Serve done."""
-        if self.serve_state == PlayerServeStates.SERVING or\
-           self.serve_state == PlayerServeStates.SCORED:
+        if (
+            self.serve_state == PlayerServeStates.SERVING
+            or self.serve_state == PlayerServeStates.SCORED
+        ):
             self.serve_state = PlayerServeStates.FINISHED
 
     def start_score(self):
         """Start score window."""
         if self.serve_state != PlayerServeStates.SCORED:
-            self.logger.debug('Player {} scored; scoring window'
-                              ' closes in 3 seconds'.format(self.pid))
+            self.logger.debug(
+                "Player {} scored; scoring window"
+                " closes in 3 seconds".format(self.pid)
+            )
             self.score_start_timer = time.time()
             self.serve_state = PlayerServeStates.SCORED
 
@@ -135,8 +145,9 @@ class PlayerScore(object):
         if self.serve_state == PlayerServeStates.SCORED:
             if time.time() - self.score_start_timer > self._serve_timeout:
                 # autoadvance
-                self.logger.debug('Scoring window closed for '
-                                  'player {}, advancing'.format(self.pid))
+                self.logger.debug(
+                    "Scoring window closed for " "player {}, advancing".format(self.pid)
+                )
                 if self.autoadvance_callback:
                     self.autoadvance_callback()
                 self.serve_state = PlayerServeStates.FINISHED

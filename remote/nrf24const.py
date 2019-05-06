@@ -57,10 +57,10 @@ STATUS_RX_P_NO_1 = 0x02
 STATUS_RX_P_NO_0 = 0x00
 STATUS_TX_FULL = 0x01
 
-EN_CRC = (1 << 3)
-CRCO = (1 << 2)
-PWR_UP = (1 << 1)
-PRIM_RX = (1 << 0)
+EN_CRC = 1 << 3
+CRCO = 1 << 2
+PWR_UP = 1 << 1
+PRIM_RX = 1 << 0
 PRIM_TX = 0
 
 RF_SETUP_RF_DR = 0x08

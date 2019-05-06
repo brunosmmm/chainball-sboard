@@ -7,20 +7,31 @@ from remote.decoder import RemoteDecoder
 from remote.constants import RemoteCommands, RemotePairFailureType
 from remote.pair import RemotePairHandler
 import logging
-from game.exceptions import (PlayerNotPairedError, PlayerNotRegisteredError,
-                             MasterRemoteAlreadyPairedError,
-                             PlayerAlreadyPairedError, GameRunningError,
-                             TooManyPlayersError, GameAlreadyStarterError,
-                             NotEnoughPlayersError, PlayerRemoteNotPaired,
-                             GameNotStartedError, GameAlreadyPausedError,
-                             GameNotPausedError)
+from game.exceptions import (
+    PlayerNotPairedError,
+    PlayerNotRegisteredError,
+    MasterRemoteAlreadyPairedError,
+    PlayerAlreadyPairedError,
+    GameRunningError,
+    TooManyPlayersError,
+    GameAlreadyStarterError,
+    NotEnoughPlayersError,
+    PlayerRemoteNotPaired,
+    GameNotStartedError,
+    GameAlreadyPausedError,
+    GameNotPausedError,
+)
 from announce.timer import TimerHandler, TimerAnnouncement
 from game.persist import GamePersistance, PlayerPersistData, GameEventTypes
 from util.soundfx import GameSFXHandler
 from game.remotemapper import RemoteMapping, RemoteMappingLoadFailed
 from game.constants import GameTurnActions, MasterRemoteActions
-from game.sfxmapper import (SFXMapping, SFXMappingLoadFailed,
-                            SFXUnknownEvent, SFXMappableEvents)
+from game.sfxmapper import (
+    SFXMapping,
+    SFXMappingLoadFailed,
+    SFXUnknownEvent,
+    SFXMappableEvents,
+)
 from game.config import ChainballGameConfiguration
 
 
@@ -37,51 +48,61 @@ class ChainballGame(object):
 
     def __init__(self, virtual_hw=False):
         """Initialize."""
-        self.logger = logging.getLogger('sboard.game')
+        self.logger = logging.getLogger("sboard.game")
 
-        self.s_handler = ScoreHandler('/dev/ttyAMA0', virt_hw=virtual_hw)
+        self.s_handler = ScoreHandler("/dev/ttyAMA0", virt_hw=virtual_hw)
         self.rf_handler = NRF24Handler(fake_hw=virtual_hw)
 
         # load remote mapping configuration file
-        self.remote_mapping = RemoteMapping('rm_map')
+        self.remote_mapping = RemoteMapping("rm_map")
         try:
-            self.remote_mapping.load_config('conf/remotemap.json')
+            self.remote_mapping.load_config("conf/remotemap.json")
         except RemoteMappingLoadFailed:
-            self.logger.error('Failed to load remote button mapping')
+            self.logger.error("Failed to load remote button mapping")
             exit(1)
 
         # load SFX mapping configuration file
         self.sfx_mapping = SFXMapping()
         try:
-            self.sfx_mapping.load_config('conf/game.json')
+            self.sfx_mapping.load_config("conf/game.json")
         except SFXMappingLoadFailed:
-            self.logger.error('Failed to load SFX mapping')
+            self.logger.error("Failed to load SFX mapping")
 
         # load other game configuration
         self.game_config = ChainballGameConfiguration()
         try:
-            self.game_config.load_config('conf/game.json')
+            self.game_config.load_config("conf/game.json")
         except:
-            self.logger.error('Failed to load game configuration')
+            self.logger.error("Failed to load game configuration")
 
         # remote pair handler (non-threaded)
-        self.pair_handler = RemotePairHandler(fail_cb=self.pair_fail,
-                                              success_cb=self.pair_end)
+        self.pair_handler = RemotePairHandler(
+            fail_cb=self.pair_fail, success_cb=self.pair_end
+        )
         # timer handler for RGB matrix
         self.timer_handler = TimerHandler(self.game_timeout, self)
         # timer handler for player panels
         self.ptimer_handler = TimerHandler(self.game_timeout, self, False)
 
         # create player dictionary
-        self.players = dict([(x, PlayerScore(self.game_config.serve_timeout,
-                                             self.s_handler,
-                                             x,
-                                             autoadv_cb=self.game_pass_turn))
-                             for x in range(4)])
+        self.players = dict(
+            [
+                (
+                    x,
+                    PlayerScore(
+                        self.game_config.serve_timeout,
+                        self.s_handler,
+                        x,
+                        autoadv_cb=self.game_pass_turn,
+                    ),
+                )
+                for x in range(4)
+            ]
+        )
         self.player_count = 0
 
         # game persistance
-        self.g_persist = GamePersistance('data/persist/games')
+        self.g_persist = GamePersistance("data/persist/games")
 
         # set flags
         self.ongoing = False
@@ -106,8 +127,7 @@ class ChainballGame(object):
             self.sfx_handler = GameSFXHandler()
         except Exception as ex:
             raise
-            self.logger.error('Failed to initialize SFX handler with: {}'
-                              .format(ex))
+            self.logger.error("Failed to initialize SFX handler with: {}".format(ex))
 
         # other variables
         self._current_fault_count = 0
@@ -115,7 +135,8 @@ class ChainballGame(object):
     def post_init(self):
         """Post-initialization tasks."""
         self.timer_handler.announcement(
-            TimerAnnouncement("CHAIN", "BALL", self.init_announcement_end), 10)
+            TimerAnnouncement("CHAIN", "BALL", self.init_announcement_end), 10
+        )
 
     def init_announcement_end(self):
         """Do setup after initialization announcement."""
@@ -124,17 +145,19 @@ class ChainballGame(object):
     def unpair_remote(self, player):
         """Unpair a players remote."""
         if player not in self.players:
-            raise KeyError('Invalid Player')
+            raise KeyError("Invalid Player")
 
         if self.players[player].registered is False:
-            raise PlayerNotRegisteredError('Player not registered')
+            raise PlayerNotRegisteredError("Player not registered")
 
         if self.players[player].remote_id is None:
-            raise PlayerNotPairedError('Player not paired to a remote')
+            raise PlayerNotPairedError("Player not paired to a remote")
 
-        self.logger.info('Unpairing remote {} for player {}'
-                         .format(self.players[player].remote_id,
-                                 player))
+        self.logger.info(
+            "Unpairing remote {} for player {}".format(
+                self.players[player].remote_id, player
+            )
+        )
 
         self.pair_handler.stop_tracking(self.players[player].remote_id)
         self.players[player].remote_id = None
@@ -143,7 +166,8 @@ class ChainballGame(object):
         """Pair master remote."""
         if self.m_remote.remote_id is not None:
             raise MasterRemoteAlreadyPairedError(
-                'Already paired to {}'.format(self.m_remote.remote_id))
+                "Already paired to {}".format(self.m_remote.remote_id)
+            )
         # pair
         self.pair_handler.start_pair("master", self.game_config.pair_timeout)
 
@@ -155,14 +179,15 @@ class ChainballGame(object):
     def pair_remote(self, player):
         """Pair a players remote."""
         if player not in self.players:
-            raise KeyError('Invalid player')
+            raise KeyError("Invalid player")
 
         if self.players[player].registered is False:
-            raise PlayerNotRegisteredError('Player not registered')
+            raise PlayerNotRegisteredError("Player not registered")
 
         if self.players[player].remote_id:
             raise PlayerAlreadyPairedError(
-                'Already paired to {}'.format(self.players[player].remote_id))
+                "Already paired to {}".format(self.players[player].remote_id)
+            )
 
         # start pairing
         self.pair_handler.start_pair(player, self.game_config.pair_timeout)
@@ -171,44 +196,49 @@ class ChainballGame(object):
         """Finish pairing remote."""
         if player == "master":
             self.m_remote.remote_id = remote_id
-            self.logger.info('Paired remote {} as the master remote'
-                             .format(remote_id))
+            self.logger.info("Paired remote {} as the master remote".format(remote_id))
             return
 
         self.players[player].remote_id = remote_id
-        self.logger.info('Paired player {} to remote {}'
-                         .format(player,
-                                 self.players[player].remote_id))
+        self.logger.info(
+            "Paired player {} to remote {}".format(
+                player, self.players[player].remote_id
+            )
+        )
 
     def pair_fail(self, player, reason=None):
         """Remote pairing failed."""
         if reason == RemotePairFailureType.TIMEOUT:
-            self.logger.info('Pairing for player {}'
-                             ' failed due to a timeout'.format(player))
+            self.logger.info(
+                "Pairing for player {}" " failed due to a timeout".format(player)
+            )
         elif reason == RemotePairFailureType.ALREADY_PAIRED:
-            self.logger.info('Pairing for player {} '
-                             'failed: remote is already paired'.format(player))
+            self.logger.info(
+                "Pairing for player {} "
+                "failed: remote is already paired".format(player)
+            )
         else:
-            self.logger.info('Pairing for player {}'
-                             'failed due to an unknown reason'.format(player))
+            self.logger.info(
+                "Pairing for player {}" "failed due to an unknown reason".format(player)
+            )
 
     def pair_running(self):
         """Get if pairing is occurring."""
         if self.pair_handler.is_running():
-            return ['PAIR', None]
+            return ["PAIR", None]
         elif self.pair_handler.has_failed() is not None:
-            return ['FAIL', self.pair_handler.has_failed()]
+            return ["FAIL", self.pair_handler.has_failed()]
 
-        return ['IDLE', None]
+        return ["IDLE", None]
 
     def shutdown(self):
         """Shutdown engine."""
-        self.logger.debug('shutting down game engine')
+        self.logger.debug("shutting down game engine")
         self.s_handler.stop()
         self.rf_handler.stop()
         self.s_handler.join()
         self.rf_handler.join()
-        self.logger.debug('game enging shutdown complete')
+        self.logger.debug("game enging shutdown complete")
 
     def game_can_start(self):
         """Verify if game can be started."""
@@ -238,8 +268,9 @@ class ChainballGame(object):
 
         self.timer_handler.announcement(announcement, duration)
 
-    def do_player_announcement(self, player_number, announcement, duration,
-                               dont_handle=False):
+    def do_player_announcement(
+        self, player_number, announcement, duration, dont_handle=False
+    ):
         """Perform announcement in player panels."""
         if dont_handle is False:
             # save callback
@@ -249,8 +280,7 @@ class ChainballGame(object):
             announcement.cb = self.default_announcement_end
             announcement.cb_args = original_cb
 
-        self.timer_handler.player_announcement(announcement,
-                                               duration, player_number)
+        self.timer_handler.player_announcement(announcement, duration, player_number)
 
     def default_announcement_end(self, original_cb=None):
         """Post-announcement tasks."""
@@ -264,33 +294,32 @@ class ChainballGame(object):
     def register_players(self, player_texts):
         """Register players."""
         if self.ongoing:
-            raise GameRunningError('Cant register players while running')
+            raise GameRunningError("Cant register players while running")
 
         if len(player_texts) > 4 - self.player_count:
-            raise TooManyPlayersError('Limited to 4 players')
+            raise TooManyPlayersError("Limited to 4 players")
 
         for player in player_texts:
             if player > 3 or player < 0:
                 # ignore this for now
-                self.logger.debug('Invalid player, ignoring')
+                self.logger.debug("Invalid player, ignoring")
                 continue
 
             if player in self.players:
                 # ignore
                 if self.players[player].registered:
                     self.logger.debug(
-                        'Player {} is already registered, ignoring'
-                        .format(player))
+                        "Player {} is already registered, ignoring".format(player)
+                    )
                     continue
 
-            self.s_handler.register_player(player,
-                                           player_texts[player].panel_txt)
+            self.s_handler.register_player(player, player_texts[player].panel_txt)
             self.players[player].web_text = player_texts[player].web_txt
             self.players[player].panel_text = player_texts[player].panel_txt
             self.players[player].registered = True
             self.player_count += 1
 
-            self.logger.debug('Registered player {}'.format(player))
+            self.logger.debug("Registered player {}".format(player))
 
     def next_player_num(self):
         """Get next player id to be inserted."""
@@ -305,7 +334,7 @@ class ChainballGame(object):
             if p_data.registered is False:
 
                 # empty slot, move up other players if available
-                for p_num in range(p_id+1, 4):
+                for p_num in range(p_id + 1, 4):
                     if self.players[p_num].registered:
                         # move up
                         p_data.web_text = self.players[p_num].web_text
@@ -329,7 +358,7 @@ class ChainballGame(object):
     def unregister_players(self, players):
         """Unregister players."""
         if self.ongoing:
-            raise GameRunningError('cant unregister players while running')
+            raise GameRunningError("cant unregister players while running")
 
         for player in players:
             if player not in self.players:
@@ -355,19 +384,22 @@ class ChainballGame(object):
         # flush remote message queue for good measure
         self.rf_handler.flush_message_queue()
 
-        self.logger.info('Starting game...')
+        self.logger.info("Starting game...")
         if self.ongoing:
-            raise GameAlreadyStarterError('Game is running')
+            raise GameAlreadyStarterError("Game is running")
 
         if self.player_count < 2:
-            raise NotEnoughPlayersError('Game needs at least 2 players')
+            raise NotEnoughPlayersError("Game needs at least 2 players")
 
         # check if remotes are paired
         for player in self.players:
-            if self.players[player].remote_id is None and\
-               self.players[player].registered:
+            if (
+                self.players[player].remote_id is None
+                and self.players[player].registered
+            ):
                 raise PlayerRemoteNotPaired(
-                    'Player {} has no remote paired'.format(player))
+                    "Player {} has no remote paired".format(player)
+                )
 
         # reorder players
         self._reorganize_players()
@@ -377,14 +409,13 @@ class ChainballGame(object):
         for player in self.players:
             if self.players[player].registered:
                 self.game_set_score(player, 0)
-                player_persist[player] =\
-                    PlayerPersistData(self.players[player].panel_text,
-                                      self.players[player].web_text)
+                player_persist[player] = PlayerPersistData(
+                    self.players[player].panel_text, self.players[player].web_text
+                )
                 self.players[player].reset_serve()
 
         # create persistance data
-        self.game_uuid = self.g_persist.new_record(player_persist,
-                                                   self._next_uid)
+        self.game_uuid = self.g_persist.new_record(player_persist, self._next_uid)
 
         # flag game start
         self.ongoing = True
@@ -398,7 +429,7 @@ class ChainballGame(object):
         self.g_persist.start_game(self.get_remaining_time())
 
         self.timer_handler.announcement(TimerAnnouncement("Game", "START"), 2)
-        self.logger.info('Game started')
+        self.logger.info("Game started")
 
     def set_game_uid(self, game_uid):
         """Set game uid."""
@@ -415,7 +446,7 @@ class ChainballGame(object):
 
         minutes, seconds = self.timer_handler.get_remaining_time()
 
-        return minutes*60 + seconds
+        return minutes * 60 + seconds
 
     def get_running_time(self):
         """Get running time in seconds."""
@@ -423,7 +454,7 @@ class ChainballGame(object):
             return None
 
         # duration in seconds
-        duration = self.game_config.game_duration*60
+        duration = self.game_config.game_duration * 60
 
         return duration - self.get_remaining_time()
 
@@ -440,21 +471,20 @@ class ChainballGame(object):
 
     def game_timeout(self):
         """Game timeout occured."""
-        self.logger.info('Game has run out of time')
-        self.game_end(reason='TIMEOUT',
-                      winner=self.find_high_score())
+        self.logger.info("Game has run out of time")
+        self.game_end(reason="TIMEOUT", winner=self.find_high_score())
 
     def game_pause(self):
         """Pause game."""
         if not self.ongoing:
-            raise GameNotStartedError('game is not running')
+            raise GameNotStartedError("game is not running")
 
         if self.paused:
-            raise GameAlreadyPausedError('game is already paused')
+            raise GameAlreadyPausedError("game is already paused")
 
         self.g_persist.pause_unpause_game()
 
-        self.logger.info('Game PAUSED')
+        self.logger.info("Game PAUSED")
         self.paused = True
         self.timer_handler.pause()
         self.ptimer_handler.pause()
@@ -462,30 +492,31 @@ class ChainballGame(object):
     def game_unpause(self):
         """Unpause game."""
         if not self.ongoing:
-            raise GameNotStartedError('game is not running')
+            raise GameNotStartedError("game is not running")
 
         if not self.paused:
-            raise GameNotPausedError('game is not paused')
+            raise GameNotPausedError("game is not paused")
 
         # check if all remotes are paired
         for p_id, p_data in self.players.items():
             if p_data.registered and p_data.remote_id is None:
                 # registered but unpaired
                 raise PlayerRemoteNotPaired(
-                    'Player {} has no remote paired'.format(p_id))
+                    "Player {} has no remote paired".format(p_id)
+                )
 
         self.g_persist.pause_unpause_game()
 
-        self.logger.info('Game UNPAUSED')
+        self.logger.info("Game UNPAUSED")
         self.paused = False
         self.timer_handler.unpause()
         self.ptimer_handler.unpause()
 
     def game_end(self, reason=None, winner=None):
         """Stop game."""
-        self.logger.info('Stopping game...')
+        self.logger.info("Stopping game...")
         if not self.ongoing:
-            raise GameNotStartedError('Game is not running')
+            raise GameNotStartedError("Game is not running")
 
         winner_player = self.find_high_score()
 
@@ -502,25 +533,24 @@ class ChainballGame(object):
         self.timer_handler.stop()
         self.ptimer_handler.stop()
 
-        self.g_persist.end_game(reason,
-                                winner,
-                                self.get_running_time(),
-                                self.get_remaining_time())
+        self.g_persist.end_game(
+            reason, winner, self.get_running_time(), self.get_remaining_time()
+        )
 
         self.ongoing = False
         self.game_uuid = None
         self._next_uid = None
 
-        self.logger.info('Game stopped')
+        self.logger.info("Game stopped")
 
     def game_set_active_player(self, player):
         """Set active player."""
         if not self.ongoing:
-            raise GameNotStartedError('Game is not running')
+            raise GameNotStartedError("Game is not running")
 
         # see if player is registered
         if self.players[player].registered is False:
-            raise PlayerNotRegisteredError('Player is not taking part in game')
+            raise PlayerNotRegisteredError("Player is not taking part in game")
 
         for p in self.players:
             self.players[p].score_diff = 0
@@ -540,31 +570,33 @@ class ChainballGame(object):
 
         # don't announce players with zero score delta
         for p in range(player, self.player_count):
-            if self.players[p].score_diff == 0 or\
-               self.players[p].current_score == -10:
+            if self.players[p].score_diff == 0 or self.players[p].current_score == -10:
                 continue
             else:
                 self.timer_handler.announcement(
-                    TimerAnnouncement(self.players[p].panel_text,
-                                      '{:+1d}'.format(
-                                          self.players[p].score_diff)),
-                    2)
+                    TimerAnnouncement(
+                        self.players[p].panel_text,
+                        "{:+1d}".format(self.players[p].score_diff),
+                    ),
+                    2,
+                )
 
     def game_pass_turn(self, force_serve=False):
         """Force serve, pass turn."""
         if not self.ongoing:
-            raise GameNotStartedError('Game is not running')
+            raise GameNotStartedError("Game is not running")
 
         # reset all serves immediately
-        self.logger.debug('Resetting serve states')
+        self.logger.debug("Resetting serve states")
         for player in self.players:
             self.players[player].reset_serve()
 
         # create event in persistance
         if force_serve is True:
-            self.g_persist.log_event(GameEventTypes.FORCE_SERVE,
-                                     {'player': int(self.active_player),
-                                      'gtime': self.get_running_time()})
+            self.g_persist.log_event(
+                GameEventTypes.FORCE_SERVE,
+                {"player": int(self.active_player), "gtime": self.get_running_time()},
+            )
 
         # announce score deltas
         self.announce_player_deltas(0)
@@ -585,23 +617,25 @@ class ChainballGame(object):
                     break
 
         if force_serve is False:
-            self.g_persist.log_event(GameEventTypes.SERVE_ADVANCE,
-                                     {'player': int(p),
-                                      'gtime': self.get_running_time()})
+            self.g_persist.log_event(
+                GameEventTypes.SERVE_ADVANCE,
+                {"player": int(p), "gtime": self.get_running_time()},
+            )
 
     def game_player_out(self, player):
         """Cowout callback."""
         # play sound here, announce
-        self.logger.debug('Player {} is out of the game!'.format(player))
+        self.logger.debug("Player {} is out of the game!".format(player))
 
         self.timer_handler.announcement(
-            TimerAnnouncement(self.players[player].panel_text, "COWOUT"), 4)
+            TimerAnnouncement(self.players[player].panel_text, "COWOUT"), 4
+        )
 
         try:
             cowout_sfx = self.sfx_mapping.get_sfx(SFXMappableEvents.COW_OUT)
             self.sfx_handler.play_fx(cowout_sfx)
         except SFXUnknownEvent:
-            self.logger.warning('SFX play error')
+            self.logger.warning("SFX play error")
 
     def game_decrement_score(self, player, referee_event=False):
         """Decrement a players score."""
@@ -614,8 +648,10 @@ class ChainballGame(object):
         if self.paused or not self.ongoing:
             return
 
-        if self.players[player].current_score > -10 and\
-           self.players[player].score_diff > -2:
+        if (
+            self.players[player].current_score > -10
+            and self.players[player].score_diff > -2
+        ):
             self.players[player].current_score -= 1
             self.players[player].score_diff -= 1
 
@@ -624,14 +660,16 @@ class ChainballGame(object):
                 player,
                 self.players[player].current_score,
                 forced_update=referee_event,
-                game_time=self.get_running_time())
+                game_time=self.get_running_time(),
+            )
 
             # check here if we have reached -10
             if self.players[player].current_score == -10:
                 # player is out of the game
-                self.g_persist.log_event(GameEventTypes.COWOUT,
-                                         {'player': player,
-                                          'gtime': self.get_running_time()})
+                self.g_persist.log_event(
+                    GameEventTypes.COWOUT,
+                    {"player": player, "gtime": self.get_running_time()},
+                )
                 return
 
     def game_increment_score(self, player, referee_event=False):
@@ -645,8 +683,10 @@ class ChainballGame(object):
         if self.paused or not self.ongoing:
             return
 
-        if self.players[player].current_score < 5 and\
-           self.players[player].score_diff < 2:
+        if (
+            self.players[player].current_score < 5
+            and self.players[player].score_diff < 2
+        ):
             self.players[player].current_score += 1
             self.players[player].score_diff += 1
 
@@ -655,7 +695,8 @@ class ChainballGame(object):
                 player,
                 self.players[player].current_score,
                 forced_update=referee_event,
-                game_time=self.get_running_time())
+                game_time=self.get_running_time(),
+            )
 
     def game_force_score(self, player, score):
         """Force scores."""
@@ -664,9 +705,8 @@ class ChainballGame(object):
         if self.ongoing is True:
             # update persistance data
             self.g_persist.force_current_score(
-                player,
-                score,
-                game_time=self.get_running_time())
+                player, score, game_time=self.get_running_time()
+            )
 
     def game_set_score(self, player, score):
         """Set scores."""
@@ -675,10 +715,8 @@ class ChainballGame(object):
         if self.ongoing is True:
             # update persistance data
             self.g_persist.update_current_score(
-                player,
-                score,
-                forced_update=False,
-                game_time=self.get_running_time())
+                player, score, forced_update=False, game_time=self.get_running_time()
+            )
 
     def _game_decode_remote(self, message):
         # handle pairing
@@ -689,8 +727,10 @@ class ChainballGame(object):
         if message.remote_id == self.m_remote.remote_id:
             # master remote actions
             if message.command == RemoteCommands.BTN_PRESS:
-                if self.remote_mapping.master_mapping[message.cmd_data] ==\
-                   MasterRemoteActions.PAUSE_UNPAUSE_CLOCK:
+                if (
+                    self.remote_mapping.master_mapping[message.cmd_data]
+                    == MasterRemoteActions.PAUSE_UNPAUSE_CLOCK
+                ):
                     if not self.ongoing:
                         if self.game_can_start():
                             self.game_begin()
@@ -717,10 +757,8 @@ class ChainballGame(object):
             elif mapping == GameTurnActions.INCREASE_SCORE:
                 self.game_increment_score(commanding_player)
             elif mapping == GameTurnActions.PASS_TURN:
-                if message.remote_id !=\
-                   self.players[self.active_player].remote_id:
-                    self.logger.debug(
-                        'Only the active player can force the serve')
+                if message.remote_id != self.players[self.active_player].remote_id:
+                    self.logger.debug("Only the active player can force the serve")
                     return
                 self.game_pass_turn(force_serve=True)
 
@@ -746,9 +784,12 @@ class ChainballGame(object):
     def announce_end(self, winner):
         """Announce game end, winner."""
         self.do_announcement(
-            TimerAnnouncement(self.players[winner].panel_text,
-                              "WINS!",
-                              self.force_show_clock), 10, True)
+            TimerAnnouncement(
+                self.players[winner].panel_text, "WINS!", self.force_show_clock
+            ),
+            10,
+            True,
+        )
 
     def force_show_clock(self):
         """Force matrix to refresh."""
@@ -763,60 +804,70 @@ class ChainballGame(object):
         if self.ongoing is False:
             return
 
-        if evt_type == 'deadball':
-            self.g_persist.log_event(GameEventTypes.DEADBALL,
-                                     {'player': int(player),
-                                      'gtime': self.get_running_time()})
+        if evt_type == "deadball":
+            self.g_persist.log_event(
+                GameEventTypes.DEADBALL,
+                {"player": int(player), "gtime": self.get_running_time()},
+            )
             self.game_pass_turn()
-        elif evt_type == 'chainball':
-            self.g_persist.log_event(GameEventTypes.CHAINBALL,
-                                     {'player': int(player),
-                                      'gtime': self.get_running_time()})
+        elif evt_type == "chainball":
+            self.g_persist.log_event(
+                GameEventTypes.CHAINBALL,
+                {"player": int(player), "gtime": self.get_running_time()},
+            )
             self.game_increment_score(int(player), referee_event=True)
-        elif evt_type == 'jailbreak':
-            self.g_persist.log_event(GameEventTypes.JAILBREAK,
-                                     {'player': int(player),
-                                      'gtime': self.get_running_time()})
+        elif evt_type == "jailbreak":
+            self.g_persist.log_event(
+                GameEventTypes.JAILBREAK,
+                {"player": int(player), "gtime": self.get_running_time()},
+            )
             self.game_increment_score(int(player), referee_event=True)
             self.game_increment_score(int(player), referee_event=True)
-        elif evt_type == 'ratmeat':
-            self.g_persist.log_event(GameEventTypes.BALL_HIT,
-                                     {'player': int(player),
-                                      'gtime': self.get_running_time()})
+        elif evt_type == "ratmeat":
+            self.g_persist.log_event(
+                GameEventTypes.BALL_HIT,
+                {"player": int(player), "gtime": self.get_running_time()},
+            )
             self.game_decrement_score(int(player), referee_event=True)
-        elif evt_type == 'mudskipper':
-            self.g_persist.log_event(GameEventTypes.MUDSKIPPER,
-                                     {'player': int(player),
-                                      'gtime': self.get_running_time()})
+        elif evt_type == "mudskipper":
+            self.g_persist.log_event(
+                GameEventTypes.MUDSKIPPER,
+                {"player": int(player), "gtime": self.get_running_time()},
+            )
             self.game_decrement_score(int(player), referee_event=True)
-        elif evt_type == 'sailormoon':
-            self.g_persist.log_event(GameEventTypes.SAILORMOON,
-                                     {'player': int(player),
-                                      'gtime': self.get_running_time()})
+        elif evt_type == "sailormoon":
+            self.g_persist.log_event(
+                GameEventTypes.SAILORMOON,
+                {"player": int(player), "gtime": self.get_running_time()},
+            )
             self.game_decrement_score(int(player), referee_event=True)
             self.game_decrement_score(int(player), referee_event=True)
-        elif evt_type == 'fault':
+        elif evt_type == "fault":
             if self._current_fault_count == 0:
-                self.g_persist.log_event(GameEventTypes.FAULT,
-                                         {'player': int(player),
-                                          'gtime': self.get_running_time()})
+                self.g_persist.log_event(
+                    GameEventTypes.FAULT,
+                    {"player": int(player), "gtime": self.get_running_time()},
+                )
                 self._current_fault_count = 1
             elif self._current_fault_count == 1:
-                self.g_persist.log_event(GameEventTypes.DOUBLEFAULT,
-                                         {'player': int(player),
-                                          'gtime': self.get_running_time()})
+                self.g_persist.log_event(
+                    GameEventTypes.DOUBLEFAULT,
+                    {"player": int(player), "gtime": self.get_running_time()},
+                )
                 self.game_decrement_score(int(player), referee_event=True)
                 # reset count immediately
                 self._current_fault_count = 0
-        elif evt_type == 'doublefault':
-            self.g_persist.log_event(GameEventTypes.DOUBLEFAULT,
-                                     {'player': int(player),
-                                      'gtime': self.get_running_time()})
+        elif evt_type == "doublefault":
+            self.g_persist.log_event(
+                GameEventTypes.DOUBLEFAULT,
+                {"player": int(player), "gtime": self.get_running_time()},
+            )
             self.game_decrement_score(int(player), referee_event=True)
-        elif evt_type == 'slowpoke':
-            self.g_persist.log_event(GameEventTypes.SLOWPOKE,
-                                     {'player': int(player),
-                                      'gtime': self.get_running_time()})
+        elif evt_type == "slowpoke":
+            self.g_persist.log_event(
+                GameEventTypes.SLOWPOKE,
+                {"player": int(player), "gtime": self.get_running_time()},
+            )
             self.game_decrement_score(int(player), referee_event=True)
 
     def game_loop(self):
@@ -841,25 +892,25 @@ class ChainballGame(object):
         # check for a cowout
         if self.ongoing:
             for player in self.players:
-                if self.players[player].current_score == -10 and\
-                   self.players[player].is_cowout is False:
+                if (
+                    self.players[player].current_score == -10
+                    and self.players[player].is_cowout is False
+                ):
                     self.players[player].is_cowout = True
                     self.game_player_out(player)
 
         # check for a winner
         if self.ongoing:
             if self.count_players_out() >= self.player_count - 1:
-                self.logger.info('Only one player remais! Ending')
+                self.logger.info("Only one player remais! Ending")
                 self.game_timeout()
                 return
 
             for player in self.players:
                 if self.players[player].current_score == 5:
-                    self.logger.info(
-                        'Player {} has won the game'.format(player))
+                    self.logger.info("Player {} has won the game".format(player))
                     self.announce_end(player)
-                    self.game_end(reason='PLAYER_WON',
-                                  winner=player)
+                    self.game_end(reason="PLAYER_WON", winner=player)
                     return
 
         # check for remote activity
@@ -872,7 +923,7 @@ class ChainballGame(object):
                 # invalid, ignore
                 return
 
-            self.logger.debug('Received: {}'.format(decoded))
+            self.logger.debug("Received: {}".format(decoded))
             self._game_decode_remote(decoded)
 
         # make score announcements
@@ -886,9 +937,9 @@ class ChainballGame(object):
                 else:
                     callback = None
                 self.ptimer_handler.player_announcement(
-                    TimerAnnouncement('',
-                                      '{:+1d}'
-                                      .format(self.players[p].current_score),
-                                      callback),
+                    TimerAnnouncement(
+                        "", "{:+1d}".format(self.players[p].current_score), callback
+                    ),
                     5,
-                    p)
+                    p,
+                )
