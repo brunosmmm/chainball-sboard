@@ -1,38 +1,43 @@
 """Game engine."""
 
-from score.handler import ScoreHandler
-from score.player import PlayerScore
-from remote.nrf24 import NRF24Handler
-from remote.decoder import RemoteDecoder
-from remote.constants import RemoteCommands, RemotePairFailureType
-from remote.pair import RemotePairHandler
 import logging
-from game.exceptions import (
+
+from scoreboard.announce.timer import TimerAnnouncement, TimerHandler
+from scoreboard.game.config import ChainballGameConfiguration
+from scoreboard.game.constants import GameTurnActions, MasterRemoteActions
+from scoreboard.game.exceptions import (
+    GameAlreadyPausedError,
+    GameAlreadyStarterError,
+    GameNotPausedError,
+    GameNotStartedError,
+    GameRunningError,
+    MasterRemoteAlreadyPairedError,
+    NotEnoughPlayersError,
+    PlayerAlreadyPairedError,
     PlayerNotPairedError,
     PlayerNotRegisteredError,
-    MasterRemoteAlreadyPairedError,
-    PlayerAlreadyPairedError,
-    GameRunningError,
-    TooManyPlayersError,
-    GameAlreadyStarterError,
-    NotEnoughPlayersError,
     PlayerRemoteNotPaired,
-    GameNotStartedError,
-    GameAlreadyPausedError,
-    GameNotPausedError,
+    TooManyPlayersError,
 )
-from announce.timer import TimerHandler, TimerAnnouncement
-from game.persist import GamePersistance, PlayerPersistData, GameEventTypes
-from util.soundfx import GameSFXHandler
-from game.remotemapper import RemoteMapping, RemoteMappingLoadFailed
-from game.constants import GameTurnActions, MasterRemoteActions
-from game.sfxmapper import (
+from scoreboard.game.persist import (
+    GameEventTypes,
+    GamePersistance,
+    PlayerPersistData,
+)
+from scoreboard.game.remotemapper import RemoteMapping, RemoteMappingLoadFailed
+from scoreboard.game.sfxmapper import (
+    SFXMappableEvents,
     SFXMapping,
     SFXMappingLoadFailed,
     SFXUnknownEvent,
-    SFXMappableEvents,
 )
-from game.config import ChainballGameConfiguration
+from scoreboard.remote.constants import RemoteCommands, RemotePairFailureType
+from scoreboard.remote.decoder import RemoteDecoder
+from scoreboard.remote.nrf24 import NRF24Handler
+from scoreboard.remote.pair import RemotePairHandler
+from scoreboard.score.handler import ScoreHandler
+from scoreboard.score.player import PlayerScore
+from scoreboard.util.soundfx import GameSFXHandler
 
 
 class MasterRemote(object):
@@ -127,7 +132,9 @@ class ChainballGame(object):
             self.sfx_handler = GameSFXHandler()
         except Exception as ex:
             raise
-            self.logger.error("Failed to initialize SFX handler with: {}".format(ex))
+            self.logger.error(
+                "Failed to initialize SFX handler with: {}".format(ex)
+            )
 
         # other variables
         self._current_fault_count = 0
@@ -196,7 +203,9 @@ class ChainballGame(object):
         """Finish pairing remote."""
         if player == "master":
             self.m_remote.remote_id = remote_id
-            self.logger.info("Paired remote {} as the master remote".format(remote_id))
+            self.logger.info(
+                "Paired remote {} as the master remote".format(remote_id)
+            )
             return
 
         self.players[player].remote_id = remote_id
@@ -210,7 +219,8 @@ class ChainballGame(object):
         """Remote pairing failed."""
         if reason == RemotePairFailureType.TIMEOUT:
             self.logger.info(
-                "Pairing for player {}" " failed due to a timeout".format(player)
+                "Pairing for player {}"
+                " failed due to a timeout".format(player)
             )
         elif reason == RemotePairFailureType.ALREADY_PAIRED:
             self.logger.info(
@@ -219,7 +229,8 @@ class ChainballGame(object):
             )
         else:
             self.logger.info(
-                "Pairing for player {}" "failed due to an unknown reason".format(player)
+                "Pairing for player {}"
+                "failed due to an unknown reason".format(player)
             )
 
     def pair_running(self):
@@ -280,7 +291,9 @@ class ChainballGame(object):
             announcement.cb = self.default_announcement_end
             announcement.cb_args = original_cb
 
-        self.timer_handler.player_announcement(announcement, duration, player_number)
+        self.timer_handler.player_announcement(
+            announcement, duration, player_number
+        )
 
     def default_announcement_end(self, original_cb=None):
         """Post-announcement tasks."""
@@ -309,11 +322,15 @@ class ChainballGame(object):
                 # ignore
                 if self.players[player].registered:
                     self.logger.debug(
-                        "Player {} is already registered, ignoring".format(player)
+                        "Player {} is already registered, ignoring".format(
+                            player
+                        )
                     )
                     continue
 
-            self.s_handler.register_player(player, player_texts[player].panel_txt)
+            self.s_handler.register_player(
+                player, player_texts[player].panel_txt
+            )
             self.players[player].web_text = player_texts[player].web_txt
             self.players[player].panel_text = player_texts[player].panel_txt
             self.players[player].registered = True
@@ -410,12 +427,15 @@ class ChainballGame(object):
             if self.players[player].registered:
                 self.game_set_score(player, 0)
                 player_persist[player] = PlayerPersistData(
-                    self.players[player].panel_text, self.players[player].web_text
+                    self.players[player].panel_text,
+                    self.players[player].web_text,
                 )
                 self.players[player].reset_serve()
 
         # create persistance data
-        self.game_uuid = self.g_persist.new_record(player_persist, self._next_uid)
+        self.game_uuid = self.g_persist.new_record(
+            player_persist, self._next_uid
+        )
 
         # flag game start
         self.ongoing = True
@@ -570,7 +590,10 @@ class ChainballGame(object):
 
         # don't announce players with zero score delta
         for p in range(player, self.player_count):
-            if self.players[p].score_diff == 0 or self.players[p].current_score == -10:
+            if (
+                self.players[p].score_diff == 0
+                or self.players[p].current_score == -10
+            ):
                 continue
             else:
                 self.timer_handler.announcement(
@@ -595,7 +618,10 @@ class ChainballGame(object):
         if force_serve is True:
             self.g_persist.log_event(
                 GameEventTypes.FORCE_SERVE,
-                {"player": int(self.active_player), "gtime": self.get_running_time()},
+                {
+                    "player": int(self.active_player),
+                    "gtime": self.get_running_time(),
+                },
             )
 
         # announce score deltas
@@ -715,7 +741,10 @@ class ChainballGame(object):
         if self.ongoing is True:
             # update persistance data
             self.g_persist.update_current_score(
-                player, score, forced_update=False, game_time=self.get_running_time()
+                player,
+                score,
+                forced_update=False,
+                game_time=self.get_running_time(),
             )
 
     def _game_decode_remote(self, message):
@@ -757,8 +786,13 @@ class ChainballGame(object):
             elif mapping == GameTurnActions.INCREASE_SCORE:
                 self.game_increment_score(commanding_player)
             elif mapping == GameTurnActions.PASS_TURN:
-                if message.remote_id != self.players[self.active_player].remote_id:
-                    self.logger.debug("Only the active player can force the serve")
+                if (
+                    message.remote_id
+                    != self.players[self.active_player].remote_id
+                ):
+                    self.logger.debug(
+                        "Only the active player can force the serve"
+                    )
                     return
                 self.game_pass_turn(force_serve=True)
 
@@ -908,7 +942,9 @@ class ChainballGame(object):
 
             for player in self.players:
                 if self.players[player].current_score == 5:
-                    self.logger.info("Player {} has won the game".format(player))
+                    self.logger.info(
+                        "Player {} has won the game".format(player)
+                    )
                     self.announce_end(player)
                     self.game_end(reason="PLAYER_WON", winner=player)
                     return
@@ -938,7 +974,9 @@ class ChainballGame(object):
                     callback = None
                 self.ptimer_handler.player_announcement(
                     TimerAnnouncement(
-                        "", "{:+1d}".format(self.players[p].current_score), callback
+                        "",
+                        "{:+1d}".format(self.players[p].current_score),
+                        callback,
                     ),
                     5,
                     p,

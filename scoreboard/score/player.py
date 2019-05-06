@@ -2,7 +2,7 @@
 
 import logging
 import time
-from score.constants import PlayerServeStates
+from scoreboard.score.constants import PlayerServeStates
 
 
 class PlayerScore(object):
@@ -93,7 +93,9 @@ class PlayerScore(object):
                 self.start_score()
             else:
                 self.logger.debug(
-                    "Forcing player {} score to {}".format(self.pid, self.current_score)
+                    "Forcing player {} score to {}".format(
+                        self.pid, self.current_score
+                    )
                 )
 
     def show_text(self, text):
@@ -146,7 +148,8 @@ class PlayerScore(object):
             if time.time() - self.score_start_timer > self._serve_timeout:
                 # autoadvance
                 self.logger.debug(
-                    "Scoring window closed for " "player {}, advancing".format(self.pid)
+                    "Scoring window closed for "
+                    "player {}, advancing".format(self.pid)
                 )
                 if self.autoadvance_callback:
                     self.autoadvance_callback()

@@ -1,8 +1,9 @@
 """Remote decoder."""
 
-from remote.constants import RemoteCommands
-from remote.persistence import PERSISTENT_REMOTE_DATA
 import struct
+
+from scoreboard.remote.constants import RemoteCommands
+from scoreboard.remote.persistence import PERSISTENT_REMOTE_DATA
 
 
 class RemoteDecoder(object):
@@ -40,7 +41,9 @@ class RemoteDecoder(object):
     def __repr__(self):
         """Dump strings."""
         if self.command == RemoteCommands.BATT:
-            return "remote({}): BATT -> {}%".format(hex(self.remote_id), self.cmd_data)
+            return "remote({}): BATT -> {}%".format(
+                hex(self.remote_id), self.cmd_data
+            )
 
         ret = "remote({}): BTN({}) ".format(hex(self.remote_id), self.cmd_data)
 

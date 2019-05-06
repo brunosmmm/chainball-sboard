@@ -1,14 +1,15 @@
 """NRF24 controller."""
 
+import logging
 import time
-from util.threads import StoppableThread
+
+import scoreboard.remote.nrf24const as rf
+from scoreboard.util.threads import StoppableThread
 
 try:
     import Queue
 except ImportError:
     import queue as Queue
-import remote.nrf24const as rf
-import logging
 
 # constants
 CE_PIN_GPIO = 1
@@ -40,8 +41,12 @@ class NRF24Chip(object):
             try:
                 self.spi_dev.open(bus, select)
                 self.spi_dev.max_speed_hz = 2000000
-                self.logger.debug("CS active HIGH = {}".format(self.spi_dev.cshigh))
-                self.logger.debug("Speed = {}".format(self.spi_dev.max_speed_hz))
+                self.logger.debug(
+                    "CS active HIGH = {}".format(self.spi_dev.cshigh)
+                )
+                self.logger.debug(
+                    "Speed = {}".format(self.spi_dev.max_speed_hz)
+                )
             except IOError:
                 self.logger.error("Cant open SPI device")
                 raise
@@ -127,11 +132,15 @@ class NRF24Chip(object):
 
     def tx_powerup(self):
         """Go into TX mode."""
-        self.write_reg(rf.REG_CONFIG, rf.EN_CRC | rf.CRCO | rf.PWR_UP | rf.PRIM_TX)
+        self.write_reg(
+            rf.REG_CONFIG, rf.EN_CRC | rf.CRCO | rf.PWR_UP | rf.PRIM_TX
+        )
 
     def rx_powerup(self):
         """Go into RX mode."""
-        self.write_reg(rf.REG_CONFIG, rf.EN_CRC | rf.CRCO | rf.PWR_UP | rf.PRIM_RX)
+        self.write_reg(
+            rf.REG_CONFIG, rf.EN_CRC | rf.CRCO | rf.PWR_UP | rf.PRIM_RX
+        )
 
     def initialize(self, addr, channel):
         """Initialize chip."""
@@ -144,7 +153,9 @@ class NRF24Chip(object):
         )
         self.clr_ce()
 
-        self.write_reg(rf.REG_RF_SETUP, rf.RF_SETUP_RF_PWR_6 | rf.RF_SETUP_RF_DR_250)
+        self.write_reg(
+            rf.REG_RF_SETUP, rf.RF_SETUP_RF_PWR_6 | rf.RF_SETUP_RF_DR_250
+        )
         self.write_reg(rf.REG_RX_PW_P0, NRF_PAYLOAD_SIZE)
         self.write_reg(rf.REG_RF_CH, channel)
 
@@ -239,7 +250,9 @@ class NRF24Handler(StoppableThread):
     def _message_callback(self, payload):
         # process payload
         try:
-            self.logger.debug("Received payload, length is {}".format(len(payload)))
+            self.logger.debug(
+                "Received payload, length is {}".format(len(payload))
+            )
 
         except TypeError:
             self.logger.debug("Payload is wrong type, dump: {}".format(payload))

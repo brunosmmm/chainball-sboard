@@ -1,27 +1,36 @@
 """Scoreboard web interface."""
 
-from bottle import route, run, template, static_file, request, response, Response
-from game.playertxt import PlayerText
-from game.exceptions import (
-    PlayerNotRegisteredError,
-    TooManyPlayersError,
-    PlayerAlreadyPairedError,
-    PlayerNotPairedError,
+import json
+import logging
+import time
+
+from bottle import (
+    Response,
+    request,
+    response,
+    route,
+    run,
+    static_file,
+    template,
+)
+from scoreboard.announce.timer import TimerAnnouncement
+from scoreboard.game.exceptions import (
+    GameAlreadyPausedError,
+    GameAlreadyStarterError,
+    GameNotPausedError,
+    GameNotStartedError,
     GameRunningError,
     NotEnoughPlayersError,
-    GameNotStartedError,
-    GameAlreadyStarterError,
-    GameAlreadyPausedError,
-    GameNotPausedError,
+    PlayerAlreadyPairedError,
+    PlayerNotPairedError,
+    PlayerNotRegisteredError,
     PlayerRemoteNotPaired,
+    TooManyPlayersError,
 )
-from remote.constants import RemotePairFailureType
-import logging
-from game.persist import GamePersistData
-from announce.timer import TimerAnnouncement
-from remote.persistence import PERSISTENT_REMOTE_DATA
-import time
-import json
+from scoreboard.game.persist import GamePersistData
+from scoreboard.game.playertxt import PlayerText
+from scoreboard.remote.constants import RemotePairFailureType
+from scoreboard.remote.persistence import PERSISTENT_REMOTE_DATA
 
 
 class WebBoard(object):
@@ -159,12 +168,16 @@ class WebBoard(object):
             else:
                 player = int(player_data["playerNum"])
             player_entry = {
-                player: PlayerText(player_data["panelTxt"], player_data["webTxt"])
+                player: PlayerText(
+                    player_data["panelTxt"], player_data["webTxt"]
+                )
             }
             self.game.register_players(player_entry)
             self.logger.info("Registering player: {}".format(player_entry))
         except TooManyPlayersError:
-            self.logger.error("Could not register player:" " too many players active")
+            self.logger.error(
+                "Could not register player:" " too many players active"
+            )
             return {"status": "error", "error": "Cant register player"}
         except TypeError:
             self.logger.error("Error occurred while registering player")
@@ -178,7 +191,8 @@ class WebBoard(object):
             return {"status": "error", "error": e.message}
         except KeyError as e:
             self.logger.error(
-                "Could not register player {}:" " malformed request".format(player)
+                "Could not register player {}:"
+                " malformed request".format(player)
             )
             self.logger.debug("exception dump: {}".format(e))
             return {"status": "error", "error": "Malformed request"}
@@ -259,7 +273,9 @@ class WebBoard(object):
         duration = request.POST["duration"]
 
         try:
-            self.game.do_announcement(TimerAnnouncement(heading, text), int(duration))
+            self.game.do_announcement(
+                TimerAnnouncement(heading, text), int(duration)
+            )
         except TypeError:
             return {"status": "error", "error": "malformed request"}
 
@@ -268,7 +284,9 @@ class WebBoard(object):
     def announce_debug(self, heading, text, duration):
         """Perform announcement."""
         try:
-            self.game.do_announcement(TimerAnnouncement(heading, text), int(duration))
+            self.game.do_announcement(
+                TimerAnnouncement(heading, text), int(duration)
+            )
         except TypeError:
             return {"status": "error", "error": "malformed request"}
         return {"status": "ok"}
@@ -357,7 +375,9 @@ class WebBoard(object):
         score_dict = {}
         if self.game.ongoing:
             for player in self.game.players:
-                score_dict[str(player)] = self.game.players[player].current_score
+                score_dict[str(player)] = self.game.players[
+                    player
+                ].current_score
 
         return score_dict
 
@@ -368,7 +388,9 @@ class WebBoard(object):
         if self.game.ongoing:
 
             for player in self.game.players:
-                score_dict[str(player)] = self.game.players[player].current_score
+                score_dict[str(player)] = self.game.players[
+                    player
+                ].current_score
         else:
             return {"status": "error"}
 
@@ -410,7 +432,10 @@ class WebBoard(object):
         td = self.game.timer_handler.get_timer()
 
         if td is None:
-            return {"status": "error", "error": "game not running or not started"}
+            return {
+                "status": "error",
+                "error": "game not running or not started",
+            }
 
         if td.days < 0:
             minutes = 0
@@ -462,7 +487,9 @@ class WebBoard(object):
             GameNotPausedError,
             PlayerRemoteNotPaired,
         ) as e:
-            self.logger.warning("Could not pause/unpause game: {}".format(e.message))
+            self.logger.warning(
+                "Could not pause/unpause game: {}".format(e.message)
+            )
             return {"status": "error", "error": e.message}
 
         return {"status": "ok"}
@@ -577,7 +604,9 @@ class WebBoard(object):
             game_dump.append(["PLAYER_LIST"])
             game_dump.append(["PLAYER_ID", "PLAYER_NAME", "PLAYER_SCORE"])
             # dump player info
-            for player_id, player_data in sorted(game_info["player_data"].items()):
+            for player_id, player_data in sorted(
+                game_info["player_data"].items()
+            ):
                 game_dump.append(
                     [
                         str(int(player_id) + 1),
@@ -621,9 +650,10 @@ class WebBoard(object):
         # headers = {}
         guuid = uuid_from_int(int(start_uuid) + int(count))
         response.headers["Content-Type"] = "text/csv; charset=UTF-8"
-        response.headers[
-            "Content-Disposition"
-        ] = "attachment ; filename=" "cbot_dump_{}_{}.csv".format(start_uuid, guuid)
+        response.headers["Content-Disposition"] = (
+            "attachment ; filename="
+            "cbot_dump_{}_{}.csv".format(start_uuid, guuid)
+        )
 
         return csv_all
 
@@ -646,7 +676,10 @@ class WebBoard(object):
 
     def get_sfx_list(self):
         """Get SFX list."""
-        return {"status": "ok", "sfx_list": self.game.sfx_handler.get_available_sfx()}
+        return {
+            "status": "ok",
+            "sfx_list": self.game.sfx_handler.get_available_sfx(),
+        }
 
     def get_remote_data(self):
         """Get remote data."""
@@ -705,7 +738,9 @@ class WebBoard(object):
         route("/control/scoreevt/<player>,<evt_type>")(self.score_evt)
 
         # development
-        route("/debug/announce/<heading>,<text>," "<duration>")(self.announce_debug)
+        route("/debug/announce/<heading>,<text>," "<duration>")(
+            self.announce_debug
+        )
         route("/debug/timeroff")(self.timeroff)
         route("/debug/timeron")(self.timeron)
         route("/debug/fpair/<player>,<remote_id>")(self.fpair)

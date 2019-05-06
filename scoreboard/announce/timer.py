@@ -1,9 +1,10 @@
 """Game timer controller."""
 
-from announce.matrixser import MatrixControllerSerial, Color
 import datetime
 import logging
 from collections import deque
+
+from scoreborad.announce.matrixser import Color, MatrixControllerSerial
 
 
 class AnnouncementKind(object):
@@ -247,7 +248,9 @@ class TimerHandler(object):
     def _announcement(self, announcement, duration, player_panel):
 
         self.logger.debug(
-            "Announcing: {} -> {}".format(announcement.heading, announcement.text)
+            "Announcing: {} -> {}".format(
+                announcement.heading, announcement.text
+            )
         )
 
         if player_panel > -1:

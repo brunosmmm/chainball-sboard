@@ -2,7 +2,7 @@
 
 import time
 import logging
-from remote.constants import RemotePairStates, RemotePairFailureType
+from scoreboard.remote.constants import RemotePairStates, RemotePairFailureType
 
 
 class RemotePairHandler(object):
@@ -82,4 +82,6 @@ class RemotePairHandler(object):
                 self.fail_reason = RemotePairFailureType.TIMEOUT
                 # failure callback
                 if self.fail_callback:
-                    self.fail_callback(self.player_pair, RemotePairFailureType.TIMEOUT)
+                    self.fail_callback(
+                        self.player_pair, RemotePairFailureType.TIMEOUT
+                    )

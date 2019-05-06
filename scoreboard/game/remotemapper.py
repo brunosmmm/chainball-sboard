@@ -1,10 +1,11 @@
 """Map remote buttons to actions."""
 
 
-from game.constants import GameTurnActions, MasterRemoteActions
-import re
 import json
 import logging
+import re
+
+from scoreboard.game.constants import GameTurnActions, MasterRemoteActions
 
 
 class RemoteMappingLoadFailed(Exception):
@@ -55,7 +56,9 @@ class RemoteMapping(object):
             remote_map = json.load(remote_map_file)
             remote_map_file.close()
         except IOError:
-            self.logger.error("Could not open remote " "mapping configuration file")
+            self.logger.error(
+                "Could not open remote " "mapping configuration file"
+            )
             raise RemoteMappingLoadFailed
 
         if "playerMapping" not in remote_map:
@@ -83,7 +86,9 @@ class RemoteMapping(object):
                     )
 
                 # map button to action
-                self.player_mapping[int(m.group(1))] = self.PLAYER_ACTIONS[mapping]
+                self.player_mapping[int(m.group(1))] = self.PLAYER_ACTIONS[
+                    mapping
+                ]
 
             else:
                 # invalid entry
@@ -107,7 +112,9 @@ class RemoteMapping(object):
                     )
 
                 # map button to action
-                self.master_mapping[int(m.group(1))] = self.MASTER_ACTIONS[mapping]
+                self.master_mapping[int(m.group(1))] = self.MASTER_ACTIONS[
+                    mapping
+                ]
 
             else:
                 # invalid entry
