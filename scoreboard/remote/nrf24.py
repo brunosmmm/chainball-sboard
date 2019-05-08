@@ -1,15 +1,11 @@
 """NRF24 controller."""
 
 import logging
+import queue as Queue
 import time
 
 import scoreboard.remote.nrf24const as rf
 from scoreboard.util.threads import StoppableThread
-
-try:
-    import Queue
-except ImportError:
-    import queue as Queue
 
 # constants
 CE_PIN_GPIO = 1
@@ -23,7 +19,7 @@ def _hw_comm_delay(func):
     return func
 
 
-class NRF24Chip(object):
+class NRF24Chip:
     """NRF24 Controller class."""
 
     def __init__(self, bus, select, message_cb=None, fake_hw=False):
@@ -211,7 +207,7 @@ class NRF24Chip(object):
                 self.msg_cb(payload[1:])
 
 
-class NRF24Message(object):
+class NRF24Message:
     """Messages."""
 
     def __init__(self, payload):
@@ -269,7 +265,7 @@ class NRF24Handler(StoppableThread):
     def flush_message_queue(self):
         """Flush message queue."""
         while self.message_pending():
-            self._receive_message()
+            self.receive_message()
 
     def run(self):
         """Run thread cycle."""
