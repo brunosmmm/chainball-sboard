@@ -6,7 +6,7 @@ import time
 import logging
 
 
-class CommandType(object):
+class CommandType:
     """Matrix command types."""
 
     TEXT = 0
@@ -20,7 +20,7 @@ class CommandType(object):
     END = 8
 
 
-class Color(object):
+class Color:
     """Matrix colors."""
 
     def __init__(self, r, g, b):
@@ -34,7 +34,7 @@ class Color(object):
         return [self.r, self.g, self.b]
 
 
-class Coordinate(object):
+class Coordinate:
     """Matrix coordinates."""
 
     def __init__(self, x, y):
@@ -43,7 +43,7 @@ class Coordinate(object):
         self.y = y
 
 
-class SerialMessage(object):
+class SerialMessage:
     """Serial command or message."""
 
     def __init__(self, command, data):
@@ -52,7 +52,7 @@ class SerialMessage(object):
         self.data = data
 
 
-class MatrixControllerSerial(object):
+class MatrixControllerSerial:
     """Matrix controller."""
 
     def __init__(self, serport):
@@ -107,9 +107,13 @@ class MatrixControllerSerial(object):
                     section += part.encode()
                 elif isinstance(part, Color):
                     r, g, b = part.to_list()
-                    section += struct.pack("ccc", bytes([r]), bytes([g]), bytes([b]))
+                    section += struct.pack(
+                        "ccc", bytes([r]), bytes([g]), bytes([b])
+                    )
                 elif isinstance(part, bool):
-                    section += struct.pack("c", bytes([1]) if part else bytes([0]))
+                    section += struct.pack(
+                        "c", bytes([1]) if part else bytes([0])
+                    )
 
             section = struct.pack("c", bytes([len(section) + 2])) + section
             section += struct.pack("c", bytes([0xFF]))
@@ -126,7 +130,9 @@ class MatrixControllerSerial(object):
 
     def putText(self, color, x, y, text, font, clear=False):
         """Draw text in the matrix."""
-        message = SerialMessage(CommandType.TEXT, [x, y, color, text, font, clear])
+        message = SerialMessage(
+            CommandType.TEXT, [x, y, color, text, font, clear]
+        )
         self._send_message(message)
 
     def fill(self, color):
