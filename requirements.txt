@@ -9,4 +9,6 @@ playsound==1.2.2
 ruamel.yaml==0.15.94
 vext==0.7.3
 vext.gi==0.7.0
+PyGObject==3.32.1
+
  
