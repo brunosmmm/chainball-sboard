@@ -592,7 +592,7 @@ class WebBoard(object):
             return "{0:06d}".format(uuid)
 
         def timestamp_from_seconds(seconds):
-            return "{:02d}:{:02d}".format(seconds / 60, seconds % 60)
+            return "{:02}:{:02}".format(int(seconds / 60), int(seconds % 60))
 
         # TODO: there are a lot of inconsistencies between player id, using
         # both strings and integers
