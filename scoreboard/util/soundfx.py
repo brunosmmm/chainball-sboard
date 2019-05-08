@@ -1,11 +1,11 @@
 """SFX library and audio device handler."""
 
 import threading
-import pygame
 import logging
-import time
 import json
 import os
+import pkg_resources
+from playsound import playsound
 
 
 class GameSoundEffect(threading.Thread):
@@ -19,9 +19,7 @@ class GameSoundEffect(threading.Thread):
 
     def run(self):
         """Play SFX."""
-        channel = self.fx.play()
-        while channel.get_busy():
-            time.sleep(0.01)
+        playsound(self.fx)
 
         self.finished = True
         # end
@@ -44,12 +42,7 @@ class GameSFXHandler(object):
         self.state = GameSFXHandlerStates.IDLE
         self.current_fx = None
 
-        try:
-            pygame.mixer.init(frequency=44100)
-            self._has_audio = True
-        except pygame.error:
-            self.logger.error("Failed to acquire audio device.")
-            self._has_audio = False
+        self._has_audio = True
 
         # build library
         self.fx_dict = {}
@@ -68,16 +61,22 @@ class GameSFXHandler(object):
 
         self.fx_dict = {}
         for name, sfx in sfx_config["sfxlib"].items():
-            path = os.path.join(os.getcwd(), sfx_config["sfxpath"], sfx["file"])
+            builtin = sfx.get("builtin", False)
+            if builtin:
+                data_path = pkg_resources.resource_filename(
+                    "scoreboard", "data"
+                )
+                path = os.path.join(data_path, "sfx", sfx["file"])
+            else:
+                path = os.path.join(
+                    os.getcwd(), sfx_config["sfxpath"], sfx["file"]
+                )
             if self._has_audio:
-                try:
-                    self.fx_dict[name] = pygame.mixer.Sound(path)
-                except pygame.error:
-                    self.logger.error("failed to load SFX file: {}".format(sfx["file"]))
+                self.fx_dict[name] = path
 
-        self.fx_desc = dict(
-            [(x, y["description"]) for x, y in sfx_config["sfxlib"].items()]
-        )
+        self.fx_desc = {
+            x: y["description"] for x, y in sfx_config["sfxlib"].items()
+        }
 
         self.logger.debug("loaded {} SFX files".format(len(self.fx_dict)))
 
