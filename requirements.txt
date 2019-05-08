@@ -3,6 +3,6 @@ backports.functools-lru-cache==1.5
 cheroot==6.5.5
 dbus-python==1.2.8
 more-itertools==7.0.0
-pygame==1.9.6
 pyserial==3.4
 six==1.12.0
+playsound==1.2.2
