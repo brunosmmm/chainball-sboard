@@ -15,11 +15,7 @@ from scoreboard.score.constants import (
 from scoreboard.score.exceptions import TextTooBigError
 from scoreboard.util.threads import StoppableThread
 
-try:
-    import Queue
-except ImportError:
-    # python3
-    import queue as Queue
+import queue as Queue
 
 
 class ScoreUpdateEventTypes(object):
