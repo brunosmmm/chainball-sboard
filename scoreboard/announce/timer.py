@@ -7,14 +7,14 @@ from collections import deque
 from scoreboard.announce.matrixser import Color, MatrixControllerSerial
 
 
-class AnnouncementKind(object):
+class AnnouncementKind:
     """Announcement types."""
 
     PLAYER_PANEL = 0
     TIMER_PANEL = 1
 
 
-class TimerAnnouncement(object):
+class TimerAnnouncement:
     """Timer panel announcement."""
 
     def __init__(self, heading, text, callback=None, cb_args=None):
@@ -25,7 +25,7 @@ class TimerAnnouncement(object):
         self.cb_args = cb_args
 
 
-class TimerHandler(object):
+class TimerHandler:
     """Timer panel controller."""
 
     def __init__(self, timer_end=None, chainball_game=None, rgbmat=True):
