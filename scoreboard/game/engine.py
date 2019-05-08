@@ -40,7 +40,7 @@ from scoreboard.score.player import PlayerScore
 from scoreboard.util.soundfx import GameSFXHandler
 
 
-class MasterRemote(object):
+class MasterRemote:
     """Master remote object."""
 
     def __init__(self):
@@ -48,7 +48,7 @@ class MasterRemote(object):
         self.remote_id = None
 
 
-class ChainballGame(object):
+class ChainballGame:
     """Game engine."""
 
     def __init__(self, virtual_hw=False):

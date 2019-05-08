@@ -3,6 +3,7 @@
 import logging
 import os
 import pty
+import queue as Queue
 import struct
 import threading
 import time
@@ -15,10 +16,8 @@ from scoreboard.score.constants import (
 from scoreboard.score.exceptions import TextTooBigError
 from scoreboard.util.threads import StoppableThread
 
-import queue as Queue
 
-
-class ScoreUpdateEventTypes(object):
+class ScoreUpdateEventTypes:
     """Update event types."""
 
     SCORE_UPD = 1
@@ -29,7 +28,7 @@ class ScoreUpdateEventTypes(object):
     BLINK_SCORE = 6
 
 
-class ScoreUpdateEvent(object):
+class ScoreUpdateEvent:
     """Update event."""
 
     def __init__(self, upd_type, data):

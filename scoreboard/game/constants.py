@@ -1,7 +1,7 @@
 """Constants."""
 
 
-class GameTurnActions(object):
+class GameTurnActions:
     """Possile actions."""
 
     INCREASE_SCORE = 0
@@ -9,13 +9,13 @@ class GameTurnActions(object):
     PASS_TURN = 2
 
 
-class MasterRemoteActions(object):
+class MasterRemoteActions:
     """Master remote actions."""
 
     PAUSE_UNPAUSE_CLOCK = 0
 
 
-class GameStates(object):
+class GameStates:
     """Game states."""
 
     IDLE = 0

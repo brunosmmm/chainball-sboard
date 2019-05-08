@@ -13,7 +13,7 @@ class CannotModifyScoresError(Exception):
     pass
 
 
-class PlayerPersistData(object):
+class PlayerPersistData:
     """Persistent data for a player."""
 
     def __init__(self, display_name, player_name=None):
@@ -45,7 +45,7 @@ class PlayerPersistData(object):
         return data
 
 
-class GamePersistStates(object):
+class GamePersistStates:
     """Game States."""
 
     RUNNING = 0
@@ -55,7 +55,7 @@ class GamePersistStates(object):
     NAMES = {RUNNING: "RUNNING", FINISHED: "FINISHED", PAUSED: "PAUSED"}
 
 
-class GameEventTypes(object):
+class GameEventTypes:
     """Events that occur during a game."""
 
     SCORE_CHANGE = "SCORE_CHANGE"
@@ -78,7 +78,7 @@ class GameEventTypes(object):
     SERVE_ADVANCE = "SERVE_ADVANCE"
 
 
-class GamePersistData(object):
+class GamePersistData:
     """Game persistance data structures."""
 
     def __init__(self, players, handler, current_series, game_uid=None):
@@ -194,7 +194,9 @@ class GamePersistData(object):
            Game duration
         """
         # doesnt change the current status for now, but i think it should
-        self.log_event(GameEventTypes.GAME_START, {"rtime": remaining_time, "gtime": 0})
+        self.log_event(
+            GameEventTypes.GAME_START, {"rtime": remaining_time, "gtime": 0}
+        )
 
     def end_game(self, reason, winner, running_time, remaining_time):
         """Log end of game.
@@ -281,7 +283,7 @@ class GamePersistData(object):
         return json_dict
 
 
-class GamePersistance(object):
+class GamePersistance:
     """Game persistance data wrapper class."""
 
     def __init__(self, folder):
@@ -337,7 +339,8 @@ class GamePersistance(object):
                 except:
                     # raise
                     self.logger.warning(
-                        "Could not load game " "persistance for game {}".format(f)
+                        "Could not load game "
+                        "persistance for game {}".format(f)
                     )
                     continue
 
@@ -456,7 +459,9 @@ class GamePersistance(object):
             Current game time
         """
         try:
-            self.game_history[self.current_game].force_score(player, score, game_time)
+            self.game_history[self.current_game].force_score(
+                player, score, game_time
+            )
         except:
             pass
 
@@ -467,7 +472,9 @@ class GamePersistance(object):
             if self._test_mode is True:
                 raise
             with open(join(self.path, "game.json"), "w") as f:
-                json.dump({"current_series": self.current_game_series}, f, indent=4)
+                json.dump(
+                    {"current_series": self.current_game_series}, f, indent=4
+                )
         except:
             self.logger.error("Could not save overall game persistance state")
 
@@ -477,7 +484,9 @@ class GamePersistance(object):
             if self._test_mode is True:
                 raise
             with open(file_name, "w") as f:
-                json.dump(self.game_history[self.current_game].to_JSON(), f, indent=4)
+                json.dump(
+                    self.game_history[self.current_game].to_JSON(), f, indent=4
+                )
         except:
             self.logger.error("Could not save game persistance data")
 

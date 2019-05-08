@@ -6,23 +6,19 @@ import json
 class SFXMappingLoadFailed(Exception):
     """Could not load mapping."""
 
-    pass
-
 
 class SFXUnknownEvent(Exception):
     """Unknown SFX."""
 
-    pass
 
-
-class SFXMappableEvents(object):
+class SFXMappableEvents:
     """Game events which can be mapped."""
 
     GAME_END = 0
     COW_OUT = 1
 
 
-class SFXMapping(object):
+class SFXMapping:
     """Mapping logic."""
 
     MAPPABLE_EVENTS = {

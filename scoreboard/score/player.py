@@ -2,10 +2,11 @@
 
 import logging
 import time
+
 from scoreboard.score.constants import PlayerServeStates
 
 
-class PlayerScore(object):
+class PlayerScore:
     """Player score."""
 
     def __init__(

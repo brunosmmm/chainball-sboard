@@ -10,7 +10,7 @@ _SERVE_TIMEOUT_DEFAULT = 3
 _GAME_DURATION_DEFAULT = 20
 
 
-class ChainballGameConfiguration(object):
+class ChainballGameConfiguration:
     """Configuration loader class."""
 
     def __init__(self):
@@ -34,12 +34,16 @@ class ChainballGameConfiguration(object):
             with open(filename, "r") as f:
                 config_data = json.load(f)
         except:
-            self.logger.warning("Could not load configuration file," "using defaults")
+            self.logger.warning(
+                "Could not load configuration file," "using defaults"
+            )
             config_data = {}
 
         # load stuff
         if "scoreAnnounceInterval" in config_data:
-            self.score_announce_interval = int(config_data["scoreAnnounceInterval"])
+            self.score_announce_interval = int(
+                config_data["scoreAnnounceInterval"]
+            )
 
         if "pairTimeout" in config_data:
             self.pair_timeout = int(config_data["pairTimeout"])

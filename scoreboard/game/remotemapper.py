@@ -11,16 +11,12 @@ from scoreboard.game.constants import GameTurnActions, MasterRemoteActions
 class RemoteMappingLoadFailed(Exception):
     """Mapping failed exception."""
 
-    pass
-
 
 class RemoteMappingIllegalError(Exception):
     """File has illegal syntax."""
 
-    pass
 
-
-class RemoteMapping(object):
+class RemoteMapping:
     """Mapping logic class."""
 
     # configuration file name mapping
