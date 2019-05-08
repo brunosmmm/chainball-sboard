@@ -1,8 +1,10 @@
 {"sfxpath" : "data/sfx",
  "sfxlib" : {
      "buzzer" : {"file": "buzzer.wav",
-                 "description":  "Buzzer"},
+                 "description":  "Buzzer",
+                 "builtin": true},
      "out" : {"file": "out.wav",
-              "description": "Cowout"}
+              "description": "Cowout",
+              "builtin": true}
  }
 }
