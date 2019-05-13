@@ -38,6 +38,7 @@ from scoreboard.remote.pair import RemotePairHandler
 from scoreboard.score.handler import ScoreHandler
 from scoreboard.score.player import PlayerScore
 from scoreboard.util.soundfx import GameSFXHandler
+from scoreboard.util.configfiles import ChainBallConfigurationError
 
 
 class MasterRemote:
@@ -51,7 +52,7 @@ class MasterRemote:
 class ChainballGame:
     """Game engine."""
 
-    def __init__(self, virtual_hw=False):
+    def __init__(self, configuration, virtual_hw=False):
         """Initialize."""
         self.logger = logging.getLogger("sboard.game")
 
@@ -61,22 +62,27 @@ class ChainballGame:
         # load remote mapping configuration file
         self.remote_mapping = RemoteMapping("rm_map")
         try:
-            self.remote_mapping.load_config("conf/remotemap.json")
-        except RemoteMappingLoadFailed:
+            remote_mapping_config = configuration.retrieve_configuration(
+                "remotemap"
+            )
+            self.remote_mapping.parse_config(remote_mapping_config)
+        except (RemoteMappingLoadFailed, ChainBallConfigurationError):
             self.logger.error("Failed to load remote button mapping")
             exit(1)
 
         # load SFX mapping configuration file
         self.sfx_mapping = SFXMapping()
         try:
-            self.sfx_mapping.load_config("conf/game.json")
+            sfx_mapping_config = configuration.retrieve_configuration("game")
+            self.sfx_mapping.parse_config(sfx_mapping_config)
         except SFXMappingLoadFailed:
             self.logger.error("Failed to load SFX mapping")
 
         # load other game configuration
         self.game_config = ChainballGameConfiguration()
         try:
-            self.game_config.load_config("conf/game.json")
+            game_config = configuration.retrieve_configuration("game")
+            self.game_config.parse_config(game_config)
         except:
             self.logger.error("Failed to load game configuration")
 

@@ -39,17 +39,20 @@ class ChainballGameConfiguration:
             )
             config_data = {}
 
-        # load stuff
-        if "scoreAnnounceInterval" in config_data:
+        self.parse_config(config_data)
+
+    def parse_config(self, configuration):
+        """Parse configuration."""
+        if "scoreAnnounceInterval" in configuration:
             self.score_announce_interval = int(
-                config_data["scoreAnnounceInterval"]
+                configuration["scoreAnnounceInterval"]
             )
 
-        if "pairTimeout" in config_data:
-            self.pair_timeout = int(config_data["pairTimeout"])
+        if "pairTimeout" in configuration:
+            self.pair_timeout = int(configuration["pairTimeout"])
 
-        if "serveTimeout" in config_data:
-            self.serve_timeout = int(config_data["serveTimeout"])
+        if "serveTimeout" in configuration:
+            self.serve_timeout = int(configuration["serveTimeout"])
 
-        if "gameDurationMinutes" in config_data:
-            self.game_duration = int(config_data["gameDurationMinutes"])
+        if "gameDurationMinutes" in configuration:
+            self.game_duration = int(configuration["gameDurationMinutes"])

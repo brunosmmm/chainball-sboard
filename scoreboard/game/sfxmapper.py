@@ -38,7 +38,6 @@ class SFXMapping:
         filename: str
            Path to configuration file
         """
-        new_mapping = {}
         try:
             sfx_map_file = open(filename)
             sfx_map = json.loads(sfx_map_file.read())
@@ -47,11 +46,15 @@ class SFXMapping:
             raise SFXMappingLoadFailed(
                 "Could not open " "sfx mapping configuration file"
             )
+        self.parse_config(sfx_map)
 
-        if "sfxmap" not in sfx_map:
+    def parse_config(self, configuration):
+        """Parse configuration."""
+        new_mapping = {}
+        if "sfxmap" not in configuration:
             raise SFXMappingLoadFailed("Configuration is invalid")
 
-        for key, value in sfx_map["sfxmap"].items():
+        for key, value in configuration["sfxmap"].items():
             if key not in self.MAPPABLE_EVENTS:
                 continue
 

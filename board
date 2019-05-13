@@ -5,21 +5,28 @@ import argparse
 import logging
 import signal
 import time
+import os
 
 from scoreboard.game.engine import ChainballGame
 from scoreboard.util.threads import StoppableThread
 from scoreboard.util.zeroconf import ZeroconfService
+from scoreboard.util.configfiles import (
+    ChainBallConfiguration,
+    ChainBallConfigurationError,
+)
 from scoreboard.web import WebBoard
 
 
 class GameWrapper(StoppableThread):
     """Main Game Thread."""
 
-    def __init__(self, virtual_hw):
+    def __init__(self, virtual_hw, configuration):
         """Initialize."""
         super(GameWrapper, self).__init__()
         # create game object
-        self.game = ChainballGame(virtual_hw=virtual_hw)
+        self.game = ChainballGame(
+            virtual_hw=virtual_hw, configuration=configuration
+        )
         self.game.post_init()
 
     def run(self):
@@ -81,8 +88,17 @@ if __name__ == "__main__":
 
     signal.signal(signal.SIGTERM, _handle_signal)
 
+    CONFIGURATION = ChainBallConfiguration(
+        extrapaths=os.path.join(os.getcwd(), "conf")
+    )
+    try:
+        CONFIGURATION.load_configuration()
+    except ChainBallConfigurationError as ex:
+        logger.error(ex)
+        exit(1)
+
     # spawn game engine in thread
-    GAME_WRAPPER = GameWrapper(args.nohw)
+    GAME_WRAPPER = GameWrapper(args.nohw, CONFIGURATION)
     GAME_WRAPPER.start()
 
     # web server

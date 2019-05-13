@@ -39,25 +39,9 @@ class RemoteMapping:
         self.player_mapping = {}
         self.master_mapping = {}
 
-    def load_config(self, filename):
-        """Load mapping configuration.
-
-        Args
-        ----
-        filename: str
-           File path for configuration
-        """
-        try:
-            remote_map_file = open(filename)
-            remote_map = json.load(remote_map_file)
-            remote_map_file.close()
-        except IOError:
-            self.logger.error(
-                "Could not open remote " "mapping configuration file"
-            )
-            raise RemoteMappingLoadFailed
-
-        if "playerMapping" not in remote_map:
+    def parse_config(self, configuration):
+        """Parse configuration."""
+        if "playerMapping" not in configuration:
             raise RemoteMappingLoadFailed("Invalid remote configuration!")
 
         # clear previous mapping
@@ -65,7 +49,7 @@ class RemoteMapping:
         self.master_mapping = {}
 
         # load player mapping
-        for button, mapping in remote_map["playerMapping"].items():
+        for button, mapping in configuration["playerMapping"].items():
             m = re.match(r"btn([0-9]+)", button)
 
             if m is not None:
@@ -91,7 +75,7 @@ class RemoteMapping:
                 raise RemoteMappingIllegalError("illegal button")
 
         # load master mapping
-        for button, mapping in remote_map["masterMapping"].items():
+        for button, mapping in configuration["masterMapping"].items():
             m = re.match(r"btn([0-9]+)", button)
 
             if m is not None:
@@ -119,3 +103,24 @@ class RemoteMapping:
         # check that we have all necessary mappings
         if len(self.player_mapping) < 3:
             raise RemoteMappingLoadFailed("Player remote mapping is invalid!")
+
+    def load_config(self, filename):
+        """Load mapping configuration.
+
+        Args
+        ----
+        filename: str
+           File path for configuration
+        """
+        try:
+            remote_map_file = open(filename)
+            remote_map = json.load(remote_map_file)
+            remote_map_file.close()
+        except IOError:
+            self.logger.error(
+                "Could not open remote " "mapping configuration file"
+            )
+            raise RemoteMappingLoadFailed
+
+        # parse configuration
+        self.parse_config(remote_map)
