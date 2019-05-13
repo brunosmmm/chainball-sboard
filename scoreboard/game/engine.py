@@ -135,7 +135,7 @@ class ChainballGame:
 
         # sound effects
         try:
-            self.sfx_handler = GameSFXHandler()
+            self.sfx_handler = GameSFXHandler(configuration)
         except Exception as ex:
             raise
             self.logger.error(

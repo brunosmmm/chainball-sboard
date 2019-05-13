@@ -2,10 +2,10 @@
 
 import threading
 import logging
-import json
 import os
 import pkg_resources
 from playsound import playsound
+from scoreboard.util.configfiles import ChainBallConfigurationError
 
 
 class GameSoundEffect(threading.Thread):
@@ -35,7 +35,7 @@ class GameSFXHandlerStates(object):
 class GameSFXHandler(object):
     """SFX Handler."""
 
-    def __init__(self):
+    def __init__(self, configuration):
         """Initialize."""
         self.logger = logging.getLogger("sboard.sfx")
 
@@ -48,14 +48,8 @@ class GameSFXHandler(object):
         self.fx_dict = {}
         self.fx_desc = {}
         try:
-            sfx_config_contents = open("conf/sfx.json")
-            sfx_config = json.loads(sfx_config_contents.read())
-            sfx_config_contents.close()
-        except IOError:
-            # no library, nothing to do
-            self.logger.error("Could not open SFX library configuration file")
-            return
-        except KeyError:
+            sfx_config = configuration.retrieve_configuration("sfx")
+        except ChainBallConfigurationError:
             self.logger.error("Invalid SFX library configuration file")
             return
 
