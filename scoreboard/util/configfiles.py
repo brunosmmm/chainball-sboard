@@ -3,7 +3,7 @@
 import os
 import json
 
-_DEFAULT_PATH = "/etc/chainball/conf"
+_DEFAULT_PATH = "/etc/chainball/"
 
 
 class ChainBallConfigurationError(Exception):
