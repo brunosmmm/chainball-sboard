@@ -3,6 +3,7 @@ Description=The Chainball Scoreboard
 After=Network.target
 
 [Service]
+User=scoreboard
 ExecStart=/usr/bin/board
 
 [Install]
