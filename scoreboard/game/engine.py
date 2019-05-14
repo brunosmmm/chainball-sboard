@@ -38,7 +38,10 @@ from scoreboard.remote.pair import RemotePairHandler
 from scoreboard.score.handler import ScoreHandler
 from scoreboard.score.player import PlayerScore
 from scoreboard.util.soundfx import GameSFXHandler
-from scoreboard.util.configfiles import ChainBallConfigurationError
+from scoreboard.util.configfiles import (
+    CHAINBALL_CONFIGURATION,
+    ChainBallConfigurationError,
+)
 
 
 class MasterRemote:
@@ -52,7 +55,7 @@ class MasterRemote:
 class ChainballGame:
     """Game engine."""
 
-    def __init__(self, configuration, virtual_hw=False):
+    def __init__(self, virtual_hw=False):
         """Initialize."""
         self.logger = logging.getLogger("sboard.game")
 
@@ -62,7 +65,7 @@ class ChainballGame:
         # load remote mapping configuration file
         self.remote_mapping = RemoteMapping("rm_map")
         try:
-            remote_mapping_config = configuration.retrieve_configuration(
+            remote_mapping_config = CHAINBALL_CONFIGURATION.retrieve_configuration(
                 "remotemap"
             )
             self.remote_mapping.parse_config(remote_mapping_config)
@@ -73,7 +76,9 @@ class ChainballGame:
         # load SFX mapping configuration file
         self.sfx_mapping = SFXMapping()
         try:
-            sfx_mapping_config = configuration.retrieve_configuration("game")
+            sfx_mapping_config = CHAINBALL_CONFIGURATION.retrieve_configuration(
+                "game"
+            )
             self.sfx_mapping.parse_config(sfx_mapping_config)
         except SFXMappingLoadFailed:
             self.logger.error("Failed to load SFX mapping")
@@ -81,7 +86,7 @@ class ChainballGame:
         # load other game configuration
         self.game_config = ChainballGameConfiguration()
         try:
-            game_config = configuration.retrieve_configuration("game")
+            game_config = CHAINBALL_CONFIGURATION.retrieve_configuration("game")
             self.game_config.parse_config(game_config)
         except:
             self.logger.error("Failed to load game configuration")
@@ -135,7 +140,7 @@ class ChainballGame:
 
         # sound effects
         try:
-            self.sfx_handler = GameSFXHandler(configuration)
+            self.sfx_handler = GameSFXHandler()
         except Exception as ex:
             raise
             self.logger.error(

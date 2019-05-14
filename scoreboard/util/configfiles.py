@@ -13,7 +13,7 @@ class ChainBallConfigurationError(Exception):
 class ChainBallConfiguration:
     """Configuration."""
 
-    def __init__(self, extrapaths=None):
+    def __init__(self, extrapaths=None, load_now=False):
         """Initialize."""
         self._config_paths = [_DEFAULT_PATH]
         self._config_files = {}
@@ -22,6 +22,18 @@ class ChainBallConfiguration:
                 extrapaths = [extrapaths]
 
             self._config_paths.extend(extrapaths)
+
+        self._loaded = False
+        if load_now:
+            try:
+                self.load_configuration()
+            except ChainBallConfigurationError:
+                pass
+
+    @property
+    def configuration_loaded(self):
+        """Get whether configuration is loaded."""
+        return self._loaded
 
     def load_configuration(self):
         """Try to load configuration."""
@@ -46,6 +58,7 @@ class ChainBallConfiguration:
                         raise ChainBallConfigurationError(
                             "couldnt load configuration file"
                         )
+            self._loaded = True
             return
 
         raise ChainBallConfigurationError("no configuration files available")
@@ -59,3 +72,8 @@ class ChainBallConfiguration:
             )
 
         return configuration
+
+
+CHAINBALL_CONFIGURATION = ChainBallConfiguration(
+    extrapaths=os.path.join(os.getcwd(), "conf"), load_now=True
+)
