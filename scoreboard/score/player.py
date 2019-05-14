@@ -24,11 +24,11 @@ class PlayerScore:
 
         self.handler = handler
         self.pid = player_id
-        self.current_score = 0
+        self._current_score = 0
         self.score_diff = 0
-        self.is_turn = False
+        self._is_turn = False
         self.web_text = None
-        self.panel_text = None
+        self._display_name = None
         self.registered = False
         self.remote_id = remote_id
 
@@ -51,34 +51,57 @@ class PlayerScore:
 
     def copy(self, other_player):
         """Copy player data."""
-        self.current_score = other_player.current_score
-        self.is_turn = other_player.is_turn
-        self.web_text = other_player.web_text[:]
-        self.panel_text = other_player.panel_text[:]
-        self.remote_id = other_player.remote_id
-        self.pid = other_player.pid
+        raise NotImplementedError
+        # self.current_score = other_player.current_score
+        # self.is_turn = other_player.is_turn
+        # self.web_text = other_player.web_text[:]
+        # self.panel_text = other_player.panel_text[:]
+        # self.remote_id = other_player.remote_id
+        # self.pid = other_player.pid
 
-    def __setattr__(self, name, value):
-        """Set attributes."""
-        super(PlayerScore, self).__setattr__(name, value)
+    @property
+    def panel_text(self):
+        """Get display text."""
+        return self._display_name
 
-        # dont set values in __init__
+    @panel_text.setter
+    def panel_text(self, value):
+        """Set display text."""
+        self._display_name = value
         if self.initialized is False:
             return
+        if self.handler and self._display_name:
+            self.handler.register_player(self.pid, self._display_name)
 
-        if name == "is_turn":
-            if self.handler and self.is_turn:
-                self.handler.set_turn(self.pid)
-                self.start_serve()
-            else:
-                self.end_serve()
+    @property
+    def current_score(self):
+        """Get current score."""
+        return self._current_score
 
-        elif name == "current_score":
-            self._set_score(self.forcing_score)
+    @current_score.setter
+    def current_score(self, value):
+        """Set current score."""
+        self._current_score = value
+        if self.initialized is False:
+            return
+        self._set_score(self.forcing_score)
 
-        elif name == "panel_text":
-            if self.handler and self.panel_text:
-                self.handler.register_player(self.pid, self.panel_text)
+    @property
+    def is_turn(self):
+        """Is current turn."""
+        return self._is_turn
+
+    @is_turn.setter
+    def is_turn(self, value):
+        """Set serving."""
+        self._is_turn = value
+        if self.initialized is False:
+            return
+        if self.handler and self._is_turn:
+            self.handler.set_turn(self.pid)
+            self.start_serve()
+        else:
+            self.end_serve()
 
     def force_score(self, new_score):
         """Force player score."""
@@ -87,15 +110,15 @@ class PlayerScore:
         self.forcing_score = False
 
     def _set_score(self, forced_update=False):
-        if self.handler and self.current_score is not None:
-            self.handler.update_score(self.pid, self.current_score)
+        if self.handler and self._current_score is not None:
+            self.handler.update_score(self.pid, self._current_score)
             if forced_update is False:
                 # enforce scoring window, pass serve automatically
                 self.start_score()
             else:
                 self.logger.debug(
                     "Forcing player {} score to {}".format(
-                        self.pid, self.current_score
+                        self.pid, self._current_score
                     )
                 )
 
@@ -105,7 +128,7 @@ class PlayerScore:
 
     def restore_text(self):
         """Restore original text."""
-        self.handler.set_panel_text(self.pid, self.panel_text)
+        self.handler.set_panel_text(self.pid, self._display_name)
 
     def start_serve(self):
         """Mark as serving."""
