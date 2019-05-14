@@ -1,0 +1,9 @@
+[Unit]
+Description=The Chainball Scoreboard
+After=Network.target
+
+[Service]
+ExecStart=/usr/bin/board
+
+[Install]
+WantedBy=multi-user.target
