@@ -11,22 +11,22 @@ from scoreboard.game.engine import ChainballGame
 from scoreboard.util.threads import StoppableThread
 from scoreboard.util.zeroconf import ZeroconfService
 from scoreboard.util.configfiles import (
-    ChainBallConfiguration,
+    CHAINBALL_CONFIGURATION,
     ChainBallConfigurationError,
 )
 from scoreboard.web import WebBoard
+from scoreboard.cbcentral.localdb import PLAYER_REGISTRY
+from scoreboard.cbcentral.queries import CBCentralQueryError
 
 
 class GameWrapper(StoppableThread):
     """Main Game Thread."""
 
-    def __init__(self, virtual_hw, configuration):
+    def __init__(self, virtual_hw):
         """Initialize."""
         super(GameWrapper, self).__init__()
         # create game object
-        self.game = ChainballGame(
-            virtual_hw=virtual_hw, configuration=configuration
-        )
+        self.game = ChainballGame(virtual_hw=virtual_hw)
         self.game.post_init()
 
     def run(self):
@@ -59,6 +59,16 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    if CHAINBALL_CONFIGURATION.configuration_loaded is False:
+        print("FATAL: cannot read configuration: {}".format(ex))
+        exit(1)
+
+    MAIN_CONFIG = CHAINBALL_CONFIGURATION.retrieve_configuration("scoreboard")
+    if MAIN_CONFIG is None:
+        log_file = "scoreboard.log"
+    else:
+        log_file = MAIN_CONFIG["log_path"]
+
     # main loop
     logging.basicConfig(
         level=logging.DEBUG,
@@ -84,21 +94,19 @@ if __name__ == "__main__":
     except Exception as ex:
         logger.error("failed to publish scoreboard service: {}".format(ex))
 
+    logger.info("Connecting to Central server")
+    try:
+        PLAYER_REGISTRY.update_registry()
+        PLAYER_REGISTRY.commit_registry()
+    except CBCentralQueryError:
+        logger.warning("could not update player registry from server")
+
     logger.info("Scoreboard Starting")
 
     signal.signal(signal.SIGTERM, _handle_signal)
 
-    CONFIGURATION = ChainBallConfiguration(
-        extrapaths=os.path.join(os.getcwd(), "conf")
-    )
-    try:
-        CONFIGURATION.load_configuration()
-    except ChainBallConfigurationError as ex:
-        logger.error(ex)
-        exit(1)
-
     # spawn game engine in thread
-    GAME_WRAPPER = GameWrapper(args.nohw, CONFIGURATION)
+    GAME_WRAPPER = GameWrapper(args.nohw)
     GAME_WRAPPER.start()
 
     # web server

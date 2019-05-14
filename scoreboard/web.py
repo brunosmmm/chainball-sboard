@@ -34,6 +34,7 @@ from scoreboard.game.persist import GamePersistData
 from scoreboard.game.playertxt import PlayerText
 from scoreboard.remote.constants import RemotePairFailureType
 from scoreboard.remote.persistence import PERSISTENT_REMOTE_DATA
+from scoreboard.cbcentral.localdb import PLAYER_REGISTRY
 
 
 class WebBoard(object):
@@ -742,6 +743,10 @@ class WebBoard(object):
 
         return ret
 
+    def dump_player_registry(self):
+        """Dump player registry."""
+        return {"status": "ok", "players": PLAYER_REGISTRY.serialized}
+
     def run(self):
         """Server routes."""
         # route
@@ -807,6 +812,7 @@ class WebBoard(object):
         route("/persist/dump_range/<start_uuid>,<count>")(self.dump_game_range)
         route("/persist/dump_fmt")(self.dump_fmt)
         route("/persist/assign_uid", method="POST")(self.assign_uid)
+        route("/persist/registry")(self.dump_player_registry)
 
         if self.bind_all:
             bind_to = "0.0.0.0"
