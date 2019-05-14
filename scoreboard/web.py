@@ -480,6 +480,7 @@ class WebBoard(object):
                 return {
                     "status": "ok",
                     "game": "paused",
+                    "serving": self.game.active_player,
                     "game_id": self.game.g_persist.current_game_series,
                     "user_id": self.game.g_persist.get_current_user_id(),
                     "scores": self._get_scores(),
@@ -751,8 +752,12 @@ class WebBoard(object):
         route("/js/<filename:re:.*\.js>")(self.jsFiles)
         route("/css/<filename:re:.*\.css>")(self.cssFiles)
         route("/images/<filename:re:.*\.(jpg|png|gif|ico)>")(self.imgFiles)
-        route("/fonts/<filename:re:.*\.(eot|ttf|woff|svg)>")(self.fontFiles)
-        route("/webfonts/<filename:re:.*\.(eot|ttf|woff|svg)>")(self.fontFiles)
+        route("/fonts/<filename:re:.*\.(eot|ttf|woff|woff2|svg)>")(
+            self.fontFiles
+        )
+        route("/webfonts/<filename:re:.*\.(eot|ttf|woff|woff2|svg)>")(
+            self.fontFiles
+        )
 
         # control
         route("/control/gbegin")(self.begin_game)
