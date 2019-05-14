@@ -101,20 +101,15 @@ class ChainballGame:
         self.ptimer_handler = TimerHandler(self.game_timeout, self, False)
 
         # create player dictionary
-        self.players = dict(
-            [
-                (
-                    x,
-                    PlayerScore(
-                        self.game_config.serve_timeout,
-                        self.s_handler,
-                        x,
-                        autoadv_cb=self.game_pass_turn,
-                    ),
-                )
-                for x in range(4)
-            ]
-        )
+        self.players = {
+            x: PlayerScore(
+                self.game_config.serve_timeout,
+                self.s_handler,
+                x,
+                autoadv_cb=self.game_pass_turn,
+            )
+            for x in range(4)
+        }
         self.player_count = 0
 
         # game persistance
