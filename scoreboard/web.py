@@ -73,7 +73,7 @@ class WebBoard(object):
 
     def referee(self):
         """Game setup template."""
-        return template("referee", gameData=self.game)
+        return template("referee", gameData=self.game, registry=PLAYER_REGISTRY)
 
     def example(self):
         """Show base layout template."""
@@ -195,11 +195,25 @@ class WebBoard(object):
                 player = self.game.next_player_num()
             else:
                 player = int(player_data["playerNum"])
-            player_entry = {
-                player: PlayerText(
-                    player_data["panelTxt"], player_data["webTxt"]
+
+            if "username" in player_data:
+                # registration using player registry information
+                pusername = player_data["username"]
+                registry_data = PLAYER_REGISTRY.get_player_by_username(
+                    pusername
                 )
-            }
+                if registry_data is None:
+                    player_entry = {
+                        player: PlayerText(
+                            player_data["panelTxt"], player_data["webTxt"]
+                        )
+                    }
+                else:
+                    player_entry = {
+                        player: PlayerText(
+                            registry_data.display_name, registry_data.name
+                        )
+                    }
             self.game.register_players(player_entry)
             self.logger.info("Registering player: {}".format(player_entry))
         except TooManyPlayersError:
