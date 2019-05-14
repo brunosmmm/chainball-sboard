@@ -5,18 +5,17 @@ import datetime
 import logging
 from os import listdir, makedirs
 from os.path import isfile, join, isdir
+from scoreboard.cbcentral.localdb import PLAYER_REGISTRY
 
 
 class CannotModifyScoresError(Exception):
     """Unable to modify scores."""
 
-    pass
-
 
 class PlayerPersistData:
     """Persistent data for a player."""
 
-    def __init__(self, display_name, player_name=None):
+    def __init__(self, display_name, player_name=None, player_username=None):
         """Initialize.
 
         Args
@@ -26,6 +25,17 @@ class PlayerPersistData:
         player_name: str
            Full name, displayed on web interface
         """
+        if player_username is not None:
+            player_info = PLAYER_REGISTRY.get_player_by_username(
+                player_username
+            )
+            if player_info is not None:
+                self.display_name = player_info.display_name
+                self.player_name = player_info.name
+                self._username = player_info.username
+                return
+
+        self._username = None
         self.display_name = display_name
         self.player_name = player_name
         self.score = 0
@@ -41,6 +51,7 @@ class PlayerPersistData:
         data["display_name"] = self.display_name
         data["full_name"] = self.player_name
         data["score"] = self.score
+        data["username"] = self._username
 
         return data
 
