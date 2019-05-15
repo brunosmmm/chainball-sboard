@@ -3,8 +3,7 @@
 import json
 import datetime
 import logging
-from os import listdir, makedirs
-from os.path import isfile, join, isdir
+import os
 from scoreboard.cbcentral.localdb import PLAYER_REGISTRY
 
 
@@ -271,7 +270,8 @@ class GamePersistData:
         if save is True and self.data_change_handler is not None:
             self.data_change_handler()
 
-    def to_JSON(self):
+    @property
+    def serialized(self):
         """Dump a JSON representation of the current game."""
         json_dict = {}
         json_dict["start_time"] = str(self.start_time)
@@ -306,6 +306,8 @@ class GamePersistance:
            Path where game persistance files are stored
         """
         self.logger = logging.getLogger("sboard.gpersist")
+        if not os.path.isabs(folder):
+            folder = os.path.join(".", folder)
         self.path = folder
         self.game_history = {}
         self.current_game = None
@@ -317,41 +319,42 @@ class GamePersistance:
     def load_history(self):
         """Load all games saved previously."""
         # check if path exists, if not, create.
-        if not isdir(join(".", self.path)):
+        if not os.path.isdir(self.path):
             # path does not exist!
             try:
-                makedirs(join(".", self.path))
+                os.makedirs(self.path)
             except OSError:
                 self.logger.error("Could not create persistance folder.")
 
         # load current game number
         try:
-            f = open(join(self.path, "game.json"), "r")
-            persist_data = json.load(f)
+            with open(os.path.join(self.path, "game.json"), "r") as data:
+                persist_data = json.load(data)
             self.current_game_series = persist_data["current_series"]
-        except:
+        except (OSError, json.JSONDecodeError):
             self.logger.error("Could not load overall game persistance data")
+            # create empty one
+            self.save_current_data()
             return
 
         try:
-            flist = listdir("./" + self.path)
-            repr(flist)
-        except:
+            os.listdir(self.path)
+        except OSError:
             self.logger.error("Could not load individual game persistances")
             return
 
-        for f in listdir("./" + self.path):
-            if isfile(join("./" + self.path, f)):
-                file_uuid = f.split(".")[0]
+        for fname in os.listdir(self.path):
+            if os.path.isfile(os.path.join(self.path, fname)):
+                file_uuid, _ = os.path.splitext(fname)
 
                 try:
-                    with open(join(self.path, f), "r") as g:
-                        game_data = json.load(g)
-                except:
+                    with open(os.path.join(self.path, fname), "r") as game:
+                        game_data = json.load(game)
+                except (OSError, json.JSONDecodeError):
                     # raise
                     self.logger.warning(
                         "Could not load game "
-                        "persistance for game {}".format(f)
+                        "persistance for game {}".format(fname)
                     )
                     continue
 
@@ -387,7 +390,7 @@ class GamePersistance:
         """
         try:
             self.game_history[self.current_game].log_event(evt_type, evt_desc)
-        except:
+        except KeyError:
             pass
 
     def start_game(self, remaining_time):
@@ -400,7 +403,7 @@ class GamePersistance:
         """
         try:
             self.game_history[self.current_game].start_game(remaining_time)
-        except:
+        except KeyError:
             pass
 
     def end_game(self, reason, winner, running_time, remaining_time):
@@ -421,7 +424,7 @@ class GamePersistance:
             self.game_history[self.current_game].end_game(
                 reason, winner, running_time, remaining_time
             )
-        except:
+        except KeyError:
             pass
         self.current_game = None
 
@@ -429,7 +432,7 @@ class GamePersistance:
         """Pause or unpause game."""
         try:
             self.game_history[self.current_game].pause_unpause()
-        except:
+        except KeyError:
             pass
 
     def update_current_score(self, player, score, forced_update, game_time):
@@ -450,7 +453,7 @@ class GamePersistance:
             self.game_history[self.current_game].update_score(
                 player, score, forced_update, game_time
             )
-        except:
+        except (KeyError, CannotModifyScoresError):
             self.logger.error(
                 "could not update score: "
                 "player {}, score: {}, "
@@ -473,33 +476,32 @@ class GamePersistance:
             self.game_history[self.current_game].force_score(
                 player, score, game_time
             )
-        except:
+        except (KeyError, CannotModifyScoresError):
             pass
 
     def save_current_data(self):
         """Save data immediately."""
         # save game series number
         try:
-            if self._test_mode is True:
-                raise
-            with open(join(self.path, "game.json"), "w") as f:
+            with open(os.path.join(self.path, "game.json"), "w") as data:
                 json.dump(
-                    {"current_series": self.current_game_series}, f, indent=4
+                    {"current_series": self.current_game_series}, data, indent=4
                 )
-        except:
+        except OSError:
             self.logger.error("Could not save overall game persistance state")
 
-        file_name = join(self.path, self.current_game + ".json")
+        if self.current_game is not None:
+            file_name = os.path.join(self.path, self.current_game + ".json")
 
-        try:
-            if self._test_mode is True:
-                raise
-            with open(file_name, "w") as f:
-                json.dump(
-                    self.game_history[self.current_game].to_JSON(), f, indent=4
-                )
-        except:
-            self.logger.error("Could not save game persistance data")
+            try:
+                with open(file_name, "w") as data:
+                    json.dump(
+                        self.game_history[self.current_game].serialized,
+                        data,
+                        indent=4,
+                    )
+            except OSError:
+                self.logger.error("Could not save game persistance data")
 
     def assign_user_id(self, user_id):
         """Assign user id to current game.
@@ -511,12 +513,12 @@ class GamePersistance:
         """
         try:
             self.game_history[self.current_game].assign_user_id(user_id)
-        except:
+        except KeyError:
             self.logger.error("Could not assign user id to game")
 
     def get_current_user_id(self):
         """Get user identifier for current game."""
         try:
             return self.game_history[self.current_game].user_game_id
-        except:
+        except KeyError:
             return None
