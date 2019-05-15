@@ -4,7 +4,9 @@ import json
 import datetime
 import logging
 import os
+import scoreboard.cbcentral.live as live_game
 from scoreboard.cbcentral.localdb import PLAYER_REGISTRY
+from scoreboard.util.configfiles import CHAINBALL_CONFIGURATION
 
 
 class CannotModifyScoresError(Exception):
@@ -111,6 +113,8 @@ class GamePersistData:
         self.internal_game_id = current_series
         self.user_game_id = game_uid
 
+        scoreboard_config = CHAINBALL_CONFIGURATION.scoreboard
+        self._live_updates = scoreboard_config.live_updates
         # if self.data_change_handler:
         #     self.data_change_handler()
 
@@ -207,6 +211,9 @@ class GamePersistData:
         self.log_event(
             GameEventTypes.GAME_START, {"rtime": remaining_time, "gtime": 0}
         )
+        if self._live_updates:
+            # push game status
+            live_game.game_start(self.internal_game_id, remaining_time)
 
     def end_game(self, reason, winner, running_time, remaining_time):
         """Log end of game.
@@ -234,6 +241,15 @@ class GamePersistData:
         )
         # if self.data_change_handler:
         #     self.data_change_handler()
+        if self._live_updates:
+            # push game status
+            live_game.game_end(
+                self.internal_game_id,
+                reason,
+                winner,
+                running_time,
+                remaining_time,
+            )
 
     def pause_unpause(self):
         """Pause or unpause game."""
@@ -269,6 +285,8 @@ class GamePersistData:
 
         if save is True and self.data_change_handler is not None:
             self.data_change_handler()
+        if self._live_updates:
+            live_game.push_event(self.internal_game_id, evt_type, evt_desc)
 
     @property
     def serialized(self):
@@ -391,7 +409,7 @@ class GamePersistance:
         try:
             self.game_history[self.current_game].log_event(evt_type, evt_desc)
         except KeyError:
-            pass
+            return
 
     def start_game(self, remaining_time):
         """Log start of game.
@@ -404,7 +422,7 @@ class GamePersistance:
         try:
             self.game_history[self.current_game].start_game(remaining_time)
         except KeyError:
-            pass
+            return
 
     def end_game(self, reason, winner, running_time, remaining_time):
         """Log end of a game.
@@ -425,7 +443,8 @@ class GamePersistance:
                 reason, winner, running_time, remaining_time
             )
         except KeyError:
-            pass
+            return
+
         self.current_game = None
 
     def pause_unpause_game(self):
