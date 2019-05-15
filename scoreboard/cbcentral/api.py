@@ -59,9 +59,9 @@ def central_api_get(sub_api=None, path=None, timeout=10):
     return result.json()
 
 
-def central_api_post(sub_api=None, path=None, timeout=10):
+def central_api_post(data, sub_api=None, path=None, timeout=10):
     """Make a POST request."""
-    central_server_address, _ = get_central_address()
+    central_server_address, api_key = get_central_address()
     get_url = central_server_address
     if sub_api is not None:
         get_url = posixpath.join(get_url, sub_api)
@@ -69,7 +69,22 @@ def central_api_post(sub_api=None, path=None, timeout=10):
     if path is not None:
         get_url = posixpath.join(get_url, path)
 
-    raise NotImplementedError
+    try:
+        result = requests.post(
+            get_url,
+            timeout=timeout,
+            headers={"Authorization": f"Api-Key {api_key}"},
+            data=data,
+        )
+    except Timeout:
+        raise CBCentralAPITimeout("POST timed out")
+    except ConnectionError:
+        raise CBCentralAPIError("POST failed")
+
+    if result.status_code != 200:
+        raise CBCentralAPIError(
+            "error while doing POST: error {}".format(result.status_code)
+        )
 
 
 def central_server_alive(timeout=1):
