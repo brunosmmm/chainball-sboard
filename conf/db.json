@@ -1,4 +1,6 @@
 {
     "database_location": "db/",
-    "player_registry": "registry.json"
+    "player_registry": "player_registry.json",
+    "tournament_registry": "tournament_registry.json",
+    "game_registry": "game_registry.json"
 }

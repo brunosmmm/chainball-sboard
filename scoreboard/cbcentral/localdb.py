@@ -139,9 +139,11 @@ class TournamentEntry:
         self._season = season
         self._description = description
         self._date = event_date
-        self._players = players
+        # abbreviate player data
+        self._players = [player.strip("/").split("/")[-1] for player in players]
         self._status = status
-        self._games = games
+        # also abbreviate
+        self._games = [int(game.strip("/").split("/")[-1]) for game in games]
 
     @property
     def season(self):
@@ -161,7 +163,7 @@ class TournamentEntry:
     @property
     def players(self):
         """Get Players."""
-        raise NotImplementedError
+        return self._players
 
     @property
     def status(self):
@@ -171,7 +173,7 @@ class TournamentEntry:
     @property
     def games(self):
         """Get games."""
-        raise NotImplementedError
+        return self._games
 
     @property
     def serialized(self):
