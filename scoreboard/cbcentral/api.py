@@ -86,6 +86,8 @@ def central_api_post(data, sub_api=None, path=None, timeout=10):
             "error while doing POST: error {}".format(result.status_code)
         )
 
+    return result.json()
+
 
 def central_server_alive(timeout=1):
     """Check if server is alive."""

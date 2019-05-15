@@ -11,7 +11,17 @@ _SCOREBOARD_DEFAULTS = {
     "chainball_server_token": "",
 }
 
-_CONFIGURATION_DEFAULTS = {"scoreboard.json": _SCOREBOARD_DEFAULTS}
+_DB_DEFAULTS = {
+    "database_location": "db/",
+    "player_registry": "player_registry.json",
+    "tournament_registry": "tournament_registry.json",
+    "game_registry": "game_registry.json",
+}
+
+_CONFIGURATION_DEFAULTS = {
+    "scoreboard.json": _SCOREBOARD_DEFAULTS,
+    "db.json": _DB_DEFAULTS,
+}
 
 
 class ChainBallConfigurationError(Exception):

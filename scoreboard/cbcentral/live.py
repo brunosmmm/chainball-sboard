@@ -1,6 +1,14 @@
 """Live updates."""
 
-from scoreboard.cbcentral.api import central_api_post
+import logging
+
+from scoreboard.cbcentral.api import (
+    central_api_post,
+    CBCentralAPIError,
+    CBCentralAPITimeout,
+)
+
+_LOGGER = logging.getLogger("sboard.live")
 
 
 def push_event(game_uuid, evt_type, evt_desc):
@@ -8,11 +16,34 @@ def push_event(game_uuid, evt_type, evt_desc):
     pass
 
 
-def game_start(game_uuid, game_time):
+def game_start(game_uuid, start_time):
     """Start game."""
-    pass
+    post_data = {"start_time": start_time}
+    try:
+        result = central_api_post(
+            post_data, sub_api="api", path=f"games/{game_uuid}/start_game"
+        )
+    except CBCentralAPIError as ex:
+        _LOGGER.error("could not start game")
+
+    if "status" not in result or result["status"] != "ok":
+        _LOGGER.error("game_start request failed")
 
 
 def game_end(game_uuid, reason, winner, running_time, remaining_time):
     """End game."""
-    pass
+    post_data = {
+        "reason": start_time,
+        "winner": winner,
+        "running_time": running_time,
+        "remaining_time": remaining_time,
+    }
+    try:
+        result = central_api_post(
+            post_data, sub_api="api", path=f"games/{game_uuid}/stop_game"
+        )
+    except CBCentralAPIError as ex:
+        _LOGGER.error("could not stop game")
+
+    if "status" not in result or result["status"] != "ok":
+        _LOGGER.error("game_stop request failed")

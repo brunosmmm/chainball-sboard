@@ -13,7 +13,7 @@ from scoreboard.util.threads import StoppableThread
 from scoreboard.util.zeroconf import ZeroconfService
 from scoreboard.util.configfiles import CHAINBALL_CONFIGURATION
 from scoreboard.web import WebBoard
-from scoreboard.cbcentral.localdb import PLAYER_REGISTRY
+from scoreboard.cbcentral.localdb import PLAYER_REGISTRY, TOURNAMENT_REGISTRY
 from scoreboard.cbcentral.api import CBCentralAPIError
 
 
@@ -97,6 +97,12 @@ if __name__ == "__main__":
         PLAYER_REGISTRY.commit_registry()
     except CBCentralAPIError:
         logger.warning("could not update player registry from server")
+
+    try:
+        TOURNAMENT_REGISTRY.update_registry()
+        TOURNAMENT_REGISTRY.commit_registry()
+    except CBCentralAPIError:
+        logger.warning("could not update tournament registry from server")
 
     logger.info("Scoreboard Starting")
 
