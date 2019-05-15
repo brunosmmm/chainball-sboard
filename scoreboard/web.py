@@ -566,7 +566,7 @@ class WebBoard(object):
             return {"status": "error", "error": "invalid uuid"}
         game_data = self.game.g_persist.game_history[game_uuid]
         if isinstance(game_data, GamePersistData):
-            game_data = game_data.to_JSON()
+            game_data = game_data.serialized
         return {"status": "ok", "data": game_data}
 
     def dump_game_readable(self, game_uuid):

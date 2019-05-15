@@ -67,7 +67,7 @@ def test_persist():
     g.pause_unpause()
 
     g.log_event(evt_type=None, evt_desc=None)
-    g.to_JSON()
+    g.serialized
 
     # fail
     persist = GamePersistance("data/persist/game")
@@ -79,9 +79,13 @@ def test_persist():
     persist.new_record({0: p})
     persist.log_event(evt_type=None, evt_desc=None)
     persist.start_game(remaining_time=1200)
-    persist.end_game(reason=None, winner=0, running_time=300, remaining_time=900)
+    persist.end_game(
+        reason=None, winner=0, running_time=300, remaining_time=900
+    )
     persist.pause_unpause_game()
-    persist.update_current_score(player=0, score=-1, forced_update=False, game_time=300)
+    persist.update_current_score(
+        player=0, score=-1, forced_update=False, game_time=300
+    )
     persist.force_current_score(player=0, score=0, game_time=300)
     persist.assign_user_id("id")
     persist.get_current_user_id()

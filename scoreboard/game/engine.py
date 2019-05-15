@@ -1,6 +1,7 @@
 """Game engine."""
 
 import logging
+import os
 
 from scoreboard.announce.timer import TimerAnnouncement, TimerHandler
 from scoreboard.game.config import ChainballGameConfiguration
@@ -90,6 +91,7 @@ class ChainballGame:
             self.game_config.parse_config(game_config)
         except:
             self.logger.error("Failed to load game configuration")
+            exit(1)
 
         # remote pair handler (non-threaded)
         self.pair_handler = RemotePairHandler(
@@ -113,7 +115,11 @@ class ChainballGame:
         self.player_count = 0
 
         # game persistance
-        self.g_persist = GamePersistance("userdata/persist/games")
+        db_configuration = CHAINBALL_CONFIGURATION.retrieve_configuration("db")
+        persist_location = os.path.join(
+            db_configuration["database_location"], "persist", "games"
+        )
+        self.g_persist = GamePersistance(persist_location)
 
         # set flags
         self.ongoing = False

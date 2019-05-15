@@ -1,4 +1,4 @@
 {
-    "database_location": "/usr/lib/chainball/db/",
+    "database_location": "db/",
     "player_registry": "registry.json"
 }
