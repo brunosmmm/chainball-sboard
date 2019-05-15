@@ -30,7 +30,7 @@ def get_central_address():
 
 def central_api_get(sub_api=None, path=None, timeout=10):
     """Make a GET request."""
-    central_server_address, _ = get_central_address()
+    central_server_address, api_key = get_central_address()
 
     # do not use access token for now
     # build request
@@ -43,7 +43,11 @@ def central_api_get(sub_api=None, path=None, timeout=10):
 
     # perform request (blocking)
     try:
-        result = requests.get(get_url, timeout=timeout)
+        result = requests.get(
+            get_url,
+            timeout=timeout,
+            headers={"Authorization": f"Api-Key {api_key}"},
+        )
     except Timeout:
         raise CBCentralAPITimeout("GET timed out.")
     except ConnectionError:
