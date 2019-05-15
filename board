@@ -5,15 +5,13 @@ import argparse
 import logging
 import signal
 import time
-import os
+
+from systemd.journal import JournalHandler
 
 from scoreboard.game.engine import ChainballGame
 from scoreboard.util.threads import StoppableThread
 from scoreboard.util.zeroconf import ZeroconfService
-from scoreboard.util.configfiles import (
-    CHAINBALL_CONFIGURATION,
-    ChainBallConfigurationError,
-)
+from scoreboard.util.configfiles import CHAINBALL_CONFIGURATION
 from scoreboard.web import WebBoard
 from scoreboard.cbcentral.localdb import PLAYER_REGISTRY
 from scoreboard.cbcentral.queries import CBCentralQueryError
@@ -72,8 +70,6 @@ if __name__ == "__main__":
     # main loop
     logging.basicConfig(
         level=logging.DEBUG,
-        filename="scoreboard.log",
-        filemode="w",
         format="%(asctime)s - %(name)s -" " %(levelname)s - %(message)s",
     )
 
@@ -82,6 +78,7 @@ if __name__ == "__main__":
     logging.getLogger("").addHandler(console)
 
     logger = logging.getLogger("sboard")
+    logger.addHandler(JournalHandler())
 
     # publish as service
     published = False
