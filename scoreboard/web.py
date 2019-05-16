@@ -36,6 +36,7 @@ from scoreboard.remote.constants import RemotePairFailureType
 from scoreboard.remote.persistence import PERSISTENT_REMOTE_DATA
 from scoreboard.cbcentral.localdb import PLAYER_REGISTRY
 from scoreboard.game.engine import ChainballGameError
+from scoreboard.cbcentral.util import update_all
 
 
 class WebBoard(object):
@@ -766,6 +767,17 @@ class WebBoard(object):
         """Dump player registry."""
         return {"status": "ok", "players": PLAYER_REGISTRY.serialized}
 
+    def update_all(self):
+        """Update from central server."""
+        if self.game.ongoing:
+            return {
+                "status": "error",
+                "error": "cannot update while game is live",
+            }
+
+        update_all()
+        return {"status": "ok"}
+
     def run(self):
         """Server routes."""
         # route
@@ -832,6 +844,7 @@ class WebBoard(object):
         route("/persist/dump_fmt")(self.dump_fmt)
         route("/persist/assign_uid", method="POST")(self.assign_uid)
         route("/persist/registry")(self.dump_player_registry)
+        route("/persist/update")(self.update_all)
 
         if self.bind_all:
             bind_to = "0.0.0.0"
