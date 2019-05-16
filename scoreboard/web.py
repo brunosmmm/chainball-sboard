@@ -34,7 +34,11 @@ from scoreboard.game.persist import GamePersistData
 from scoreboard.game.playertxt import PlayerText
 from scoreboard.remote.constants import RemotePairFailureType
 from scoreboard.remote.persistence import PERSISTENT_REMOTE_DATA
-from scoreboard.cbcentral.localdb import PLAYER_REGISTRY
+from scoreboard.cbcentral.localdb import (
+    PLAYER_REGISTRY,
+    TOURNAMENT_REGISTRY,
+    GAME_REGISTRY,
+)
 from scoreboard.game.engine import ChainballGameError
 from scoreboard.cbcentral.localdb import update_all
 
@@ -75,7 +79,13 @@ class WebBoard(object):
 
     def referee(self):
         """Game setup template."""
-        return template("referee", gameData=self.game, registry=PLAYER_REGISTRY)
+        return template(
+            "referee",
+            gameData=self.game,
+            pregistry=PLAYER_REGISTRY,
+            tregistry=TOURNAMENT_REGISTRY,
+            gregistry=GAME_REGISTRY,
+        )
 
     def example(self):
         """Show base layout template."""
@@ -778,6 +788,26 @@ class WebBoard(object):
         update_all()
         return {"status": "ok"}
 
+    def activate_tournament(self, tournament_id):
+        """Activate tournament."""
+        if self.game.ongoing:
+            return {"status": "error", "error": "game is live"}
+
+        if tournament_id not in TOURNAMENT_REGISTRY:
+            return {"status": "error", "error": "invalid tournament id"}
+
+        self.game.activate_tournament(tournament_id)
+
+        return {"status": "ok"}
+
+    def deactivate_tournament(self):
+        """Deactivate tournament."""
+        if self.game.ongoing:
+            return {"status": "error", "error": "game is live"}
+
+        self.game.deactivate_tournament()
+        return {"status": "ok"}
+
     def run(self):
         """Server routes."""
         # route
@@ -845,6 +875,8 @@ class WebBoard(object):
         route("/persist/assign_uid", method="POST")(self.assign_uid)
         route("/persist/registry")(self.dump_player_registry)
         route("/persist/update")(self.update_all)
+        route("/persist/tournament/<tournament_id>")(self.activate_tournament)
+        route("/persist/tournament_off")(self.deactivate_tournament)
 
         if self.bind_all:
             bind_to = "0.0.0.0"
