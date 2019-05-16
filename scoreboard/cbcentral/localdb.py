@@ -153,6 +153,10 @@ class LocalRegistry:
 
         raise KeyError
 
+    def __iter__(self):
+        """Get iterator."""
+        return iter(self._registry_contents)
+
 
 class LocalPlayerRegistry(LocalRegistry):
     """Local player registry."""
