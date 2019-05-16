@@ -176,18 +176,28 @@ class ChainballGame:
         """Put in tournament mode."""
         if self.ongoing:
             raise ChainballGameError("game is live")
+
+        self.logger.info(
+            "activating tournament with id {}".format(tournament_id)
+        )
         self._tournament = tournament_id
 
     def deactivate_tournament(self):
         """Deactivate tournament mode."""
         if self.ongoing:
             raise ChainballGameError("game is live")
+        self.logger.info("deactivating tournament")
         self._tournament = None
 
     @property
     def tournament_mode(self):
         """Get mode."""
-        return not bool(self._tournament is None)
+        return bool(self._tournament is not None)
+
+    @property
+    def tournament_id(self):
+        """Get tournament id."""
+        return self._tournament
 
     def enable_remotes(self):
         """Enable remotes."""

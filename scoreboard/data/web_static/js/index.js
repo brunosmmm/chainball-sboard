@@ -71,6 +71,23 @@ function refreshStatus()
             if (result.status == "ok") {
                 // update status globally
                 currentGameStatus = result.game;
+                // manage tournament toggler
+                if (!result.tournament)
+                {
+                    $("#tournament-toggle").text("Activate tournament");
+                    $("#tournament-toggle").attr("data-toggle", "modal");
+                    $("#tournament-toggle").attr("data-target", "#tournamentModal");
+                    $("#tournament-toggle").removeAttr("onclick");
+                    $("#tournament-name").text("");
+                }
+                else
+                {
+                    $("#tournament-toggle").text("Deactivate tournament");
+                    $("#tournament-toggle").removeAttr("data-toggle");
+                    $("#tournament-toggle").removeAttr("data-target");
+                    $("#tournament-toggle").attr("onclick", "deactivateTournament()");
+                    $("#tournament-name").text(result.tournament_str);
+                }
                 if (result.game != "stopped") {
                     // set scores
                     $.each(result.scores,
@@ -88,6 +105,8 @@ function refreshStatus()
                     for (p=0;p<4;p++) {
                         $("#pline-"+p+"-drop").addClass("disabled");
                     }
+
+                    $("#tournament-toggle").addClass("disabled");
                 }
                 else {
                     var p;
@@ -98,6 +117,7 @@ function refreshStatus()
                     }
                     $("#game-stop-btn").addClass("disabled");
                     $("#game-pause-btn").addClass("disabled");
+                    $("#tournament-toggle").removeClass("disabled");
                     canStartGame();
                 }
             }
@@ -191,4 +211,14 @@ function pairRemote(playerNum) {}
 // update local registry
 export function updateRegistry() {
     $.ajax({method: "GET", url: "/persist/update"});
+}
+
+export function activateTournament(){
+    var tournament_id;
+    tournament_id = $("#tournament-selector").find(":selected").attr("data");
+    $.ajax({method: "GET", url: "/persist/tournament/"+tournament_id});
+}
+
+export function deactivateTournament(){
+    $.ajax({method: "GET", url: "/persist/tournament_off"});
 }

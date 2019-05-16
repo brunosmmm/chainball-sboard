@@ -36,7 +36,8 @@
             </a>
             <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
               <a class="dropdown-item" href="#" onclick="chainbot.updateRegistry()">Update local registry</a>
-              <a class="dropdown-item" href="#" data-toggle="modal" data-target="#tournamentModal">Activate tournament</a>
+              <a class="dropdown-item" href="#"  id="tournament-toggle">
+                Activate tournament</a>
               <div class="dropdown-divider"></div>
               <a class="dropdown-item disabled" href="#" id="remote-enable-disable">Enable remotes</a>
               <a class="dropdown-item disabled" href="#">Override remote pairing</a>
@@ -44,6 +45,7 @@
           </li>
         </ul>
       </div>
+      <p class="text-right" id="tournament-name"></p>
       <p class="text-right font-weight-bold" id="game-status">Game not in progress</p>
     </nav>
     <div class="container">
@@ -400,9 +402,9 @@
         <form>
           <div class="form-group">
             <label for="player-selector" class="col-form-label">Tournament:</label>
-            <select class="form-control" id="player-selector">
+            <select class="form-control" id="tournament-selector">
               %for tournament in tregistry:
-              <option id="tournamentSelector-{{player.username}}">{{tournament.season}} {{tournament.description}}</option>
+              <option data="{{tournament.id}}">{{tournament.season}} {{tournament.description}}</option>
               %end
             </select>
           </div>
@@ -410,7 +412,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-primary">Activate</button>
+        <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="chainbot.activateTournament()">Activate</button>
       </div>
     </div>
   </div>

@@ -506,6 +506,13 @@ class WebBoard(object):
 
     def get_game_status(self):
         """Get current game status."""
+        if self.game.tournament_mode:
+            tournament = TOURNAMENT_REGISTRY[self.game.tournament_id]
+            tournament_str = "{} {}".format(
+                tournament.season, tournament.description
+            )
+        else:
+            tournament_str = ""
         if self.game.ongoing:
             if self.game.paused:
                 return {
@@ -515,6 +522,8 @@ class WebBoard(object):
                     "game_id": self.game.g_persist.current_game_series,
                     "user_id": self.game.g_persist.get_current_user_id(),
                     "scores": self._get_scores(),
+                    "tournament": self.game.tournament_mode,
+                    "tournament_str": tournament_str,
                 }
             return {
                 "status": "ok",
@@ -523,6 +532,8 @@ class WebBoard(object):
                 "game_id": self.game.g_persist.current_game_series,
                 "user_id": self.game.g_persist.get_current_user_id(),
                 "scores": self._get_scores(),
+                "tournament": self.game.tournament_mode,
+                "tournament_str": tournament_str,
             }
         else:
             return {
@@ -531,6 +542,8 @@ class WebBoard(object):
                 "game_id": self.game.g_persist.current_game_series,
                 "user_id": self.game.g_persist.get_current_user_id(),
                 "can_start": self.game.game_can_start(),
+                "tournament": self.game.tournament_mode,
+                "tournament_str": tournament_str,
             }
 
     def pause_unpause(self):
@@ -793,7 +806,15 @@ class WebBoard(object):
         if self.game.ongoing:
             return {"status": "error", "error": "game is live"}
 
+        try:
+            tournament_id = int(tournament_id)
+        except ValueError:
+            return {"status": "error", "error": "invalid value for id"}
+
         if tournament_id not in TOURNAMENT_REGISTRY:
+            self.logger.warning(
+                "invalid tournament id: {}".format(tournament_id)
+            )
             return {"status": "error", "error": "invalid tournament id"}
 
         self.game.activate_tournament(tournament_id)
