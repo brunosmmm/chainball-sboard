@@ -41,6 +41,11 @@ class PlayerPersistData:
         self.player_name = player_name
         self.score = 0
 
+    @property
+    def username(self):
+        """Get username."""
+        return self._username
+
     def update_score(self, score):
         """Update player score."""
         self.score = score
@@ -213,7 +218,10 @@ class GamePersistData:
         )
         if self._live_updates:
             # push game status
-            live_game.game_start(self.internal_game_id, remaining_time)
+            player_order = [player.username for player in self.player_data]
+            live_game.game_start(
+                self.internal_game_id, remaining_time, player_order
+            )
 
     def end_game(self, reason, winner, running_time, remaining_time):
         """Log end of game.
