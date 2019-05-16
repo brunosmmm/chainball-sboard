@@ -10,6 +10,7 @@
     <script src="/js/jquery.min.js"></script>
     <script src="/js/popper.min.js"></script>
     <script src="/js/bootstrap.min.js"></script>
+    <script src="/js/chainbot.js"></script>
     <link href="/css/all.css" rel="stylesheet"> <!--load all styles -->
 
     <script>$(document).ready(function(c) {
@@ -32,187 +33,51 @@
 
     <!-- start a game -->
     <script>
-      function startGame()
-      {
-          if (!$("#game-start-btn").hasClass("disabled")) {
-            $("#game-status").load("/control/gbegin");
-            setTimeout(function(){
-                window.location.reload(true);
-            });
-          }
-      }
-
-      function stopGame()
-      {
-          if (!$("#game-stop-btn").hasClass("disabled")) {
-            $.ajax({
-                method: "GET",
-                url: "/control/gend"
-            });
-         }
-      }
-
-      var refreshTimer;
-      function startRefreshing()
-      {
-          // refresh immediately
-          refreshStatus();
-          refreshTimer = setInterval(refreshStatus, 1000);
-      }
-
-      function stopRefreshing()
-      {
-          clearInterval(refreshTimer);
-      }
-
-      function canStartGame()
-      {
-        $.ajax({
-          method: "GET",
-          url: "/status/can_start",
-          success: function(result) {
-            if (result.status == "ok") {
-              if (result.can_start) {
-                $("#game-start-btn").removeClass("disabled");
-              }
-              else {
-                $("#game-start-btn").addClass("disabled");
-              }
-            }
-          }});
-      }
-
-      var currentGameStatus;
-      function refreshStatus()
-      {
-          getPlayerNames();
-          $.ajax({
-              method: "GET",
-              url: "/status/game",
-              success: function(result) {
-                  if (result.status == "ok") {
-                      // update status globally
-                      currentGameStatus = result.game;
-                      if (result.game != "stopped") {
-                          // set scores
-                          $.each(result.scores,
-                                 function(key, val) {
-                                     if (key != "status") {
-                                         setScore(key, val, result.serving);
-                                     }
-                                 });
-                          // enable pause/stop
-                          $("#game-stop-btn").removeClass("disabled");
-                          $("#game-pause-btn").removeClass("disabled");
-                          $("#game-start-btn").addClass("disabled");
-                          // disable dropdown in player names
-                          var p;
-                          for (p=0;p<4;p++) {
-                            $("#pline-"+p+"-drop").addClass("disabled");
-                          }
-                      }
-                      else {
-                        var p;
-                        for (p=0; p<4; p++) {
-                           disableControls(p);
-                           // enable dropdowns in player names
-                           $("#pline-"+p+"-drop").removeClass("disabled");
-                        }
-                        $("#game-stop-btn").addClass("disabled");
-                        $("#game-pause-btn").addClass("disabled");
-                        canStartGame();
-                      }
-                  }
-              }
-          });
-      }
-
-      function getPlayerNames() {
-        $.ajax({
-          method: "GET",
-          url: "/status/players",
-          success: function(result) {
-             $.each(result, function(key, val) { $("#pline-"+key).text(val.web_txt); });
-          }});
-      }
-
-      function setScore(player, score, serving)
-      {
-          if (serving != player) {
-              $("#pline-"+player).removeClass("btn-danger");
-          }
-          else
-          {
-              $("#pline-"+player).addClass("btn-danger");
-          }
-
-          $("#pscore-"+player).text(score);
-      }
-
-      function setTurn(playerNum)
-      {
-          $.ajax({
-              method: "GET",
-              url: "/debug/setturn/"+playerNum
-          });
-      }
-
-      function scoringEvt(playerNum, evtType)
-      {
-          $.ajax({
-              method: "GET",
-              url: "/control/scoreevt/"+playerNum+","+evtType
-          });
-      }
-
-      function disableControls(playerNum)
-      {
-          var evt;
-          for (evt = 0; evt < 8; evt++) {
-              $("#p"+playerNum+"Evt"+evt).addClass("disabled");
-              $("#scoreDropdownBtn"+playerNum).addClass("disabled");
-          }
-      }
-
-      function enableControls(playerNum)
-      {
-          var evt;
-          for (evt = 0; evt < 8; evt++) {
-              $("#p"+playerNum+"Evt"+evt).removeClass("disabled");
-              $("#scoreDropdownBtn"+playerNum).removeClass("disabled");
-          }
-      }
-
-      function pnameClick(playerNum) {
-        if (currentGameStatus == "stopped") {
-          // add or remove player etc
-
-        } else {
-          // set turn
-          $.ajax({method: "GET", url: "/debug/setturn/"+playerNum});
-        }
-      }
-
-      function addPlayer(playerNum) {}
-      function rmPlayer(playerNum) {}
-      function pairRemote(playerNum) {}
+$('#exampleModal').on('show.bs.modal', function (event) {
+  var button = $(event.relatedTarget) // Button that triggered the modal
+  var recipient = button.data('whatever') // Extract info from data-* attributes
+  // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
+  // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
+  var modal = $(this)
+  modal.find('.modal-title').text('New message to ' + recipient)
+  modal.find('.modal-body input').val(recipient)
+})
     </script>
 
   </head>
   <body onload="startRefreshing()">
 	  <!--content-starts-->
-    <nav class="navbar sticky-top navbar-light bg-light">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
       <a class="navbar-brand" href="#">Chainball Scoreboard</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNavDropdown">
+        <ul class="navbar-nav">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              Actions
+            </a>
+            <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+              <a class="dropdown-item" href="#" onclick="updateRegistry()">Update local registry</a>
+              <a class="dropdown-item" href="#">Activate tournament</a>
+              <div class="dropdown-divider"></div>
+              <a class="dropdown-item disabled" href="#" id="remote-enable-disable">Enable remotes</a>
+              <a class="dropdown-item disabled" href="#">Override remote pairing</a>
+            </div>
+          </li>
+        </ul>
+      </div>
       <p class="text-right font-weight-bold" id="game-status">Game not in progress</p>
     </nav>
-          <div class="container">
-            <div class="row mb-2 mt-2">
-              <div class="col-3">
-                <p class="text-center font-weight-bolder">Player</p>
-              </div>
-              <div class="col-2">
-                <p class="text-center font-weight-bolder">Score</p>
-              </div>
+    <div class="container">
+      <div class="row mb-2 mt-2">
+        <div class="col-3">
+          <p class="text-center font-weight-bolder">Player</p>
+        </div>
+        <div class="col-2">
+          <p class="text-center font-weight-bolder">Score</p>
+        </div>
               <div class="col-7">
                 <p class="text-center font-weight-bolder">Events</p>
               </div>
@@ -226,7 +91,7 @@
                     <span class="sr-only">Toggle Dropdown</span>
                   </button>
                   <div class="dropdown-menu">
-                    <a class="dropdown-item" href="#" onclick="addPlayer(0)">Add Player</a>
+                    <a class="dropdown-item" href="#" data-toggle="modal" data-target="#exampleModal" data-whatever="0">Add Player</a>
                     <a class="dropdown-item" href="#" onclick="rmPlayer(0)">Remove Player</a>
                     <div class="dropdown-divider"></div>
                     <a class="dropdown-item" href="#" onclick="pairRemote(0)">Pair Remote</a>
@@ -515,6 +380,36 @@
         <p class="text-right font-weight-bold text-light">00:00</p>
       </nav>
 	  <!--content-end-->
+
+
+<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Add Player</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form>
+          <div class="form-group">
+            <label for="player-selector" class="col-form-label">Player:</label>
+            <select class="form-control" id="player-selector">
+              %for player in registry:
+              <option id="playerSelector-{{player.username}}">{{player.name}}</option>
+              %end
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary">Add</button>
+      </div>
+    </div>
+  </div>
+</div>
+
   </body>
 </html>
-:
