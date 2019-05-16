@@ -162,7 +162,7 @@ class TournamentEntry(LocalRegistryEntry):
         """Initialize."""
         super().__init__()
         self._id = id
-        self._season = season
+        self._season = id_from_url(season)
         self._description = description
         self._date = event_date
         # abbreviate player data
