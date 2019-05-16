@@ -126,6 +126,7 @@ class ChainballGame:
         self.score_display_ended = True
         self._next_uid = None
         self._tournament = None
+        self._tournament_game_id = None
 
         # start remote subsystem
         self._start_remote_subsystem()
@@ -189,6 +190,12 @@ class ChainballGame:
         self.logger.info("deactivating tournament")
         self._tournament = None
 
+    def set_active_game(self, game_id):
+        """Set active game id."""
+        if self.ongoing:
+            raise ChainballGameError("game is live")
+        self._tournament_game_id = game_id
+
     @property
     def tournament_mode(self):
         """Get mode."""
@@ -198,6 +205,11 @@ class ChainballGame:
     def tournament_id(self):
         """Get tournament id."""
         return self._tournament
+
+    @property
+    def active_game_id(self):
+        """Active game id."""
+        return self._tournament_game_id
 
     def enable_remotes(self):
         """Enable remotes."""
@@ -671,6 +683,7 @@ class ChainballGame:
         self.ongoing = False
         self.game_uuid = None
         self._next_uid = None
+        self._tournament_game_id = None
 
         self.logger.info("Game stopped")
 

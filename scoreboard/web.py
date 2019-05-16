@@ -508,11 +508,17 @@ class WebBoard(object):
         """Get current game status."""
         if self.game.tournament_mode:
             tournament = TOURNAMENT_REGISTRY[self.game.tournament_id]
-            tournament_str = "{} {}".format(
+            tournament_str = "{} {} ".format(
                 tournament.season, tournament.description
             )
+            if self.game.active_game_id is not None:
+                game = GAME_REGISTRY[game.acive_game_id]
+                game_seq = game.seq
+            else:
+                game_seq = None
         else:
             tournament_str = ""
+            game_seq = None
         if self.game.ongoing:
             if self.game.paused:
                 return {
@@ -524,6 +530,8 @@ class WebBoard(object):
                     "scores": self._get_scores(),
                     "tournament": self.game.tournament_mode,
                     "tournament_str": tournament_str,
+                    "game_id": self.game.active_game_id,
+                    "game_seq": game_seq,
                 }
             return {
                 "status": "ok",
@@ -534,6 +542,8 @@ class WebBoard(object):
                 "scores": self._get_scores(),
                 "tournament": self.game.tournament_mode,
                 "tournament_str": tournament_str,
+                "game_id": self.game.active_game_id,
+                "game_seq": game_seq,
             }
         else:
             return {
@@ -544,6 +554,8 @@ class WebBoard(object):
                 "can_start": self.game.game_can_start(),
                 "tournament": self.game.tournament_mode,
                 "tournament_str": tournament_str,
+                "game_id": self.game.active_game_id,
+                "game_seq": game_seq,
             }
 
     def pause_unpause(self):

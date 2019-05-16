@@ -31,16 +31,24 @@
       <div class="collapse navbar-collapse" id="navbarNavDropdown">
         <ul class="navbar-nav">
           <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <a class="nav-link dropdown-toggle" href="#" id="actionsDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
               Actions
             </a>
-            <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+            <div class="dropdown-menu" aria-labelledby="actionsDropdown">
               <a class="dropdown-item" href="#" onclick="chainbot.updateRegistry()">Update local registry</a>
               <a class="dropdown-item" href="#"  id="tournament-toggle">
                 Activate tournament</a>
               <div class="dropdown-divider"></div>
               <a class="dropdown-item disabled" href="#" id="remote-enable-disable">Enable remotes</a>
               <a class="dropdown-item disabled" href="#">Override remote pairing</a>
+            </div>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle disabled" href="#" id="tournamentDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              Tournament
+            </a>
+            <div class="dropdown-menu" aria-labelledby="tournamentDropdown">
+              <a class="dropdown-item" href="#">Select game</a>
             </div>
           </li>
         </ul>
@@ -69,10 +77,10 @@
                     <span class="sr-only">Toggle Dropdown</span>
                   </button>
                   <div class="dropdown-menu">
-                    <a class="dropdown-item" href="#" data-toggle="modal" data-target="#playerAddModal" data-whatever="0">Add Player</a>
-                    <a class="dropdown-item" href="#" onclick="rmPlayer(0)">Remove Player</a>
+                    <a id="player-add-0" class="dropdown-item" href="#" data-toggle="modal" data-target="#playerAddModal" data-whatever="0">Add Player</a>
+                    <a class="dropdown-item disabled" href="#" onclick="rmPlayer(0)">Remove Player</a>
                     <div class="dropdown-divider"></div>
-                    <a class="dropdown-item" href="#" onclick="pairRemote(0)">Pair Remote</a>
+                    <a class="dropdown-item disabled" href="#" onclick="pairRemote(0)">Pair Remote</a>
                   </div>
                 </div>
               </div>
@@ -141,10 +149,10 @@
                     <span class="sr-only">Toggle Dropdown</span>
                   </button>
                   <div class="dropdown-menu">
-                    <a class="dropdown-item" href="#" onclick="addPlayer(1)">Add Player</a>
-                    <a class="dropdown-item" href="#" onclick="rmPlayer(1)">Remove Player</a>
+                    <a id="player-add-1" class="dropdown-item" href="#" onclick="addPlayer(1)">Add Player</a>
+                    <a class="dropdown-item disabled" href="#" onclick="rmPlayer(1)">Remove Player</a>
                     <div class="dropdown-divider"></div>
-                    <a class="dropdown-item" href="#" onclick="pairRemote(1)">Pair Remote</a>
+                    <a class="dropdown-item disabled" href="#" onclick="pairRemote(1)">Pair Remote</a>
                   </div>
                 </div>
               </div>
@@ -213,10 +221,10 @@
                     <span class="sr-only">Toggle Dropdown</span>
                   </button>
                   <div class="dropdown-menu">
-                    <a class="dropdown-item" href="#" onclick="addPlayer(2)">Add Player</a>
-                    <a class="dropdown-item" href="#" onclick="rmPlayer(2)">Remove Player</a>
+                    <a id="player-add-2" class="dropdown-item" href="#" onclick="addPlayer(2)">Add Player</a>
+                    <a class="dropdown-item disabled" href="#" onclick="rmPlayer(2)">Remove Player</a>
                     <div class="dropdown-divider"></div>
-                    <a class="dropdown-item" href="#" onclick="pairRemote(2)">Pair Remote</a>
+                    <a class="dropdown-item disabled" href="#" onclick="pairRemote(2)">Pair Remote</a>
                   </div>
                 </div>
               </div>
@@ -285,10 +293,10 @@
                     <span class="sr-only">Toggle Dropdown</span>
                   </button>
                   <div class="dropdown-menu">
-                    <a class="dropdown-item" href="#" onclick="addPlayer(3)">Add Player</a>
-                    <a class="dropdown-item" href="#" onclick="rmPlayer(3)">Remove Player</a>
+                    <a id="player-add-3" class="dropdown-item" href="#" onclick="addPlayer(3)">Add Player</a>
+                    <a class="dropdown-item disabled" href="#" onclick="rmPlayer(3)">Remove Player</a>
                     <div class="dropdown-divider"></div>
-                    <a class="dropdown-item" href="#" onclick="pairRemote(3)">Pair Remote</a>
+                    <a class="dropdown-item disabled" href="#" onclick="pairRemote(3)">Pair Remote</a>
                   </div>
                 </div>
               </div>
@@ -359,7 +367,6 @@
       </nav>
 	  <!--content-end-->
 
-
 <div class="modal fade" id="playerAddModal" tabindex="-1" role="dialog" aria-labelledby="playerAddModalLabel" aria-hidden="true">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
@@ -401,10 +408,41 @@
       <div class="modal-body">
         <form>
           <div class="form-group">
-            <label for="player-selector" class="col-form-label">Tournament:</label>
+            <label for="tournament-selector" class="col-form-label">Tournament:</label>
             <select class="form-control" id="tournament-selector">
               %for tournament in tregistry:
               <option data="{{tournament.id}}">{{tournament.season}} {{tournament.description}}</option>
+              %end
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="chainbot.activateTournament()">Activate</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="gameModal" tabindex="-1" role="dialog" aria-labelledby="gameModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="gameModalLabel">Select game</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form>
+          <div class="form-group">
+            <label for="game-selector" class="col-form-label">Game Number:</label>
+            <select class="form-control" id="game-selector">
+              %for game in gregistry:
+              %if game.status == "NYET" and game.tournament == gameData.tournament_id:
+              <option data="{{game.identifier}}">{{game.sequence}}</option>
+              %end
               %end
             </select>
           </div>

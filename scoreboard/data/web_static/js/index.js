@@ -79,6 +79,11 @@ function refreshStatus()
                     $("#tournament-toggle").attr("data-target", "#tournamentModal");
                     $("#tournament-toggle").removeAttr("onclick");
                     $("#tournament-name").text("");
+                    $("#tournamentDropdown").addClass("disabled");
+                    var p;
+                    for(p=0;p<4;p++) {
+                        $("#player-add-"+p).removeClass("disabled");
+                    }
                 }
                 else
                 {
@@ -87,6 +92,11 @@ function refreshStatus()
                     $("#tournament-toggle").removeAttr("data-target");
                     $("#tournament-toggle").attr("onclick", "deactivateTournament()");
                     $("#tournament-name").text(result.tournament_str);
+                    $("#tournamentDropdown").removeClass("disabled");
+                    var p;
+                    for(p=0;p<4;p++) {
+                        $("#player-add-"+p).addClass("disabled");
+                    }
                 }
                 if (result.game != "stopped") {
                     // set scores
