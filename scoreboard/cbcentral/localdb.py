@@ -48,55 +48,6 @@ class LocalRegistryEntry:
         return self._kwargs
 
 
-class PlayerEntry(LocalRegistryEntry):
-    """Locally cached player description."""
-
-    _index = "username"
-
-    def __init__(self, name, display_name, username, sfx_md5, **kwargs):
-        """Initialize."""
-        super().__init__(**kwargs)
-        self._name = name
-        self._dispname = display_name
-        self._username = username
-        self._sfx_md5 = sfx_md5
-
-    @property
-    def name(self):
-        """Get name."""
-        return self._name
-
-    @property
-    def display_name(self):
-        """Get display name."""
-        return self._dispname
-
-    @property
-    def username(self):
-        """Get username."""
-        return self._username
-
-    @property
-    def sfx_md5(self):
-        """Get sfx md5 sum."""
-        return self._sfx_md5
-
-    @property
-    def serialized(self):
-        """Serialized."""
-        kwargs = super().serialized
-        kwargs.update(
-            {
-                "name": self._name,
-                "display_name": self._dispname,
-                "username": self._username,
-                "sfx_md5": self._sfx_md5,
-            }
-        )
-
-        return kwargs
-
-
 class LocalRegistry:
     """Local registry."""
 
@@ -157,6 +108,63 @@ class LocalRegistry:
     def __iter__(self):
         """Get iterator."""
         return iter(self._registry_contents)
+
+    def __contains__(self, item):
+        """Contains or not."""
+        try:
+            _ = self[item]
+            return True
+        except KeyError:
+            return False
+
+
+class PlayerEntry(LocalRegistryEntry):
+    """Locally cached player description."""
+
+    _index = "username"
+
+    def __init__(self, name, display_name, username, sfx_md5, **kwargs):
+        """Initialize."""
+        super().__init__(**kwargs)
+        self._name = name
+        self._dispname = display_name
+        self._username = username
+        self._sfx_md5 = sfx_md5
+
+    @property
+    def name(self):
+        """Get name."""
+        return self._name
+
+    @property
+    def display_name(self):
+        """Get display name."""
+        return self._dispname
+
+    @property
+    def username(self):
+        """Get username."""
+        return self._username
+
+    @property
+    def sfx_md5(self):
+        """Get sfx md5 sum."""
+        return self._sfx_md5
+
+    @property
+    def serialized(self):
+        """Serialized."""
+        kwargs = super().serialized
+        kwargs.update(
+            {
+                "name": self._name,
+                "display_name": self._dispname,
+                "username": self._username,
+                "sfx_md5": self._sfx_md5,
+            }
+        )
+
+        return kwargs
 
 
 class LocalPlayerRegistry(LocalRegistry):
