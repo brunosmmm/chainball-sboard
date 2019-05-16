@@ -65,27 +65,14 @@ class ChainballGame:
         self.logger = logging.getLogger("sboard.game")
         self._remotes = remote_score
 
+        self.rf_handler = None
+        self.remote_mapping = None
+        self.pair_handler = None
+        self.m_remote = None
         self.s_handler = ScoreHandler("/dev/ttyAMA0", virt_hw=virtual_hw)
+        # initialize remotes
         if self._remotes:
-            self.rf_handler = NRF24Handler(fake_hw=virtual_hw)
-            # load remote mapping configuration file
-            self.remote_mapping = RemoteMapping("rm_map")
-            try:
-                remote_mapping_config = CHAINBALL_CONFIGURATION.retrieve_configuration(
-                    "remotemap"
-                )
-                self.remote_mapping.parse_config(remote_mapping_config)
-            except (RemoteMappingLoadFailed, ChainBallConfigurationError):
-                self.logger.error("Failed to load remote button mapping")
-                exit(1)
-            # remote pair handler (non-threaded)
-            self.pair_handler = RemotePairHandler(
-                fail_cb=self.pair_fail, success_cb=self.pair_end
-            )
-        else:
-            self.rf_handler = None
-            self.remote_mapping = None
-            self.pair_handler = None
+            self._initialize_remote_subsystem(test_hw=virtual_hw)
 
         # load SFX mapping configuration file
         self.sfx_mapping = SFXMapping()
@@ -139,14 +126,8 @@ class ChainballGame:
         self.score_display_ended = True
         self._next_uid = None
 
-        if self.rf_handler is not None:
-            # start rf handler
-            self.rf_handler.start()
-
-            # master remote
-            self.m_remote = MasterRemote()
-        else:
-            self.m_remote = None
+        # start remote subsystem
+        self._start_remote_subsystem()
 
         # start score handler
         self.s_handler.start()
@@ -162,6 +143,68 @@ class ChainballGame:
 
         # other variables
         self._current_fault_count = 0
+
+    def _initialize_remote_subsystem(self, test_hw=False):
+        self.rf_handler = NRF24Handler(fake_hw=test_hw)
+        # load remote mapping configuration file
+        self.remote_mapping = RemoteMapping("rm_map")
+        try:
+            remote_mapping_config = CHAINBALL_CONFIGURATION.retrieve_configuration(
+                "remotemap"
+            )
+            self.remote_mapping.parse_config(remote_mapping_config)
+        except (RemoteMappingLoadFailed, ChainBallConfigurationError):
+            self.logger.error("Failed to load remote button mapping")
+            exit(1)
+        # remote pair handler (non-threaded)
+        self.pair_handler = RemotePairHandler(
+            fail_cb=self.pair_fail, success_cb=self.pair_end
+        )
+
+    def _start_remote_subsystem(self):
+        if self.rf_handler is not None:
+            # start rf handler
+            self.rf_handler.start()
+
+            # master remote
+            self.m_remote = MasterRemote()
+        else:
+            self.m_remote = None
+
+    def enable_remotes(self):
+        """Enable remotes."""
+        if self._remotes:
+            return
+
+        if self.ongoing:
+            raise ChainballGameError(
+                "cannot change scoring mode with live game"
+            )
+
+        self._initialize_remote_subsystem()
+        self._start_remote_subsystem()
+        self._remotes = True
+
+    def disable_remotes(self):
+        """Disable remotes."""
+        if self._remotes is False:
+            return
+
+        if self.ongoing:
+            raise ChainballGameError(
+                "cannot change scoring mode with live game."
+            )
+
+        # stop
+        self.rf_handler.stop()
+        self.rf_handler.join()
+
+        # delete
+        self.rf_handler = None
+        self.pair_handler = None
+        self.m_remote = None
+
+        self._remotes = False
 
     def post_init(self):
         """Post-initialization tasks."""

@@ -24,11 +24,11 @@ from scoreboard.cbcentral.api import CBCentralAPIError
 class GameWrapper(StoppableThread):
     """Main Game Thread."""
 
-    def __init__(self, virtual_hw):
+    def __init__(self, virtual_hw, remotes=False):
         """Initialize."""
         super(GameWrapper, self).__init__()
         # create game object
-        self.game = ChainballGame(virtual_hw=virtual_hw)
+        self.game = ChainballGame(virtual_hw=virtual_hw, remote_score=remotes)
         self.game.post_init()
 
     def run(self):
