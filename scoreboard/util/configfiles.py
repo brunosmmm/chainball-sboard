@@ -31,14 +31,31 @@ class ChainBallConfigurationError(Exception):
 class ChainBallConfigurationFile:
     """Configuration file."""
 
-    def __init__(self, data, defaults=None):
+    def __init__(self, data, path, defaults=None):
         """Initialize."""
 
         self._data = data
+        self._path = path
         if defaults is not None:
             for name, value in defaults.items():
                 if name not in self._data:
                     self._data[name] = value
+
+    def save(self):
+        """Save."""
+        try:
+            with open(self._path, "w") as config:
+                json.dump(self._data, config)
+        except OSError:
+            raise ChainBallConfigurationError("cannot write configuration")
+
+    def add_section(self, section_name, section_data):
+        """Add section."""
+        if section_name in self._data:
+            raise ChainBallConfigurationError(
+                "section already exists: {}".format(section_name)
+            )
+        self._data[section_name] = section_data
 
     def __getattr__(self, name):
         """Get attribute."""
@@ -103,10 +120,12 @@ class ChainBallConfiguration:
             for file_name in found_files:
                 defaults = _CONFIGURATION_DEFAULTS.get(file_name)
                 fname, ext = os.path.splitext(file_name)
+                cfg_file_path = os.path.join(path, file_name)
                 if ext == ".json":
                     try:
                         self._config_files[fname] = ChainBallConfigurationFile(
-                            load_json_file(os.path.join(path, file_name)),
+                            load_json_file(cfg_file_path),
+                            cfg_file_path,
                             defaults=defaults,
                         )
                     except (OSError, json.JSONDecodeError):
