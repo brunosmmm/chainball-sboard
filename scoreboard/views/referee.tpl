@@ -5,47 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <script type="application/x-javascript"> addEventListener("load", function() { setTimeout(hideURLbar, 0); }, false); function hideURLbar(){ window.scrollTo(0,1); } </script>
-    <link href="/css/bootstrap.min.css" rel='stylesheet' type='text/css' />
-    <link href="/css/style.css" rel='stylesheet' type='text/css' />
-    <script src="/js/jquery.min.js"></script>
-    <script src="/js/popper.min.js"></script>
-    <script src="/js/bootstrap.min.js"></script>
-    <script src="/js/chainbot.js"></script>
-    <link href="/css/all.css" rel="stylesheet"> <!--load all styles -->
-
-    <script>$(document).ready(function(c) {
-    $('.sky-close').on('click', function(c){
-        $('.green-button').fadeOut('slow', function(c){
-            $('.green-button').remove();
-        });
-    });
-});
-    </script>
-    <script>$(document).ready(function(c) {
-    $('.oran-close').on('click', function(c){
-        $('.orange-button').fadeOut('slow', function(c){
-            $('.orange-button').remove();
-        });
-    });
-});
-    </script>
-    <script type="text/javascript" src="/js/Chart.js"></script>
-
+    <script src="/dist/bundle.js" type="text/javascript"></script>
+    <link href="/dist/main.css" rel='stylesheet' type='text/css' />
     <!-- start a game -->
-    <script>
-$('#exampleModal').on('show.bs.modal', function (event) {
-  var button = $(event.relatedTarget) // Button that triggered the modal
-  var recipient = button.data('whatever') // Extract info from data-* attributes
-  // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
-  // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
-  var modal = $(this)
-  modal.find('.modal-title').text('New message to ' + recipient)
-  modal.find('.modal-body input').val(recipient)
-})
-    </script>
+<!--     <script> -->
+<!-- $('#exampleModal').on('show.bs.modal', function (event) { -->
+<!--   var button = $(event.relatedTarget) // Button that triggered the modal -->
+<!--   var recipient = button.data('whatever') // Extract info from data-* attributes -->
+<!--   // If necessary, you could initiate an AJAX request here (and then do the updating in a callback). -->
+<!--   // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead. -->
+<!--   var modal = $(this) -->
+<!--   modal.find('.modal-title').text('New message to ' + recipient) -->
+<!--   modal.find('.modal-body input').val(recipient) -->
+<!-- }) -->
+<!--     </script> -->
 
   </head>
-  <body onload="startRefreshing()">
+  <body onload="chainbot.startRefreshing()">
 	  <!--content-starts-->
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
       <a class="navbar-brand" href="#">Chainball Scoreboard</a>
@@ -59,7 +35,7 @@ $('#exampleModal').on('show.bs.modal', function (event) {
               Actions
             </a>
             <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-              <a class="dropdown-item" href="#" onclick="updateRegistry()">Update local registry</a>
+              <a class="dropdown-item" href="#" onclick="chainbot.updateRegistry()">Update local registry</a>
               <a class="dropdown-item" href="#">Activate tournament</a>
               <div class="dropdown-divider"></div>
               <a class="dropdown-item disabled" href="#" id="remote-enable-disable">Enable remotes</a>
@@ -373,9 +349,9 @@ $('#exampleModal').on('show.bs.modal', function (event) {
     </div>
       <nav class="navbar fixed-bottom navbar-dark bg-primary">
         <div class="btn-group" role="group" aria-label="Basic example">
-          <button type="button" class="btn btn-secondary" onclick="startGame()" id="game-start-btn"><i class="fa fa-play" aria-hidden="true"></i></button>
+          <button type="button" class="btn btn-secondary" onclick="chainbot.startGame()" id="game-start-btn"><i class="fa fa-play" aria-hidden="true"></i></button>
           <button type="button" class="btn btn-secondary" id="game-pause-btn"><i class="fa fa-pause" aria-hidden="true"></i></button>
-          <button type="button" class="btn btn-secondary" onclick="stopGame()" id="game-stop-btn"><i class="fa fa-stop" aria-hidden="true"></i></button>
+          <button type="button" class="btn btn-secondary" onclick="chainbot.stopGame()" id="game-stop-btn"><i class="fa fa-stop" aria-hidden="true"></i></button>
         </div>
         <p class="text-right font-weight-bold text-light">00:00</p>
       </nav>

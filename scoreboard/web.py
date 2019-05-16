@@ -84,13 +84,13 @@ class WebBoard(object):
     def jsFiles(self, filename):
         """Retrieve .js files."""
         return static_file(
-            filename, root=os.path.join(self.static_file_path, "js")
+            filename, root=os.path.join(self.static_file_path, "dist")
         )
 
     def cssFiles(self, filename):
         """Retrieve css files."""
         return static_file(
-            filename, root=os.path.join(self.static_file_path, "css")
+            filename, root=os.path.join(self.static_file_path, "dist")
         )
 
     def imgFiles(self, filename):
@@ -785,8 +785,8 @@ class WebBoard(object):
         route("/index.html")(self.index)
         route("/setup")(self.setup)
         route("/referee")(self.referee)
-        route("/js/<filename:re:.*\.js>")(self.jsFiles)
-        route("/css/<filename:re:.*\.css>")(self.cssFiles)
+        route("/dist/<filename:re:.*\.js>")(self.jsFiles)
+        route("/dist/<filename:re:.*\.css>")(self.cssFiles)
         route("/images/<filename:re:.*\.(jpg|png|gif|ico)>")(self.imgFiles)
         route("/fonts/<filename:re:.*\.(eot|ttf|woff|woff2|svg)>")(
             self.fontFiles
