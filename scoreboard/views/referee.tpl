@@ -36,7 +36,7 @@
             </a>
             <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
               <a class="dropdown-item" href="#" onclick="chainbot.updateRegistry()">Update local registry</a>
-              <a class="dropdown-item" href="#">Activate tournament</a>
+              <a class="dropdown-item" href="#" data-toggle="modal" data-target="#tournamentModal">Activate tournament</a>
               <div class="dropdown-divider"></div>
               <a class="dropdown-item disabled" href="#" id="remote-enable-disable">Enable remotes</a>
               <a class="dropdown-item disabled" href="#">Override remote pairing</a>
@@ -67,7 +67,7 @@
                     <span class="sr-only">Toggle Dropdown</span>
                   </button>
                   <div class="dropdown-menu">
-                    <a class="dropdown-item" href="#" data-toggle="modal" data-target="#exampleModal" data-whatever="0">Add Player</a>
+                    <a class="dropdown-item" href="#" data-toggle="modal" data-target="#playerAddModal" data-whatever="0">Add Player</a>
                     <a class="dropdown-item" href="#" onclick="rmPlayer(0)">Remove Player</a>
                     <div class="dropdown-divider"></div>
                     <a class="dropdown-item" href="#" onclick="pairRemote(0)">Pair Remote</a>
@@ -358,11 +358,11 @@
 	  <!--content-end-->
 
 
-<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+<div class="modal fade" id="playerAddModal" tabindex="-1" role="dialog" aria-labelledby="playerAddModalLabel" aria-hidden="true">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLabel">Add Player</h5>
+        <h5 class="modal-title" id="playerAddModalLabel">Add Player</h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
@@ -372,7 +372,7 @@
           <div class="form-group">
             <label for="player-selector" class="col-form-label">Player:</label>
             <select class="form-control" id="player-selector">
-              %for player in registry:
+              %for player in pregistry:
               <option id="playerSelector-{{player.username}}">{{player.name}}</option>
               %end
             </select>
@@ -387,5 +387,33 @@
   </div>
 </div>
 
+<div class="modal fade" id="tournamentModal" tabindex="-1" role="dialog" aria-labelledby="tournamentModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="tournamentModalLabel">Activate Tournament</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form>
+          <div class="form-group">
+            <label for="player-selector" class="col-form-label">Tournament:</label>
+            <select class="form-control" id="player-selector">
+              %for tournament in tregistry:
+              <option id="tournamentSelector-{{player.username}}">{{tournament.season}} {{tournament.description}}</option>
+              %end
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary">Activate</button>
+      </div>
+    </div>
+  </div>
+</div>
   </body>
 </html>
