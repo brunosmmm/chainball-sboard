@@ -56,6 +56,16 @@ class GameSFXHandler(object):
             self.logger.error("Invalid SFX library configuration file")
             return
 
+        # check path, create if doesnt exist
+        if not os.path.isabs(sfx_config.sfxpath):
+            sfx_path = os.path.join(".", sfx_config.sfxpath)
+        if not os.path.exists(sfx_path):
+            self.logger.warning("sfx database path does not exist")
+            try:
+                os.makedirs(sfx_path)
+            except OSError:
+                self.logger.error("cannot create sfx database path")
+
         self.fx_dict = {}
         for name, sfx in sfx_config["sfxlib"].items():
             builtin = sfx.get("builtin", False)
@@ -65,9 +75,7 @@ class GameSFXHandler(object):
                 )
                 path = os.path.join(data_path, "sfx", sfx["file"])
             else:
-                path = os.path.join(
-                    os.getcwd(), sfx_config["sfxpath"], sfx["file"]
-                )
+                path = os.path.join(sfx_path, sfx["file"])
             if self._has_audio:
                 self.fx_dict[name] = path
 
@@ -109,3 +117,11 @@ class GameSFXHandler(object):
             return self.fx_desc[fx_name]
 
         return None
+
+    def insert_sfx_data(self, fx_name, fx_data):
+        """Insert data."""
+        pass
+
+    def commit_sfx_data(self):
+        """Save to disk."""
+        pass
