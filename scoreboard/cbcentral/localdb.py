@@ -24,6 +24,10 @@ class LocalRegistryEntry:
 
     _index = None
 
+    def __init__(self, **kwargs):
+        """Initialize."""
+        self._kwargs = kwargs
+
     @property
     def index(self):
         """Get index member value."""
@@ -37,19 +41,24 @@ class LocalRegistryEntry:
         """Get index member name."""
         return cls._index
 
+    @property
+    def serialized(self):
+        """Get serialized."""
+        return self._kwargs
+
 
 class PlayerEntry(LocalRegistryEntry):
     """Locally cached player description."""
 
     _index = "username"
 
-    def __init__(self, name, display_name, username, sfx=None):
+    def __init__(self, name, display_name, username, sfx_md5, **kwargs):
         """Initialize."""
-        super().__init__()
+        super().__init__(**kwargs)
         self._name = name
         self._dispname = display_name
         self._username = username
-        self._sfx = sfx
+        self._sfx_md5 = sfx_md5
 
     @property
     def name(self):
@@ -67,13 +76,24 @@ class PlayerEntry(LocalRegistryEntry):
         return self._username
 
     @property
+    def sfx_md5(self):
+        """Get sfx md5 sum."""
+        return self._sfx_md5
+
+    @property
     def serialized(self):
         """Serialized."""
-        return {
-            "name": self._name,
-            "display_name": self._dispname,
-            "username": self._username,
-        }
+        kwargs = super().serialized
+        kwargs.update(
+            {
+                "name": self._name,
+                "display_name": self._dispname,
+                "username": self._username,
+                "sfx_md5": self._sfx_md5,
+            }
+        )
+
+        return kwargs
 
 
 class LocalRegistry:

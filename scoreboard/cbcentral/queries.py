@@ -16,3 +16,8 @@ def query_tournaments():
 def query_games():
     """Query games."""
     return central_api_get(sub_api="api", path="games")
+
+
+def get_sfx_data(player):
+    """Get player SFX data."""
+    return central_api_get(sub_api="api", path=f"players/{player}/get_sfx_data")
