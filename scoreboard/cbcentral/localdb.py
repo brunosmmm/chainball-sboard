@@ -9,6 +9,7 @@ from scoreboard.cbcentral.queries import (
     query_tournaments,
     query_games,
 )
+from scoreboard.cbcentral.util import id_from_url
 from logging import getLogger
 
 
@@ -165,15 +166,10 @@ class TournamentEntry(LocalRegistryEntry):
         self._description = description
         self._date = event_date
         # abbreviate player data
-        self._players = [player.strip("/").split("/")[-1] for player in players]
+        self._players = [id_from_url(player) for player in players]
         self._status = status
         # also abbreviate
-        self._games = []
-        for game in games:
-            if not isinstance(game, int):
-                self._games.append(int(game.strip("/").split("/")[-1]))
-            else:
-                self._games.append(game)
+        self._games = [id_from_url(game) for game in games]
 
     @property
     def id(self):
@@ -260,9 +256,9 @@ class GameEntry(LocalRegistryEntry):
         self._identifier = identifier
         self._sequence = sequence
         self._description = description
-        self._tournament = tournament
+        self._tournament = id_from_url(tournament)
         self._events = events
-        self._players = players
+        self._players = [id_from_url(player) for player in players]
         self._duration = duration
         self._start_time = start_time
         self._status = game_status
