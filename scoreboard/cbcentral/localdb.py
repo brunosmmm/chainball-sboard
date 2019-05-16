@@ -2,16 +2,15 @@
 
 import json
 import os
-
-from scoreboard.util.configfiles import CHAINBALL_CONFIGURATION
-from scoreboard.cbcentral.queries import (
-    query_players,
-    query_tournaments,
-    query_games,
-)
-from scoreboard.cbcentral.util import id_from_url
 from logging import getLogger
 
+from scoreboard.cbcentral.queries import (
+    query_games,
+    query_players,
+    query_tournaments,
+)
+from scoreboard.cbcentral.util import id_from_url
+from scoreboard.util.configfiles import CHAINBALL_CONFIGURATION
 
 LOCALDB_LOGGER = getLogger("sboard.localdb")
 
