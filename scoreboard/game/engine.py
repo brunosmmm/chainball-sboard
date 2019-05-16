@@ -125,6 +125,7 @@ class ChainballGame:
         self.error = False
         self.score_display_ended = True
         self._next_uid = None
+        self._tournament = None
 
         # start remote subsystem
         self._start_remote_subsystem()
@@ -170,6 +171,23 @@ class ChainballGame:
             self.m_remote = MasterRemote()
         else:
             self.m_remote = None
+
+    def activate_tournament(self, tournament_id):
+        """Put in tournament mode."""
+        if self.ongoing:
+            raise ChainballGameError("game is live")
+        self._tournament = tournament_id
+
+    def deactivate_tournament(self):
+        """Deactivate tournament mode."""
+        if self.ongoing:
+            raise ChainballGameError("game is live")
+        self._tournament = None
+
+    @property
+    def tournament_mode(self):
+        """Get mode."""
+        return not bool(self._tournament is None)
 
     def enable_remotes(self):
         """Enable remotes."""
