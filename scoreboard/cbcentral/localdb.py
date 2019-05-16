@@ -35,7 +35,7 @@ class LocalRegistryEntry:
     @classmethod
     def get_index_name(cls):
         """Get index member name."""
-        return self._index
+        return cls._index
 
 
 class PlayerEntry(LocalRegistryEntry):
