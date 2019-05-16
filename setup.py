@@ -12,7 +12,7 @@ setup(
         "pyserial>=3.4",
         "dbus-python>=1.2.8",
     ],
-    package_data={"views": ["*.tpl"], "data": ["*"]},
+    package_data={"views": ["*.tpl"], "data": ["sfx/*", "web_static/dist/*"]},
     author="Bruno Morais",
     author_email="brunosmmm@gmail.com",
     description="The chainball scoreboard",
