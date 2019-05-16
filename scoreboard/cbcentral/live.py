@@ -13,7 +13,16 @@ _LOGGER = logging.getLogger("sboard.live")
 
 def push_event(game_uuid, evt_type, evt_desc):
     """Push event to server."""
-    pass
+    post_data = {"evt_type": evt_type, "evt_data": evt_desc}
+    try:
+        result = central_api_post(
+            post_data, sub_api="api", path=f"games/{game_uuid}/push_event"
+        )
+    except CBCentralAPIError as ex:
+        _LOGGER.error("could not push event")
+
+    if "status" not in result or result["status"] != "ok":
+        _LOGGER.error("push_event request failed")
 
 
 def game_start(game_uuid, start_time):
