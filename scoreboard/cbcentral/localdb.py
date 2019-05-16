@@ -4,7 +4,11 @@ import json
 import os
 
 from scoreboard.util.configfiles import CHAINBALL_CONFIGURATION
-from scoreboard.cbcentral.queries import query_players, query_tournaments
+from scoreboard.cbcentral.queries import (
+    query_players,
+    query_tournaments,
+    query_games,
+)
 from logging import getLogger
 
 
@@ -15,11 +19,33 @@ class ChainBallLocalDBError(Exception):
     """Local DB error."""
 
 
-class PlayerEntry:
+class LocalRegistryEntry:
+    """Local registry entry."""
+
+    _index = None
+
+    @property
+    def index(self):
+        """Get index member value."""
+        if self._index is not None:
+            return getattr(self, self._index)
+
+        return None
+
+    @classmethod
+    def get_index_name(cls):
+        """Get index member name."""
+        return self._index
+
+
+class PlayerEntry(LocalRegistryEntry):
     """Locally cached player description."""
+
+    _index = "username"
 
     def __init__(self, name, display_name, username, sfx=None):
         """Initialize."""
+        super().__init__()
         self._name = name
         self._dispname = display_name
         self._username = username
@@ -53,8 +79,9 @@ class PlayerEntry:
 class LocalRegistry:
     """Local registry."""
 
-    def __init__(self, registry_name):
+    def __init__(self, registry_name, entry_class):
         """Initialize."""
+        self._entry_class = entry_class
         db_config = CHAINBALL_CONFIGURATION.db
         self._registry_location = os.path.join(
             db_config.database_location, db_config[registry_name]
@@ -75,67 +102,65 @@ class LocalRegistry:
         except (OSError, json.JSONDecodeError):
             raise ChainBallLocalDBError("cannot load registry.")
 
+        # build
+        self.build_registry(self._registry_contents)
+
     @property
     def serialized(self):
         """Get serialized."""
-        raise NotImplementedError
+        return [item.serialized for item in self._registry_contents]
 
     def update_registry(self):
         """Update registry."""
         raise NotImplementedError
 
+    def build_registry(self, contents):
+        """Build registry."""
+        self._registry_contents = [
+            self._entry_class(**item) for item in contents
+        ]
+
     def commit_registry(self):
         """Commit to disk."""
         with open(self._registry_location, "w") as registry:
-            json.dump(self.serialized, registry)
+            json.dump(self.serialized, registry, indent=2)
+
+    def __getitem__(self, item):
+        if self._entry_class.get_index_name() is not None:
+            for element in self._registry_contents:
+                if element.index == item:
+                    return element
+
+        raise KeyError
 
 
 class LocalPlayerRegistry(LocalRegistry):
     """Local player registry."""
 
     def __init__(self):
-        super().__init__("player_registry")
+        super().__init__("player_registry", PlayerEntry)
 
         # build registry
-        self._player_registry = [
-            PlayerEntry(**player) for player in self._registry_contents
-        ]
         LOCALDB_LOGGER.info("local player registry loaded")
-
-    def get_player_by_username(self, username):
-        """Get player by username."""
-        for player in self._player_registry:
-            if player.username == username:
-                return player
-
-        return None
-
-    @property
-    def players(self):
-        """Get list of all players in registry."""
-        return self._player_registry
 
     def update_registry(self):
         """Update registry with information from central server."""
         LOCALDB_LOGGER.info("updating player registry from central server")
         upstream_players = query_players()
-        # for now just replace everything
-        self._player_registry = None
-        self._player_registry = [
-            PlayerEntry(**player) for player in upstream_players
-        ]
-
-    @property
-    def serialized(self):
-        """Get serialized registry."""
-        return [player.serialized for player in self._player_registry]
+        self.build_registry(upstream_players)
 
 
-class TournamentEntry:
+class TournamentEntry(LocalRegistryEntry):
     """Tournament registry entry."""
 
-    def __init__(self, season, description, event_date, players, status, games):
+    _index = "id"
+
+    def __init__(
+        self, id, season, description, event_date, players, status, games
+    ):
         """Initialize."""
+        super().__init__()
+        self._id = id
         self._season = season
         self._description = description
         self._date = event_date
@@ -143,7 +168,17 @@ class TournamentEntry:
         self._players = [player.strip("/").split("/")[-1] for player in players]
         self._status = status
         # also abbreviate
-        self._games = [int(game.strip("/").split("/")[-1]) for game in games]
+        self._games = []
+        for game in games:
+            if not isinstance(game, int):
+                self._games.append(int(game.strip("/").split("/")[-1]))
+            else:
+                self._games.append(game)
+
+    @property
+    def id(self):
+        """Get id."""
+        return self._id
 
     @property
     def season(self):
@@ -179,6 +214,7 @@ class TournamentEntry:
     def serialized(self):
         """Get serialized."""
         return {
+            "id": self._id,
             "season": self._season,
             "description": self._description,
             "event_date": self._date,
@@ -189,33 +225,122 @@ class TournamentEntry:
 
 
 class LocalTournamentRegistry(LocalRegistry):
-    """Game registry retrieved from central server."""
+    """Tournament registry retrieved from central server."""
 
     def __init__(self):
         """Initialize."""
-        super().__init__("tournament_registry")
-        self._tournament_registry = [
-            TournamentEntry(**tournament)
-            for tournament in self._registry_contents
-        ]
+        super().__init__("tournament_registry", TournamentEntry)
         LOCALDB_LOGGER.info("local tournament registry loaded")
 
     def update_registry(self):
         """Update registry."""
         LOCALDB_LOGGER.info("updating game registry from central server")
         upstream_tournaments = query_tournaments()
-        self._tournament_registry = None
-        self._tournament_registry = [
-            TournamentEntry(**tournament) for tournament in upstream_tournaments
-        ]
+        self.build_registry(upstream_tournaments)
+
+
+class GameEntry(LocalRegistryEntry):
+    """Game registry entry."""
+
+    _index = "identifier"
+
+    def __init__(
+        self,
+        identifier,
+        sequence,
+        description,
+        tournament,
+        events,
+        players,
+        duration,
+        start_time,
+        game_status,
+    ):
+        """Initialize."""
+        self._identifier = identifier
+        self._sequence = sequence
+        self._description = description
+        self._tournament = tournament
+        self._events = events
+        self._players = players
+        self._duration = duration
+        self._start_time = start_time
+        self._status = game_status
+
+    @property
+    def identifier(self):
+        """Get identifier."""
+        return self._identifier
+
+    @property
+    def sequence(self):
+        """Get sequence number."""
+        return self._sequence
+
+    @property
+    def description(self):
+        """Get description."""
+        return self._description
+
+    @property
+    def tournament(self):
+        """Get tournament id."""
+        return self._tournament
+
+    @property
+    def events(self):
+        """Get events."""
+        return self._events
+
+    @property
+    def players(self):
+        """Get players."""
+        return self._players
+
+    @property
+    def duration(self):
+        """Get duration."""
+        return self._duration
+
+    @property
+    def start_time(self):
+        """Get start time."""
+        return self._start_time
+
+    @property
+    def status(self):
+        """Get status."""
+        return self._status
 
     @property
     def serialized(self):
-        """Get serialized registry."""
-        return [
-            tournament.serialized for tournament in self._tournament_registry
-        ]
+        """Get serialized."""
+        return {
+            "identifier": self._identifier,
+            "sequence": self._sequence,
+            "description": self._description,
+            "tournament": self._tournament,
+            "events": self._events,
+            "players": self._players,
+            "duration": self._duration,
+            "start_time": self._start_time,
+            "game_status": self._status,
+        }
+
+
+class LocalGameRegistry(LocalRegistry):
+    """Game registry retrieved from server."""
+
+    def __init__(self):
+        """Initialize."""
+        super().__init__("game_registry", GameEntry)
+
+    def update_registry(self):
+        """Update registry."""
+        upstream_games = query_games()
+        self.build_registry(upstream_games)
 
 
 PLAYER_REGISTRY = LocalPlayerRegistry()
 TOURNAMENT_REGISTRY = LocalTournamentRegistry()
+GAME_REGISTRY = LocalGameRegistry()

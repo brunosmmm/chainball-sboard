@@ -11,3 +11,8 @@ def query_players():
 def query_tournaments():
     """Query tournaments."""
     return central_api_get(sub_api="api", path="tournaments")
+
+
+def query_games():
+    """Query games."""
+    return central_api_get(sub_api="api", path="games")
