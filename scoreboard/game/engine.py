@@ -45,6 +45,10 @@ from scoreboard.util.configfiles import (
 )
 
 
+class ChainballGameError(Exception):
+    """Game-related error"""
+
+
 class MasterRemote:
     """Master remote object."""
 
@@ -56,23 +60,32 @@ class MasterRemote:
 class ChainballGame:
     """Game engine."""
 
-    def __init__(self, virtual_hw=False):
+    def __init__(self, virtual_hw=False, remote_score=False):
         """Initialize."""
         self.logger = logging.getLogger("sboard.game")
+        self._remotes = remote_score
 
         self.s_handler = ScoreHandler("/dev/ttyAMA0", virt_hw=virtual_hw)
-        self.rf_handler = NRF24Handler(fake_hw=virtual_hw)
-
-        # load remote mapping configuration file
-        self.remote_mapping = RemoteMapping("rm_map")
-        try:
-            remote_mapping_config = CHAINBALL_CONFIGURATION.retrieve_configuration(
-                "remotemap"
+        if self._remotes:
+            self.rf_handler = NRF24Handler(fake_hw=virtual_hw)
+            # load remote mapping configuration file
+            self.remote_mapping = RemoteMapping("rm_map")
+            try:
+                remote_mapping_config = CHAINBALL_CONFIGURATION.retrieve_configuration(
+                    "remotemap"
+                )
+                self.remote_mapping.parse_config(remote_mapping_config)
+            except (RemoteMappingLoadFailed, ChainBallConfigurationError):
+                self.logger.error("Failed to load remote button mapping")
+                exit(1)
+            # remote pair handler (non-threaded)
+            self.pair_handler = RemotePairHandler(
+                fail_cb=self.pair_fail, success_cb=self.pair_end
             )
-            self.remote_mapping.parse_config(remote_mapping_config)
-        except (RemoteMappingLoadFailed, ChainBallConfigurationError):
-            self.logger.error("Failed to load remote button mapping")
-            exit(1)
+        else:
+            self.rf_handler = None
+            self.remote_mapping = None
+            self.pair_handler = None
 
         # load SFX mapping configuration file
         self.sfx_mapping = SFXMapping()
@@ -93,10 +106,6 @@ class ChainballGame:
             self.logger.error("Failed to load game configuration")
             exit(1)
 
-        # remote pair handler (non-threaded)
-        self.pair_handler = RemotePairHandler(
-            fail_cb=self.pair_fail, success_cb=self.pair_end
-        )
         # timer handler for RGB matrix
         self.timer_handler = TimerHandler(self.game_timeout, self)
         # timer handler for player panels
@@ -130,14 +139,17 @@ class ChainballGame:
         self.score_display_ended = True
         self._next_uid = None
 
-        # start rf handler
-        self.rf_handler.start()
+        if self.rf_handler is not None:
+            # start rf handler
+            self.rf_handler.start()
+
+            # master remote
+            self.m_remote = MasterRemote()
+        else:
+            self.m_remote = None
 
         # start score handler
         self.s_handler.start()
-
-        # master remote
-        self.m_remote = MasterRemote()
 
         # sound effects
         try:
@@ -163,6 +175,9 @@ class ChainballGame:
 
     def unpair_remote(self, player):
         """Unpair a players remote."""
+        if self._remotes is False:
+            raise ChainballGameError("remotes are disabled")
+
         if player not in self.players:
             raise KeyError("Invalid Player")
 
@@ -183,6 +198,8 @@ class ChainballGame:
 
     def pair_master(self):
         """Pair master remote."""
+        if self._remotes is False:
+            raise ChainballGameError("remotes are disabled.")
         if self.m_remote.remote_id is not None:
             raise MasterRemoteAlreadyPairedError(
                 "Already paired to {}".format(self.m_remote.remote_id)
@@ -192,11 +209,15 @@ class ChainballGame:
 
     def unpair_master(self):
         """Unpair master remote."""
+        if self._remotes is False:
+            raise ChainballGameError("remotes are disaled.")
         self.pair_handler.stop_tracking(self.m_remote.remote_id)
         self.m_remote.remote_id = None
 
     def pair_remote(self, player):
         """Pair a players remote."""
+        if self._remotes is False:
+            raise ChainballGameError("remotes are disabled.")
         if player not in self.players:
             raise KeyError("Invalid player")
 
@@ -213,6 +234,8 @@ class ChainballGame:
 
     def pair_end(self, player, remote_id):
         """Finish pairing remote."""
+        if self._remotes is False:
+            raise ChainballGameError("remotes are disabled.")
         if player == "master":
             self.m_remote.remote_id = remote_id
             self.logger.info(
@@ -247,9 +270,11 @@ class ChainballGame:
 
     def pair_running(self):
         """Get if pairing is occurring."""
+        if self._remotes is False:
+            return ["DISABLED", None]
         if self.pair_handler.is_running():
             return ["PAIR", None]
-        elif self.pair_handler.has_failed() is not None:
+        if self.pair_handler.has_failed() is not None:
             return ["FAIL", self.pair_handler.has_failed()]
 
         return ["IDLE", None]
@@ -258,10 +283,11 @@ class ChainballGame:
         """Shutdown engine."""
         self.logger.debug("shutting down game engine")
         self.s_handler.stop()
-        self.rf_handler.stop()
         self.s_handler.join()
-        self.rf_handler.join()
-        self.logger.debug("game enging shutdown complete")
+        if self._remotes:
+            self.rf_handler.stop()
+            self.rf_handler.join()
+        self.logger.debug("game engine shutdown complete")
 
     def game_can_start(self):
         """Verify if game can be started."""
@@ -273,9 +299,9 @@ class ChainballGame:
         for player in self.players:
             if self.players[player].registered is False:
                 continue
-
-            if self.players[player].remote_id is None:
-                return False
+            if self._remotes:
+                if self.players[player].remote_id is None:
+                    return False
 
         return True
 
@@ -402,7 +428,8 @@ class ChainballGame:
             self.players[player].web_text = None
             self.players[player].panel_text = None
             self.players[player].registered = False
-            self.pair_handler.stop_tracking(self.players[player].remote_id)
+            if self.pair_handler is not None:
+                self.pair_handler.stop_tracking(self.players[player].remote_id)
             self.players[player].remote_id = None
             self.player_count -= 1
 
@@ -411,7 +438,8 @@ class ChainballGame:
     def game_begin(self):
         """Start the game."""
         # flush remote message queue for good measure
-        self.rf_handler.flush_message_queue()
+        if self.rf_handler is not None:
+            self.rf_handler.flush_message_queue()
 
         self.logger.info("Starting game...")
         if self.ongoing:
@@ -927,7 +955,8 @@ class ChainballGame:
         self.sfx_handler.handle()
 
         # handle pairing
-        self.pair_handler.handle()
+        if self.pair_handler is not None:
+            self.pair_handler.handle()
 
         # handle timer
         self.timer_handler.handle()
@@ -962,7 +991,7 @@ class ChainballGame:
                     return
 
         # check for remote activity
-        if self.rf_handler.message_pending():
+        if self.rf_handler is not None and self.rf_handler.message_pending():
             message = self.rf_handler.receive_message()
             # process message
             try:

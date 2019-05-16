@@ -35,6 +35,7 @@ from scoreboard.game.playertxt import PlayerText
 from scoreboard.remote.constants import RemotePairFailureType
 from scoreboard.remote.persistence import PERSISTENT_REMOTE_DATA
 from scoreboard.cbcentral.localdb import PLAYER_REGISTRY
+from scoreboard.game.engine import ChainballGameError
 
 
 class WebBoard(object):
@@ -152,6 +153,8 @@ class WebBoard(object):
                 return "Player is not registered!"
             except PlayerAlreadyPairedError:
                 return "Player already paired to a remote"
+            except ChainballGameError as ex:
+                return str(ex)
 
         return "Waiting"
 
@@ -168,6 +171,8 @@ class WebBoard(object):
                 return {"status": "error", "error": "malformed request"}
             except (PlayerNotRegisteredError, PlayerNotPairedError) as e:
                 return {"status": "error", "error": e.message}
+            except ChainballGameError as ex:
+                return {"status": "error", "error": str(ex)}
 
         return {"status": "OK"}
 
