@@ -25,9 +25,10 @@ def push_event(game_uuid, evt_type, evt_desc):
         _LOGGER.error("push_event request failed")
 
 
-def game_start(game_uuid, start_time):
+def game_start(game_uuid, start_time, player_order):
     """Start game."""
-    post_data = {"start_time": start_time}
+    order = ",".join(player_order)
+    post_data = {"start_time": start_time, "player_order": order}
     try:
         result = central_api_post(
             post_data, sub_api="api", path=f"games/{game_uuid}/start_game"
