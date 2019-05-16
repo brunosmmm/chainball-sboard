@@ -13,7 +13,7 @@ from scoreboard.util.threads import StoppableThread
 from scoreboard.util.zeroconf import ZeroconfService
 from scoreboard.util.configfiles import CHAINBALL_CONFIGURATION
 from scoreboard.web import WebBoard
-from scoreboard.cbcentral.util import update_all
+from scoreboard.cbcentral.localdb import update_all
 
 
 class GameWrapper(StoppableThread):

@@ -11,6 +11,7 @@ from scoreboard.cbcentral.queries import (
 )
 from scoreboard.cbcentral.util import id_from_url
 from scoreboard.util.configfiles import CHAINBALL_CONFIGURATION
+from scoreboard.cbcentral.api import CBCentralAPIError
 
 LOCALDB_LOGGER = getLogger("sboard.localdb")
 
@@ -363,3 +364,26 @@ class LocalGameRegistry(LocalRegistry):
 PLAYER_REGISTRY = LocalPlayerRegistry()
 TOURNAMENT_REGISTRY = LocalTournamentRegistry()
 GAME_REGISTRY = LocalGameRegistry()
+
+
+def update_all():
+    """Update everything."""
+    try:
+        PLAYER_REGISTRY.update_registry()
+        PLAYER_REGISTRY.commit_registry()
+    except CBCentralAPIError:
+        LOCALDB_LOGGER.warning("could not update player registry from server")
+
+    try:
+        TOURNAMENT_REGISTRY.update_registry()
+        TOURNAMENT_REGISTRY.commit_registry()
+    except CBCentralAPIError:
+        LOCALDB_LOGGER.warning(
+            "could not update tournament registry from server"
+        )
+
+    try:
+        GAME_REGISTRY.update_registry()
+        GAME_REGISTRY.commit_registry()
+    except CBCentralAPIError:
+        LOCALDB_LOGGER.warning("could not update game registry from server")

@@ -36,7 +36,7 @@ from scoreboard.remote.constants import RemotePairFailureType
 from scoreboard.remote.persistence import PERSISTENT_REMOTE_DATA
 from scoreboard.cbcentral.localdb import PLAYER_REGISTRY
 from scoreboard.game.engine import ChainballGameError
-from scoreboard.cbcentral.util import update_all
+from scoreboard.cbcentral.localdb import update_all
 
 
 class WebBoard(object):
