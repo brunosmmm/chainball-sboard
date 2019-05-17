@@ -1,0 +1,25 @@
+#+AUTHOR: Bruno Morais
+#+TITLE: Chainball Scoreboard Development roadmap
+
+* TODO Scoreboard Software [/]
+** TODO Game Logic [/]
+** TODO Web Interface (referee) [/]
+   - [ ] Build referee panel UI
+   - [ ] Implement referee panel Authentication
+   - [ ] HTTPS
+** TODO Game Data API and Referee web app [/]
+*** TODO Decouple webapp from game engine [/]
+    - [ ] Select IPC framework
+    - [ ] Define message structure
+    - [ ] Implement message exchange
+    - [ ] Remove webapp code from game engine
+*** TODO Run webapp with dedicated web server [/]
+    - [ ] Re-implement webapp templating with Flask
+    - [ ] Implement IPC exchange in webapp side
+    - [ ] Add server-based authentication
+    - [ ] Configure HTTPS
+
+* TODO Scoreboard Central Server [/]
+** TODO Database Specification
+** TODO Live Tournament Interface
+** TODO Game History Browser
