@@ -45,7 +45,7 @@ class ChainBallConfigurationFile:
         """Save."""
         try:
             with open(self._path, "w") as config:
-                json.dump(self._data, config)
+                json.dump(self._data, config, indent=2)
         except OSError:
             raise ChainBallConfigurationError("cannot write configuration")
 
