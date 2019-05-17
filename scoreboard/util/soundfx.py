@@ -3,12 +3,17 @@
 import threading
 import logging
 import os
+import base64
 import pkg_resources
 from playsound import playsound
 from scoreboard.util.configfiles import (
     CHAINBALL_CONFIGURATION,
     ChainBallConfigurationError,
 )
+
+
+class SFXDataError(Exception):
+    """SFX data error."""
 
 
 class GameSoundEffect(threading.Thread):
@@ -83,6 +88,8 @@ class GameSFXHandler(object):
             x: y["description"] for x, y in sfx_config["sfxlib"].items()
         }
 
+        self.fx_data_path = sfx_path
+
         self.logger.debug("loaded {} SFX files".format(len(self.fx_dict)))
 
     def play_fx(self, fx):
@@ -120,8 +127,25 @@ class GameSFXHandler(object):
 
     def insert_sfx_data(self, fx_name, fx_data):
         """Insert data."""
-        pass
+        # add to configuration
+        sfx_data_bytes = base64.b64decode(fx_data)
+        sfx_dest_path = os.path.join(self.fx_data_path, fx_name)
+        try:
+            with open(sfx_dest_path, "wb") as sfx_data_file:
+                sfx_data_file.write(sfx_data_bytes)
+        except OSError:
+            raise SFXDataError("cannot save SFX data")
+
+        self.fx_desc[fx_name] = "SFX_{}".format(fx_name)
+        CHAINBALL_CONFIGURATION.sfx.sfxlib[fx_name] = {
+            "file": fx_name,
+            "description": "SFX_{}".format(fx_name),
+            "builtin": False,
+        }
 
     def commit_sfx_data(self):
         """Save to disk."""
-        pass
+        CHAINBALL_CONFIGURATION.sfx.save()
+
+
+SFX_HANDLER = GameSFXHandler()

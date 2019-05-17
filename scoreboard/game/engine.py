@@ -38,7 +38,7 @@ from scoreboard.remote.nrf24 import NRF24Handler
 from scoreboard.remote.pair import RemotePairHandler
 from scoreboard.score.handler import ScoreHandler
 from scoreboard.score.player import PlayerScore
-from scoreboard.util.soundfx import GameSFXHandler
+from scoreboard.util.soundfx import SFX_HANDLER
 from scoreboard.util.configfiles import (
     CHAINBALL_CONFIGURATION,
     ChainBallConfigurationError,
@@ -133,15 +133,6 @@ class ChainballGame:
 
         # start score handler
         self.s_handler.start()
-
-        # sound effects
-        try:
-            self.sfx_handler = GameSFXHandler()
-        except Exception as ex:
-            raise
-            self.logger.error(
-                "Failed to initialize SFX handler with: {}".format(ex)
-            )
 
         # other variables
         self._current_fault_count = 0
@@ -669,7 +660,7 @@ class ChainballGame:
         # play sfx
         try:
             game_end_sfx = self.sfx_mapping.get_sfx(SFXMappableEvents.GAME_END)
-            self.sfx_handler.play_fx(game_end_sfx)
+            SFX_HANDLER.play_fx(game_end_sfx)
         except SFXUnknownEvent:
             pass
 
@@ -783,7 +774,7 @@ class ChainballGame:
 
         try:
             cowout_sfx = self.sfx_mapping.get_sfx(SFXMappableEvents.COW_OUT)
-            self.sfx_handler.play_fx(cowout_sfx)
+            SFX_HANDLER.play_fx(cowout_sfx)
         except SFXUnknownEvent:
             self.logger.warning("SFX play error")
 
@@ -1036,7 +1027,7 @@ class ChainballGame:
                 self.players[player].handle_serve()
 
         # handle SFX
-        self.sfx_handler.handle()
+        SFX_HANDLER.handle()
 
         # handle pairing
         if self.pair_handler is not None:

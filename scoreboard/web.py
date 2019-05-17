@@ -41,6 +41,7 @@ from scoreboard.cbcentral.localdb import (
 )
 from scoreboard.game.engine import ChainballGameError
 from scoreboard.cbcentral.localdb import update_all
+from scoreboard.util.soundfx import SFX_HANDLER
 
 
 class WebBoard(object):
@@ -404,7 +405,7 @@ class WebBoard(object):
     def play_sfx(self, fx):
         """Play SFX."""
         try:
-            self.game.sfx_handler.play_fx(fx)
+            SFX_HANDLER.play_fx(fx)
         except KeyError as e:
             self.logger.warning("Could not play SFX: {}".format(e.message))
             return {"status": "error", "error": e.message}
@@ -760,10 +761,7 @@ class WebBoard(object):
 
     def get_sfx_list(self):
         """Get SFX list."""
-        return {
-            "status": "ok",
-            "sfx_list": self.game.sfx_handler.get_available_sfx(),
-        }
+        return {"status": "ok", "sfx_list": SFX_HANDLER.get_available_sfx()}
 
     def get_remote_data(self):
         """Get remote data."""

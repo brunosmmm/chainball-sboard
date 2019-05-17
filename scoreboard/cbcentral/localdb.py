@@ -8,10 +8,12 @@ from scoreboard.cbcentral.queries import (
     query_games,
     query_players,
     query_tournaments,
+    get_sfx_data,
 )
 from scoreboard.cbcentral.util import id_from_url
 from scoreboard.util.configfiles import CHAINBALL_CONFIGURATION
 from scoreboard.cbcentral.api import CBCentralAPIError
+from scoreboard.util.soundfx import SFX_HANDLER
 
 LOCALDB_LOGGER = getLogger("sboard.localdb")
 
@@ -381,6 +383,33 @@ def update_all():
         PLAYER_REGISTRY.commit_registry()
     except CBCentralAPIError:
         LOCALDB_LOGGER.warning("could not update player registry from server")
+
+    # check SFX data
+    for player in PLAYER_REGISTRY:
+        if player.username not in SFX_HANDLER.fx_desc:
+            # SFX data not available, retrieve
+            try:
+                data = get_sfx_data(player.username)
+            except CBCentralAPIError:
+                LOCALDB_LOGGER.error("failed to retrieve SFX data")
+                continue
+            if data["status"] != "ok":
+                LOCALDB_LOGGER.error(
+                    "could not retrieve SFX data for player {}".format(
+                        player.username
+                    )
+                )
+                continue
+
+            # insert data
+            if data["data"] is not None:
+                SFX_HANDLER.insert_sfx_data(player.username, data["data"])
+        else:
+            # check md5sum
+            pass
+
+    # save SFX configuration
+    SFX_HANDLER.commit_sfx_data()
 
     try:
         TOURNAMENT_REGISTRY.update_registry()
