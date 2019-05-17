@@ -233,7 +233,7 @@ class ChainballMainIPC(StoppableThread):
                 "panelTxt": player.panel_text,
                 "webTxt": player.web_text,
                 "remoteId": player.remote_id,
-                "username": player.username,
+                "username": player.registry_username,
             }
             players[str(player_id)] = player_dict
         return ipc_ok_response(players)
