@@ -7,7 +7,7 @@ import os
 import scoreboard.cbcentral.live as live_game
 from scoreboard.cbcentral.localdb import PLAYER_REGISTRY
 from scoreboard.util.configfiles import CHAINBALL_CONFIGURATION
-from scoreboard.ipc import IPC_HANDLER
+from scoreboard.ipc.server import IPC_HANDLER
 
 
 class CannotModifyScoresError(Exception):
