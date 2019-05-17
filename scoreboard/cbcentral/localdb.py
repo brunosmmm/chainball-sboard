@@ -10,7 +10,7 @@ from scoreboard.cbcentral.queries import (
     query_tournaments,
     get_sfx_data,
 )
-from scoreboard.cbcentral.util import id_from_url
+from scoreboard.cbcentral.util import id_from_url, md5_sum
 from scoreboard.util.configfiles import CHAINBALL_CONFIGURATION
 from scoreboard.cbcentral.api import CBCentralAPIError
 from scoreboard.util.soundfx import SFX_HANDLER
@@ -406,7 +406,35 @@ def update_all():
                 SFX_HANDLER.insert_sfx_data(player.username, data["data"])
         else:
             # check md5sum
-            pass
+            fx_path = os.path.join(SFX_HANDLER.fx_data_path, player.username)
+            try:
+                md5sum = md5_sum(fx_path)
+            except OSError:
+                LOCALDB_LOGGER.warning("could not calculate SFX checksum")
+                continue
+
+            if md5sum != player.sfx_md5:
+                # must update!
+                LOCALDB_LOGGER.info(
+                    "updating SFX data for user {}".format(player.username)
+                )
+                try:
+                    data = get_sfx_data(player.username)
+                except CBCentralAPIError:
+                    LOCALDB_LOGGER.error("failed to retrieve SFX data")
+                    continue
+
+                if data["status"] != "ok":
+                    LOCALDB_LOGGER.error(
+                        "could not retrieve SFX data for player {}".format(
+                            player.username
+                        )
+                    )
+                    continue
+
+                # FIXME cannot fully remove SFX data!
+                if data["data"] is not None:
+                    SFX_HANDLER.insert_sfx_data(player.username, data["data"])
 
     # save SFX configuration
     SFX_HANDLER.commit_sfx_data()
