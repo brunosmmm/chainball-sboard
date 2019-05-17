@@ -30,6 +30,7 @@ class PlayerScore:
         self.web_text = None
         self._display_name = None
         self.registered = False
+        self._username = None
         self.remote_id = remote_id
 
         self.serve_state = PlayerServeStates.IDLE
@@ -102,6 +103,21 @@ class PlayerScore:
             self.start_serve()
         else:
             self.end_serve()
+
+    @property
+    def registry_username(self):
+        """Get registry username."""
+        return self._username
+
+    @registry_username.setter
+    def registry_username(self, username):
+        """Set registry username."""
+        self._username = username
+
+    def reset(self):
+        """Deinitialize."""
+        self.registry_username = None
+        self.panel_text = None
 
     def force_score(self, new_score):
         """Force player score."""

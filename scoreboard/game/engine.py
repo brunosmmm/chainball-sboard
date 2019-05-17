@@ -524,13 +524,14 @@ class ChainballGame:
 
         # check if remotes are paired
         for player in self.players:
-            if (
-                self.players[player].remote_id is None
-                and self.players[player].registered
-            ):
-                raise PlayerRemoteNotPaired(
-                    "Player {} has no remote paired".format(player)
-                )
+            if self._remotes:
+                if (
+                    self.players[player].remote_id is None
+                    and self.players[player].registered
+                ):
+                    raise PlayerRemoteNotPaired(
+                        "Player {} has no remote paired".format(player)
+                    )
 
         # reorder players
         self._reorganize_players()
@@ -659,7 +660,18 @@ class ChainballGame:
 
         # play sfx
         try:
+            # regular buzzer
             game_end_sfx = self.sfx_mapping.get_sfx(SFXMappableEvents.GAME_END)
+            if (
+                winner is not None
+                and self.players[winner].registry_username is not None
+            ):
+                if (
+                    self.players[winner].registry_username
+                    in SFX_HANDLER.fx_desc
+                ):
+                    # custom sound effect
+                    game_end_sfx = self.players[winner].registry_username
             SFX_HANDLER.play_fx(game_end_sfx)
         except SFXUnknownEvent:
             pass
