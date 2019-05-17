@@ -12,8 +12,10 @@ from scoreboard.game.engine import ChainballGame
 from scoreboard.util.threads import StoppableThread
 from scoreboard.util.zeroconf import ZeroconfService
 from scoreboard.util.configfiles import CHAINBALL_CONFIGURATION
-from scoreboard.web import WebBoard
+
+# from scoreboard.web import WebBoard
 from scoreboard.cbcentral.localdb import update_all
+from scoreboard.ipc.server import IPC_HANDLER
 
 
 class GameWrapper(StoppableThread):
@@ -42,8 +44,10 @@ class GameWrapper(StoppableThread):
 
 if __name__ == "__main__":
 
+    STOP_ENGINE = False
+
     def _handle_signal(*whatever):
-        exit(0)
+        STOP_ENGINE = True
 
     # Parse Command Line arguments
     parser = argparse.ArgumentParser()
@@ -102,15 +106,25 @@ if __name__ == "__main__":
     # spawn game engine in thread
     GAME_WRAPPER = GameWrapper(args.nohw)
     GAME_WRAPPER.start()
+    IPC_HANDLER.associate_game(GAME_WRAPPER.game)
+    IPC_HANDLER.start_handler()
 
     # web server
     # NOT THREAD SAFE
-    WEB_SCOREBOARD = WebBoard(args.port, GAME_WRAPPER.game, bind_all=True)
+    # WEB_SCOREBOARD = WebBoard(args.port, GAME_WRAPPER.game, bind_all=True)
+    while STOP_ENGINE is False:
+        try:
+            time.sleep(0.1)
+        except KeyboardInterrupt:
+            break
 
     # spawn web server
-    WEB_SCOREBOARD.run()
+    # WEB_SCOREBOARD.run()
+    logger.info("Exiting")
+    IPC_HANDLER.stop_handler()
 
     # done, cleanup and exit
     GAME_WRAPPER.stop()
+    GAME_WRAPPER.join()
     if published:
         avahi_service.unpublish()
