@@ -27,9 +27,10 @@ class PlayerPersistData:
            Full name, displayed on web interface
         """
         if player_username is not None:
-            player_info = PLAYER_REGISTRY.get_player_by_username(
-                player_username
-            )
+            try:
+                player_info = PLAYER_REGISTRY[player_username]
+            except KeyError:
+                player_info = None
             if player_info is not None:
                 self.display_name = player_info.display_name
                 self.player_name = player_info.name
