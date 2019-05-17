@@ -90,8 +90,11 @@ if __name__ == "__main__":
     except Exception as ex:
         logger.error("failed to publish scoreboard service: {}".format(ex))
 
-    logger.info("Connecting to Central server")
-    update_all()
+    if CHAINBALL_CONFIGURATION.scoreboard.chainball_server_token is not None:
+        logger.info("Connecting to Central server")
+        update_all()
+    else:
+        logger.warning("Server API Token not set, not trying to update")
     logger.info("Scoreboard Starting")
 
     signal.signal(signal.SIGTERM, _handle_signal)
