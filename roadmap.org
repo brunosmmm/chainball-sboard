@@ -12,10 +12,10 @@
 ** TODO Game Data API and Referee web app [1/2]
 *** DONE Decouple webapp from game engine [4/4]
     CLOSED: [2019-05-17 Fri 16:02]
-    - [X] Select IPC framework
-    - [X] Define message structure
-    - [X] Implement message exchange
-    - [X] Remove webapp code from game engine
+    - [X] Select IPC framework :: zmq
+    - [X] Define message structure :: simple tuple (command, data)
+    - [X] Implement message exchange :: server implemented in scoreboard code
+    - [X] Remove webapp code from game engine :: only IPC running now
 *** TODO Run webapp with dedicated web server [/]
     - [ ] Re-implement webapp templating with Flask
     - [ ] Implement IPC exchange in webapp side
