@@ -3,16 +3,19 @@
 
 * TODO Scoreboard Software [/]
 ** TODO Game Logic [/]
+   - [ ] Perform code revision
+   - [ ] Sort out entanglement of logic / persistance / external persistance
 ** TODO Web Interface (referee) [/]
    - [ ] Build referee panel UI
    - [ ] Implement referee panel Authentication
    - [ ] HTTPS
-** TODO Game Data API and Referee web app [/]
-*** TODO Decouple webapp from game engine [/]
-    - [ ] Select IPC framework
-    - [ ] Define message structure
-    - [ ] Implement message exchange
-    - [ ] Remove webapp code from game engine
+** TODO Game Data API and Referee web app [1/2]
+*** DONE Decouple webapp from game engine [4/4]
+    CLOSED: [2019-05-17 Fri 16:02]
+    - [X] Select IPC framework
+    - [X] Define message structure
+    - [X] Implement message exchange
+    - [X] Remove webapp code from game engine
 *** TODO Run webapp with dedicated web server [/]
     - [ ] Re-implement webapp templating with Flask
     - [ ] Implement IPC exchange in webapp side
