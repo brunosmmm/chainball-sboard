@@ -74,6 +74,18 @@ class VerifyIPCFields:
         return fn_wrapper
 
 
+def ipc_ok_response(resp_data):
+    """Make OK response."""
+    response = ("ok", resp_data)
+    return response
+
+
+def ipc_error_response(resp_data):
+    """Make error response."""
+    response = ("error", resp_data)
+    return response
+
+
 class ChainballMainIPC(StoppableThread):
     """Main IPC."""
 
@@ -127,7 +139,7 @@ class ChainballMainIPC(StoppableThread):
 
         # call
         ipc_function = getattr(self, "ipc_{}".format(req_type))
-        response = ipc_function(req_data)
+        response = ipc_function(self._game, **req_data)
         if response is None:
             response = (self.RESPONSE_OK, None)
         elif isinstance(response, (list, tuple)):
@@ -143,82 +155,83 @@ class ChainballMainIPC(StoppableThread):
         return response
 
     @staticmethod
-    def ipc_game_can_start(**req_data):
+    def ipc_game_can_start(game, **req_data):
         """Get whether game can start."""
+        return ipc_ok_response(game.game_can_start())
 
     @staticmethod
-    def ipc_score_status(**req_data):
+    def ipc_score_status(game, **req_data):
         """Get score status."""
 
     @staticmethod
-    def ipc_player_status(**req_data):
+    def ipc_player_status(game, **req_data):
         """Get player status."""
 
     @staticmethod
-    def ipc_tournament_active(**req_data):
+    def ipc_tournament_active(game, **req_data):
         """Get tournament status."""
 
     @staticmethod
     @VerifyIPCFields("tournamentId")
-    def ipc_activate_tournament(**req_data):
+    def ipc_activate_tournament(game, **req_data):
         """Activate tournament."""
 
     @staticmethod
-    def ipc_deactivate_tournament(**req_data):
+    def ipc_deactivate_tournament(game, **req_data):
         """Deactivate tournament."""
 
     @staticmethod
-    def ipc_update_registry(**req_data):
+    def ipc_update_registry(game, **req_data):
         """Update local registry."""
 
     @staticmethod
     @VerifyIPCFields("registryId")
-    def ipc_retrieve_registry(**req_data):
+    def ipc_retrieve_registry(game, **req_data):
         """Retrieve local registry."""
 
     @staticmethod
-    def ipc_game_begin(**req_data):
+    def ipc_game_begin(game, **req_data):
         """Start game."""
 
     @staticmethod
-    def ipc_game_end(**req_data):
+    def ipc_game_end(game, **req_data):
         """End game."""
 
     @staticmethod
     @VerifyIPCFields("playerNumber")
-    def ipc_remote_pair(**req_data):
+    def ipc_remote_pair(game, **req_data):
         """Pair remote."""
         raise NotImplementedError
 
     @staticmethod
     @VerifyIPCFields("playerNumber")
-    def ipc_remote_unpair(**req_data):
+    def ipc_remote_unpair(game, **req_data):
         """Unpair remote."""
         raise NotImplementedError
 
     @staticmethod
     @VerifyIPCFields("playerNum", "webTxt", "panelTxt")
-    def ipc_player_register(**req_data):
+    def ipc_player_register(game, **req_data):
         """Register player."""
 
     @staticmethod
     @VerifyIPCFields("playerNumber")
-    def ipc_player_unregister(**req_data):
+    def ipc_player_unregister(game, **req_data):
         """Unregister player."""
 
     @staticmethod
     @VerifyIPCFields("playerNum", "evtType")
-    def ipc_score_event(**req_data):
+    def ipc_score_event(game, **req_data):
         """Scoring event."""
 
     @staticmethod
     @VerifyIPCFields("playerNum")
-    def ipc_set_turn(**req_data):
+    def ipc_set_turn(game, **req_data):
         """Set turn."""
 
     @staticmethod
     @VerifyIPCFields("playerNum", "score")
-    def ipc_set_score(**req_data):
+    def ipc_set_score(game, **req_data):
         """Set score."""
 
 
