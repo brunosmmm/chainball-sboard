@@ -390,6 +390,7 @@ class ChainballIPCHandler:
         """Initialize."""
         self._evt_pub = ChainballEventPublisher(5556)
         self._main_ipc = ChainballMainIPC()
+        self._running = False
 
     def associate_game(self, game):
         """Associate game."""
@@ -397,18 +398,26 @@ class ChainballIPCHandler:
 
     def start_handler(self):
         """Start handler."""
+        if self._running:
+            return
         self._evt_pub.start()
         self._main_ipc.start()
+        self._running = True
 
     def stop_handler(self):
         """Stop handler."""
+        if self._running is False:
+            return
         self._evt_pub.stop()
         self._evt_pub.join()
         self._main_ipc.stop()
         self._main_ipc.join()
+        self._running = False
 
     def publish_event(self, evt_type, evt_data):
         """Publish event."""
+        if self._running is False:
+            raise ChainballIPCNotAvailableError
         self._evt_pub.publish(evt_type, evt_data)
 
 
