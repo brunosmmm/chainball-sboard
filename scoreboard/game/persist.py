@@ -7,6 +7,7 @@ import os
 import scoreboard.cbcentral.live as live_game
 from scoreboard.cbcentral.localdb import PLAYER_REGISTRY
 from scoreboard.util.configfiles import CHAINBALL_CONFIGURATION
+from scoreboard.ipc import IPC_HANDLER
 
 
 class CannotModifyScoresError(Exception):
@@ -294,6 +295,7 @@ class GamePersistData:
 
         if save is True and self.data_change_handler is not None:
             self.data_change_handler()
+        IPC_HANDLER.publish_event(evt_type, evt_desc)
         if self._live_updates:
             live_game.push_event(self.internal_game_id, evt_type, evt_desc)
 
