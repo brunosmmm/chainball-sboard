@@ -1,23 +1,25 @@
 """Chainball game IPC."""
 
-import zmq
 import time
 from collections import deque
-from scoreboard.util.threads import StoppableThread
+
+import zmq
+
+from scoreboard.cbcentral.localdb import (
+    GAME_REGISTRY,
+    PLAYER_REGISTRY,
+    TOURNAMENT_REGISTRY,
+    update_all,
+)
 from scoreboard.game.exceptions import (
     NotEnoughPlayersError,
     PlayerNotPairedError,
+    PlayerNotRegisteredError,
     PlayerRemoteNotPaired,
     TooManyPlayersError,
-    PlayerNotRegisteredError,
 )
 from scoreboard.game.playertxt import PlayerText
-from scoreboard.cbcentral.localdb import (
-    PLAYER_REGISTRY,
-    TOURNAMENT_REGISTRY,
-    GAME_REGISTRY,
-    update_all,
-)
+from scoreboard.util.threads import StoppableThread
 
 
 class ChainballInvalidIPCRequestError(Exception):
