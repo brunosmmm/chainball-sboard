@@ -4,6 +4,20 @@ import zmq
 import time
 from collections import deque
 from scoreboard.util.threads import StoppableThread
+from scoreboard.game.exceptions import (
+    NotEnoughPlayersError,
+    PlayerNotPairedError,
+    PlayerRemoteNotPaired,
+    TooManyPlayersError,
+    PlayerNotRegisteredError,
+)
+from scoreboard.game.playertxt import PlayerText
+from scoreboard.cbcentral.localdb import (
+    PLAYER_REGISTRY,
+    TOURNAMENT_REGISTRY,
+    GAME_REGISTRY,
+    update_all,
+)
 
 
 class ChainballInvalidIPCRequestError(Exception):
@@ -20,6 +34,10 @@ class ChainballIPCInternalError(Exception):
 
 class ChainballIPCNotAvailableError(Exception):
     """IPC subsystem not available."""
+
+
+class ChainballIPCRequestFieldTypeError(Exception):
+    """Wrong field type."""
 
 
 class ChainballEventPublisher(StoppableThread):
@@ -56,20 +74,31 @@ class ChainballEventPublisher(StoppableThread):
 class VerifyIPCFields:
     """Verify required fields."""
 
-    def __init__(self, *args):
+    def __init__(self, *args, **kwargs):
         """Initialize."""
-        self._required_fields = args
+        self._required_fields = kwargs
+        for arg in args:
+            self._required_fields[arg] = None
 
     def __call__(self, function):
         """Call."""
 
-        def fn_wrapper(**kwargs):
-            for arg in self._required_fields:
+        def fn_wrapper(*args, **kwargs):
+            for arg, arg_type in self._required_fields.items():
                 if arg not in kwargs:
                     raise ChainballIPCRequestMissingFieldError(
                         "missing required field {}".format(arg)
                     )
-            return function(**kwargs)
+                if arg_type is None:
+                    continue
+                # check type
+                if not isinstance(kwargs[arg], arg_type):
+                    raise ChainballIPCRequestFieldTypeError(
+                        "field {} has wrong type, expected {}".format(
+                            arg, arg_type
+                        )
+                    )
+            return function(*args, **kwargs)
 
         return fn_wrapper
 
@@ -84,6 +113,28 @@ def ipc_error_response(resp_data):
     """Make error response."""
     response = ("error", resp_data)
     return response
+
+
+def fail_game_live(function):
+    """Fail if game live decorator."""
+
+    def fn_wrapper(game, **kwargs):
+        if game.ongoing:
+            return ipc_error_response("game is live")
+        return function(game, **kwargs)
+
+    return fn_wrapper
+
+
+def fail_game_stopped(function):
+    """Fail if game stopped decorator."""
+
+    def fn_wrapper(game, **kwargs):
+        if not game.ongoing:
+            return ipc_error_response("game is stopped")
+        return function(game, **kwargs)
+
+    return fn_wrapper
 
 
 class ChainballMainIPC(StoppableThread):
@@ -122,6 +173,8 @@ class ChainballMainIPC(StoppableThread):
                 response = (self.RESPONSE_ERROR, self.ERROR_INTERNAL)
             except ChainballIPCNotAvailableError:
                 response = (self.RESPONSE_ERROR, self.ERROR_NOT_AVAILABLE)
+            except Exception:
+                response = (self.RESPONSE_ERROR, self.ERROR_INTERNAL)
 
             rep_socket.send_json(response)
 
@@ -139,6 +192,8 @@ class ChainballMainIPC(StoppableThread):
 
         # call
         ipc_function = getattr(self, "ipc_{}".format(req_type))
+        if req_data is None:
+            req_data = {}
         response = ipc_function(self._game, **req_data)
         if response is None:
             response = (self.RESPONSE_OK, None)
@@ -160,79 +215,172 @@ class ChainballMainIPC(StoppableThread):
         return ipc_ok_response(game.game_can_start())
 
     @staticmethod
+    @fail_game_live
     def ipc_score_status(game, **req_data):
         """Get score status."""
+        scores = {
+            str(pid): player.current_score
+            for pid, player in game.players.items()
+        }
+        return ipc_ok_response(scores)
 
     @staticmethod
     def ipc_player_status(game, **req_data):
         """Get player status."""
+        players = {}
+        for player_id, player in game.players.items():
+            player_dict = {
+                "panelTxt": player.panel_text,
+                "webTxt": player.web_text,
+                "remoteId": player.remote_id,
+                "username": player.username,
+            }
+            players[str(player_id)] = player_dict
+        return ipc_ok_response(players)
 
     @staticmethod
     def ipc_tournament_active(game, **req_data):
         """Get tournament status."""
+        return ipc_ok_response(game.tournament_id)
 
     @staticmethod
-    @VerifyIPCFields("tournamentId")
+    @fail_game_live
+    @VerifyIPCFields(tournamentId=None)
     def ipc_activate_tournament(game, **req_data):
         """Activate tournament."""
+        try:
+            tournament_id = int(req_data["tournamentId"])
+        except ValueError:
+            return ipc_error_response("invalid value")
+
+        if tournament_id not in TOURNAMENT_REGISTRY:
+            return ipc_error_response("invalid tournament id")
+
+        game.activate_tournament(tournament_id)
+        return None
 
     @staticmethod
+    @fail_game_live
     def ipc_deactivate_tournament(game, **req_data):
         """Deactivate tournament."""
+        game.deactivate_tournament()
 
     @staticmethod
+    @fail_game_live
     def ipc_update_registry(game, **req_data):
         """Update local registry."""
+        update_all()
 
     @staticmethod
-    @VerifyIPCFields("registryId")
+    @VerifyIPCFields(registryId=str)
     def ipc_retrieve_registry(game, **req_data):
         """Retrieve local registry."""
+        registry = req_data["registryId"]
+        if registry == "player":
+            return ipc_ok_response(PLAYER_REGISTRY.serialized)
+        if registry == "tournament":
+            return ipc_ok_response(TOURNAMENT_REGISTRY.serialized)
+        if registry == "game":
+            return ipc_ok_response(GAME_REGISTRY.serialized)
+        return ipc_error_response("invalid registry")
 
     @staticmethod
+    @fail_game_live
     def ipc_game_begin(game, **req_data):
         """Start game."""
+        try:
+            game.game_begin()
+        except NotEnoughPlayersError:
+            return ipc_error_response("at least 2 players needed")
+        except PlayerNotPairedError:
+            return ipc_error_response("player not paired")
+        except PlayerRemoteNotPaired:
+            return ipc_error_response("player remote not paired")
+
+        return None
 
     @staticmethod
+    @fail_game_stopped
     def ipc_game_end(game, **req_data):
         """End game."""
+        game.game_end(reason="FORCED_STOP")
 
     @staticmethod
-    @VerifyIPCFields("playerNumber")
+    @VerifyIPCFields(playerNumber=None)
     def ipc_remote_pair(game, **req_data):
         """Pair remote."""
         raise NotImplementedError
 
     @staticmethod
-    @VerifyIPCFields("playerNumber")
+    @VerifyIPCFields(playerNumber=None)
     def ipc_remote_unpair(game, **req_data):
         """Unpair remote."""
         raise NotImplementedError
 
     @staticmethod
-    @VerifyIPCFields("playerNum", "webTxt", "panelTxt")
+    @fail_game_live
+    @VerifyIPCFields(webTxt=str, panelTxt=str)
     def ipc_player_register(game, **req_data):
         """Register player."""
+        player_num = req_data.get("playerNum")
+        if player_num is None:
+            game.next_player_num()
+
+        username = req_data.get("username")
+        if username is not None:
+            try:
+                registry_data = PLAYER_REGISTRY[username]
+            except KeyError:
+                username = None
+
+        if username is None:
+            player_entry = {
+                player_num: PlayerText(req_data["panelTxt"], req_data["webTxt"])
+            }
+        else:
+            player_entry = {
+                player_num: PlayerText(
+                    registry_data.display_name, registry_data.name
+                )
+            }
+        try:
+            game.register_players(player_entry)
+        except TooManyPlayersError:
+            return ipc_error_response("too many players")
+
+        return None
 
     @staticmethod
-    @VerifyIPCFields("playerNumber")
+    @fail_game_live
+    @VerifyIPCFields(playerNumber=None)
     def ipc_player_unregister(game, **req_data):
         """Unregister player."""
+        try:
+            game.unregister_players([int(req_data["playerNumber"])])
+        except PlayerNotRegisteredError:
+            return ipc_error_response("player not registered")
+
+        return None
 
     @staticmethod
-    @VerifyIPCFields("playerNum", "evtType")
+    @fail_game_stopped
+    @VerifyIPCFields("evtType", playerNum=int)
     def ipc_score_event(game, **req_data):
         """Scoring event."""
+        game.scoring_evt(req_data["playerNum"], req_data["evtType"])
 
     @staticmethod
-    @VerifyIPCFields("playerNum")
+    @fail_game_stopped
+    @VerifyIPCFields(playerNum=int)
     def ipc_set_turn(game, **req_data):
         """Set turn."""
+        game.set_active_player(req_data["playerNum"])
 
     @staticmethod
-    @VerifyIPCFields("playerNum", "score")
+    @VerifyIPCFields(playerNum=int, score=int)
     def ipc_set_score(game, **req_data):
         """Set score."""
+        game.game_force_score(req_data["playerNum"], req_data["score"])
 
 
 class ChainballIPCHandler:
