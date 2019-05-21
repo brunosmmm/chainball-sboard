@@ -29,13 +29,13 @@ class ChainballEventPublisher(StoppableThread):
         pub_socket.bind("tcp://127.0.0.1:{}".format(self._port))
 
         while not self.is_stopped():
+            time.sleep(0.1)
+
             try:
                 evt_type, evt_data = self._queue.popleft()
             except IndexError:
                 continue
 
             pub_socket.send_json((evt_type, evt_data))
-
-            time.sleep(0.1)
 
         pub_socket.close()

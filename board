@@ -96,9 +96,6 @@ if __name__ == "__main__":
     IPC_HANDLER.associate_game(GAME_WRAPPER.game)
     IPC_HANDLER.start_handler()
 
-    # web server
-    # NOT THREAD SAFE
-    # WEB_SCOREBOARD = WebBoard(args.port, GAME_WRAPPER.game, bind_all=True)
     while STOP_ENGINE is False:
         try:
             time.sleep(0.1)
@@ -106,7 +103,6 @@ if __name__ == "__main__":
             STOP_ENGINE = True
 
     # spawn web server
-    # WEB_SCOREBOARD.run()
     logger.info("Exiting")
     IPC_HANDLER.stop_handler()
     # done, cleanup and exit
