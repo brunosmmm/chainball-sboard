@@ -297,4 +297,4 @@ class ScoreHandler(StoppableThread):
             self.process_queue()
 
             # throttle cycle
-            time.sleep(0.01)
+            time.sleep(0.1)

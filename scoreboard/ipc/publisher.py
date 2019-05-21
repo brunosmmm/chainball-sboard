@@ -36,4 +36,6 @@ class ChainballEventPublisher(StoppableThread):
 
             pub_socket.send_json((evt_type, evt_data))
 
-        time.sleep(0.1)
+            time.sleep(0.1)
+
+        pub_socket.close()

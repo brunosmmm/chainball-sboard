@@ -280,4 +280,4 @@ class NRF24Handler(StoppableThread):
             self.chip.poll()
 
             # throttle cycle
-            time.sleep(0.01)
+            time.sleep(0.1)

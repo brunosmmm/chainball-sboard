@@ -10,7 +10,6 @@ from systemd.journal import JournalHandler
 
 from scoreboard.game.engine import ChainballGame
 from scoreboard.util.threads import StoppableThread
-from scoreboard.util.zeroconf import ZeroconfService
 from scoreboard.util.configfiles import CHAINBALL_CONFIGURATION
 
 # from scoreboard.web import WebBoard
@@ -38,8 +37,8 @@ class GameWrapper(StoppableThread):
             else:
                 self.game.game_loop()
 
-                # throttle main loop
-                time.sleep(0.01)
+            # throttle main loop
+            time.sleep(0.1)
 
 
 if __name__ == "__main__":
@@ -56,7 +55,6 @@ if __name__ == "__main__":
         action="store_true",
         help="hardware not present, development only",
     )
-    parser.add_argument("--port", help="web interface port", default=80)
 
     args = parser.parse_args()
 
@@ -83,17 +81,6 @@ if __name__ == "__main__":
     logger = logging.getLogger("sboard")
     logger.addHandler(JournalHandler())
 
-    # publish as service
-    published = False
-    try:
-        avahi_service = ZeroconfService(
-            name="Chainball Scoreboard", port=args.port, stype="_http._tcp"
-        )
-        avahi_service.publish()
-        published = True
-    except Exception as ex:
-        logger.error("failed to publish scoreboard service: {}".format(ex))
-
     if CHAINBALL_CONFIGURATION.scoreboard.chainball_server_token is not None:
         logger.info("Connecting to Central server")
         update_all()
@@ -101,7 +88,7 @@ if __name__ == "__main__":
         logger.warning("Server API Token not set, not trying to update")
     logger.info("Scoreboard Starting")
 
-    signal.signal(signal.SIGTERM, _handle_signal)
+    # signal.signal(signal.SIGINT, _handle_signal)
 
     # spawn game engine in thread
     GAME_WRAPPER = GameWrapper(args.nohw)
@@ -116,15 +103,12 @@ if __name__ == "__main__":
         try:
             time.sleep(0.1)
         except KeyboardInterrupt:
-            break
+            STOP_ENGINE = True
 
     # spawn web server
     # WEB_SCOREBOARD.run()
     logger.info("Exiting")
     IPC_HANDLER.stop_handler()
-
     # done, cleanup and exit
     GAME_WRAPPER.stop()
     GAME_WRAPPER.join()
-    if published:
-        avahi_service.unpublish()
