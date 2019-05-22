@@ -26,6 +26,7 @@ class LocalRegistryEntry:
     """Local registry entry."""
 
     _index = None
+    _fields = []
 
     def __init__(self, **kwargs):
         """Initialize."""
@@ -44,10 +45,17 @@ class LocalRegistryEntry:
         """Get index member name."""
         return cls._index
 
+    @classmethod
+    def get_field_names(cls):
+        """Get fields."""
+        return cls._fields
+
     @property
     def serialized(self):
         """Get serialized."""
-        return self._kwargs
+        serialized = {arg: getattr(self, arg) for arg in self._fields}
+        serialized.update(self._kwargs)
+        return serialized
 
 
 class LocalRegistry:
@@ -119,11 +127,17 @@ class LocalRegistry:
         except KeyError:
             return False
 
+    @property
+    def data_layout(self):
+        """Get data layout."""
+        return self._entry_class.get_field_names()
+
 
 class PlayerEntry(LocalRegistryEntry):
     """Locally cached player description."""
 
     _index = "username"
+    _fields = ["name", "display_name", "username", "sfx_md5"]
 
     def __init__(self, name, display_name, username, sfx_md5, **kwargs):
         """Initialize."""
@@ -153,21 +167,6 @@ class PlayerEntry(LocalRegistryEntry):
         """Get sfx md5 sum."""
         return self._sfx_md5
 
-    @property
-    def serialized(self):
-        """Serialized."""
-        kwargs = super().serialized
-        kwargs.update(
-            {
-                "name": self._name,
-                "display_name": self._dispname,
-                "username": self._username,
-                "sfx_md5": self._sfx_md5,
-            }
-        )
-
-        return kwargs
-
 
 class LocalPlayerRegistry(LocalRegistry):
     """Local player registry."""
@@ -189,12 +188,29 @@ class TournamentEntry(LocalRegistryEntry):
     """Tournament registry entry."""
 
     _index = "id"
+    _fields = [
+        "id",
+        "season",
+        "description",
+        "event_date",
+        "players",
+        "status",
+        "games",
+    ]
 
     def __init__(
-        self, id, season, description, event_date, players, status, games
+        self,
+        id,
+        season,
+        description,
+        event_date,
+        players,
+        status,
+        games,
+        **kwargs
     ):
         """Initialize."""
-        super().__init__()
+        super().__init__(**kwargs)
         self._id = id
         self._season = id_from_url(season)
         self._description = description
@@ -213,7 +229,7 @@ class TournamentEntry(LocalRegistryEntry):
             if isinstance(game, int):
                 ret.append(game)
             elif isinstance(game, str):
-                ret.append(id_from_url(game))
+                ret.append(int(id_from_url(game)))
             else:
                 raise TypeError("invalid type")
 
@@ -235,7 +251,7 @@ class TournamentEntry(LocalRegistryEntry):
         return self._description
 
     @property
-    def date(self):
+    def event_date(self):
         """Get date."""
         return self._date
 
@@ -253,19 +269,6 @@ class TournamentEntry(LocalRegistryEntry):
     def games(self):
         """Get games."""
         return self._games
-
-    @property
-    def serialized(self):
-        """Get serialized."""
-        return {
-            "id": self._id,
-            "season": self._season,
-            "description": self._description,
-            "event_date": self._date,
-            "players": self._players,
-            "status": self._status,
-            "games": self._games,
-        }
 
 
 class LocalTournamentRegistry(LocalRegistry):
@@ -287,6 +290,17 @@ class GameEntry(LocalRegistryEntry):
     """Game registry entry."""
 
     _index = "identifier"
+    _fields = [
+        "identifier",
+        "sequence",
+        "description",
+        "tournament",
+        "events",
+        "players",
+        "duration",
+        "start_time",
+        "game_status",
+    ]
 
     def __init__(
         self,
@@ -299,8 +313,10 @@ class GameEntry(LocalRegistryEntry):
         duration,
         start_time,
         game_status,
+        **kwargs
     ):
         """Initialize."""
+        super().__init__(**kwargs)
         self._identifier = identifier
         self._sequence = sequence
         self._description = description
@@ -317,7 +333,7 @@ class GameEntry(LocalRegistryEntry):
         if isinstance(tournament, int):
             return tournament
         if isinstance(tournament, str):
-            return id_from_url(tournament)
+            return int(id_from_url(tournament))
 
         raise TypeError("invalid type")
 
@@ -362,24 +378,9 @@ class GameEntry(LocalRegistryEntry):
         return self._start_time
 
     @property
-    def status(self):
+    def game_status(self):
         """Get status."""
         return self._status
-
-    @property
-    def serialized(self):
-        """Get serialized."""
-        return {
-            "identifier": self._identifier,
-            "sequence": self._sequence,
-            "description": self._description,
-            "tournament": self._tournament,
-            "events": self._events,
-            "players": self._players,
-            "duration": self._duration,
-            "start_time": self._start_time,
-            "game_status": self._status,
-        }
 
 
 class LocalGameRegistry(LocalRegistry):
