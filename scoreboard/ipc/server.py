@@ -187,6 +187,7 @@ class ChainballMainIPC(StoppableThread):
             "internal_user_id": game.g_persist.get_current_user_id(),
             "scores": ChainballMainIPC._get_scores(game),
             "tournament": game.tournament_mode,
+            "tournament_id": game.tournament_id,
             "tournament_str": tournament_str,
             "game_id": game.active_game_id,
             "game_seq": game_seq,
