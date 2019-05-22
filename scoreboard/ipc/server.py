@@ -172,8 +172,8 @@ class ChainballMainIPC(StoppableThread):
                 tournament.season, tournament.description
             )
             if game.active_game_id is not None:
-                game = GAME_REGISTRY[game.active_game_id]
-                game_seq = game.seq
+                game_entry = GAME_REGISTRY[game.active_game_id]
+                game_seq = game_entry.sequence
             else:
                 game_seq = None
         else:
