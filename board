@@ -3,7 +3,6 @@
 
 import argparse
 import logging
-import signal
 import time
 
 from systemd.journal import JournalHandler
@@ -45,9 +44,6 @@ if __name__ == "__main__":
 
     STOP_ENGINE = False
 
-    def _handle_signal(*whatever):
-        STOP_ENGINE = True
-
     # Parse Command Line arguments
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -59,7 +55,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if CHAINBALL_CONFIGURATION.configuration_loaded is False:
-        print("FATAL: cannot read configuration: {}".format(ex))
+        print("FATAL: cannot read configuration")
         exit(1)
 
     MAIN_CONFIG = CHAINBALL_CONFIGURATION.retrieve_configuration("scoreboard")
