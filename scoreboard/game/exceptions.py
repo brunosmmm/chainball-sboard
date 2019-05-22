@@ -47,3 +47,7 @@ class GameAlreadyPausedError(Exception):
 
 class GameNotPausedError(Exception):
     """Game is not paused."""
+
+
+class ChainballGameError(Exception):
+    """Game-related error"""

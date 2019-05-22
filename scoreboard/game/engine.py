@@ -19,6 +19,7 @@ from scoreboard.game.exceptions import (
     PlayerNotRegisteredError,
     PlayerRemoteNotPaired,
     TooManyPlayersError,
+    ChainballGameError,
 )
 from scoreboard.game.persist import (
     GameEventTypes,
@@ -43,10 +44,6 @@ from scoreboard.util.configfiles import (
     CHAINBALL_CONFIGURATION,
     ChainBallConfigurationError,
 )
-
-
-class ChainballGameError(Exception):
-    """Game-related error"""
 
 
 class MasterRemote:
@@ -185,6 +182,8 @@ class ChainballGame:
         """Set active game id."""
         if self.ongoing:
             raise ChainballGameError("game is live")
+        if self._tournament is None:
+            raise ChainballGameError("no tournament is currently active")
         self._tournament_game_id = game_id
 
     @property

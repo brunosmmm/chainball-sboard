@@ -14,6 +14,7 @@ from scoreboard.game.exceptions import (
     PlayerNotRegisteredError,
     PlayerRemoteNotPaired,
     TooManyPlayersError,
+    ChainballGameError,
 )
 from scoreboard.game.playertxt import PlayerText
 from scoreboard.ipc import (
@@ -43,6 +44,7 @@ class ChainballMainIPC(StoppableThread):
     ERROR_INVALID_REQ = "invalid request"
     ERROR_NOT_SUPPORTED = "request not supported"
     ERROR_INTERNAL = "internal error occurred"
+    ERROR_WRONG_TYPE = "wrong data type"
     ERROR_NOT_AVAILABLE = "IPC not available"
 
     def __init__(self):
@@ -76,6 +78,8 @@ class ChainballMainIPC(StoppableThread):
                 response = (self.RESPONSE_ERROR, self.ERROR_INTERNAL)
             except ChainballIPCNotAvailableError:
                 response = (self.RESPONSE_ERROR, self.ERROR_NOT_AVAILABLE)
+            except ChainballIPCRequestFieldTypeError:
+                response = (self.RESPONSE_ERROR, self.ERROR_WRONG_TYPE)
             except Exception:
                 if DEBUG:
                     raise
@@ -206,7 +210,10 @@ class ChainballMainIPC(StoppableThread):
         if tournament_id not in TOURNAMENT_REGISTRY:
             return ipc_error_response("invalid tournament id")
 
-        game.activate_tournament(tournament_id)
+        try:
+            game.activate_tournament(tournament_id)
+        except ChainballGameError:
+            return ipc_error_response("cannot activate")
         return None
 
     @staticmethod
@@ -214,6 +221,25 @@ class ChainballMainIPC(StoppableThread):
     def ipc_deactivate_tournament(game, **req_data):
         """Deactivate tournament."""
         game.deactivate_tournament()
+
+    @staticmethod
+    @fail_game_live
+    @VerifyIPCFields(game_id=int)
+    def ipc_activate_game(game, **req_data):
+        """Activate game."""
+        try:
+            game_id = int(req_data["game_id"])
+        except ValueError:
+            return ipc_error_response("invalid value")
+
+        if game_id not in GAME_REGISTRY:
+            return ipc_error_response("invalid game id")
+
+        try:
+            game.set_active_game(game_id)
+        except ChainballGameError:
+            return ipc_error_response("cannot activate")
+        return None
 
     @staticmethod
     @fail_game_live

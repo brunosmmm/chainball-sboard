@@ -3,6 +3,7 @@
 import json
 import os
 from logging import getLogger
+from typing import List, Dict, Type
 
 from scoreboard.cbcentral.queries import (
     query_games,
@@ -25,8 +26,8 @@ class ChainBallLocalDBError(Exception):
 class LocalRegistryEntry:
     """Local registry entry."""
 
-    _index = None
-    _fields = []
+    _index: str = None
+    _fields: List[str] = []
 
     def __init__(self, **kwargs):
         """Initialize."""
@@ -41,17 +42,17 @@ class LocalRegistryEntry:
         return None
 
     @classmethod
-    def get_index_name(cls):
+    def get_index_name(cls) -> str:
         """Get index member name."""
         return cls._index
 
     @classmethod
-    def get_field_names(cls):
+    def get_field_names(cls) -> List[str]:
         """Get fields."""
         return cls._fields
 
     @property
-    def serialized(self):
+    def serialized(self) -> Dict:
         """Get serialized."""
         serialized = {arg: getattr(self, arg) for arg in self._fields}
         serialized.update(self._kwargs)
@@ -61,7 +62,7 @@ class LocalRegistryEntry:
 class LocalRegistry:
     """Local registry."""
 
-    def __init__(self, registry_name, entry_class):
+    def __init__(self, registry_name: str, entry_class: Type):
         """Initialize."""
         self._entry_class = entry_class
         db_config = CHAINBALL_CONFIGURATION.db
@@ -88,7 +89,7 @@ class LocalRegistry:
         self.build_registry(self._registry_contents)
 
     @property
-    def serialized(self):
+    def serialized(self) -> List[Dict]:
         """Get serialized."""
         return [item.serialized for item in self._registry_contents]
 
@@ -96,7 +97,7 @@ class LocalRegistry:
         """Update registry."""
         raise NotImplementedError
 
-    def build_registry(self, contents):
+    def build_registry(self, contents: List) -> None:
         """Build registry."""
         self._registry_contents = [
             self._entry_class(**item) for item in contents
