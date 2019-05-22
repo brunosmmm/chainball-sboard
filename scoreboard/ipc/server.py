@@ -182,8 +182,9 @@ class ChainballMainIPC(StoppableThread):
         status = {
             "game": status_string,
             "serving": game.active_player,
-            "game_id": game.g_persist.current_game_series,
-            "user_id": game.g_persist.get_current_user_id(),
+            "serving_user_id": game.active_player_id,
+            "internal_game_id": game.g_persist.current_game_series,
+            "internal_user_id": game.g_persist.get_current_user_id(),
             "scores": ChainballMainIPC._get_scores(game),
             "tournament": game.tournament_mode,
             "tournament_str": tournament_str,

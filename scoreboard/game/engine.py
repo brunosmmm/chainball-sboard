@@ -201,6 +201,13 @@ class ChainballGame:
         """Active game id."""
         return self._tournament_game_id
 
+    @property
+    def active_player_id(self):
+        """Get active player id if available."""
+        if self.active_player is None:
+            return None
+        return self.players[self.active_player].registry_username
+
     def enable_remotes(self):
         """Enable remotes."""
         if self._remotes:
