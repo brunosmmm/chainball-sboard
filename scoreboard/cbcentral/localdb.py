@@ -203,7 +203,21 @@ class TournamentEntry(LocalRegistryEntry):
         self._players = [id_from_url(player) for player in players]
         self._status = status
         # also abbreviate
-        self._games = [id_from_url(game) for game in games]
+        self._games = self._get_game_ids(games)
+
+    @staticmethod
+    def _get_game_ids(games):
+        """Get game ids."""
+        ret = []
+        for game in games:
+            if isinstance(game, int):
+                ret.append(game)
+            elif isinstance(game, str):
+                ret.append(id_from_url(game))
+            else:
+                raise TypeError("invalid type")
+
+        return ret
 
     @property
     def id(self):
@@ -290,12 +304,22 @@ class GameEntry(LocalRegistryEntry):
         self._identifier = identifier
         self._sequence = sequence
         self._description = description
-        self._tournament = id_from_url(tournament)
+        self._tournament = self._get_tournament_id(tournament)
         self._events = events
         self._players = [id_from_url(player) for player in players]
         self._duration = duration
         self._start_time = start_time
         self._status = game_status
+
+    @staticmethod
+    def _get_tournament_id(tournament):
+        """Get tournament id."""
+        if isinstance(tournament, int):
+            return tournament
+        if isinstance(tournament, str):
+            return id_from_url(tournament)
+
+        raise TypeError("invalid type")
 
     @property
     def identifier(self):
