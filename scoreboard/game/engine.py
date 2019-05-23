@@ -476,6 +476,9 @@ class ChainballGame:
                         p_data.web_text = self.players[p_num].web_text
                         p_data.panel_text = self.players[p_num].panel_text
                         p_data.remote_id = self.players[p_num].remote_id
+                        p_data.registry_username = self.players[
+                            p_num
+                        ].registry_username
                         p_data.registered = True
 
                         # register panel
@@ -486,6 +489,7 @@ class ChainballGame:
                         self.players[p_num].panel_text = None
                         self.players[p_num].registered = False
                         self.players[p_num].remote_id = None
+                        self.players[p_num].registry_username = None
                         self.s_handler.unregister_player(p_num)
 
                         # done
@@ -509,6 +513,7 @@ class ChainballGame:
             self.players[player].web_text = None
             self.players[player].panel_text = None
             self.players[player].registered = False
+            self.players[player].registry_username = None
             if self.pair_handler is not None:
                 self.pair_handler.stop_tracking(self.players[player].remote_id)
             self.players[player].remote_id = None

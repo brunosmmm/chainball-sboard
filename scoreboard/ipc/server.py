@@ -151,6 +151,7 @@ class ChainballMainIPC(StoppableThread):
                 "web_txt": player.web_text,
                 "remote_id": player.remote_id,
                 "username": player.registry_username,
+                "registered": player.registered,
             }
             players[str(player_id)] = player_dict
         return ipc_ok_response(players)
