@@ -422,7 +422,7 @@ class ChainballGame:
         if original_cb:
             original_cb()
 
-    def register_players(self, player_texts):
+    def register_players(self, player_texts, username=None):
         """Register players."""
         if self.ongoing:
             raise GameRunningError("Cant register players while running")
@@ -452,6 +452,7 @@ class ChainballGame:
             self.players[player].web_text = player_texts[player].web_txt
             self.players[player].panel_text = player_texts[player].panel_txt
             self.players[player].registered = True
+            self.players[player].registry_username = username
             self.player_count += 1
 
             self.logger.debug("Registered player {}".format(player))

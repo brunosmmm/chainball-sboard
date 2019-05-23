@@ -324,7 +324,7 @@ class ChainballMainIPC(StoppableThread):
                 )
             }
         try:
-            game.register_players(player_entry)
+            game.register_players(player_entry, username)
         except TooManyPlayersError:
             return ipc_error_response("too many players")
 
