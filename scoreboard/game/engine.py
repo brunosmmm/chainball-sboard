@@ -184,6 +184,8 @@ class ChainballGame:
             raise ChainballGameError("game is live")
         if self._tournament is None:
             raise ChainballGameError("no tournament is currently active")
+        # remove all players
+        self.unregister_players([0, 1, 2, 3])
         self._tournament_game_id = game_id
 
     @property
