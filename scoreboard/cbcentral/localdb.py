@@ -89,7 +89,7 @@ class LocalRegistry:
         self.build_registry(self._registry_contents)
 
     @property
-    def serialized(self) -> List[Dict]:
+    def serialized(self):
         """Get serialized."""
         return [item.serialized for item in self._registry_contents]
 
@@ -97,7 +97,7 @@ class LocalRegistry:
         """Update registry."""
         raise NotImplementedError
 
-    def build_registry(self, contents: List) -> None:
+    def build_registry(self, contents: List):
         """Build registry."""
         self._registry_contents = [
             self._entry_class(**item) for item in contents
