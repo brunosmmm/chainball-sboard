@@ -43,7 +43,9 @@ class ChainballCentralAPI(StoppableThread):
                 except (CBCentralAPITimeout, CBCentralAPIError):
                     # retry
                     if retry:
-                        self._outgoing_queue.appendleft((data, sub_api, path))
+                        self._outgoing_queue.appendleft(
+                            (data, sub_api, path, True)
+                        )
 
             time.sleep(1)
 
@@ -59,9 +61,10 @@ class ChainballCentralAPI(StoppableThread):
             scoreboard_config["chainball_server_token"],
         )
 
-    def central_api_get(self, sub_api=None, path=None, timeout=10):
+    @classmethod
+    def central_api_get(cls, sub_api=None, path=None, timeout=10):
         """Make a GET request."""
-        central_server_address, api_key = self.get_central_address()
+        central_server_address, api_key = cls.get_central_address()
 
         # do not use access token for now
         # build request
