@@ -3,8 +3,10 @@
 import posixpath
 
 import requests
+import time
 from collections import deque
 from requests.exceptions import ConnectionError, Timeout
+from scoreboard.util.threads import StoppableThread
 
 from scoreboard.util.configfiles import CHAINBALL_CONFIGURATION
 
@@ -17,8 +19,33 @@ class CBCentralAPITimeout(CBCentralAPIError):
     """Timeout."""
 
 
-class ChainballCentralAPI:
+class ChainballCentralAPI(StoppableThread):
     """Central API."""
+
+    def __init__(self):
+        """Initialize."""
+        super().__init__()
+        self._outgoing_queue = deque()
+
+    def run(self):
+        """Run."""
+        while not self.is_stopped():
+            while True:
+                try:
+                    data, sub_api, path, retry = self._outgoing_queue.popleft()
+                    result = self._central_api_post(
+                        data=data, sub_api=sub_api, path=path
+                    )
+                    if "status" not in result or result["status"] != "ok":
+                        raise CBCentralAPIError()
+                except IndexError:
+                    break
+                except (CBCentralAPITimeout, CBCentralAPIError):
+                    # retry
+                    if retry:
+                        self._outgoing_queue.appendleft((data, sub_api, path))
+
+            time.sleep(1)
 
     @staticmethod
     def get_central_address():
@@ -32,10 +59,9 @@ class ChainballCentralAPI:
             scoreboard_config["chainball_server_token"],
         )
 
-    @classmethod
-    def central_api_get(cls, sub_api=None, path=None, timeout=10):
+    def central_api_get(self, sub_api=None, path=None, timeout=10):
         """Make a GET request."""
-        central_server_address, api_key = cls.get_central_address()
+        central_server_address, api_key = self.get_central_address()
 
         # do not use access token for now
         # build request
@@ -65,10 +91,13 @@ class ChainballCentralAPI:
             )
         return result.json()
 
-    @classmethod
-    def central_api_post(cls, data, sub_api=None, path=None, timeout=10):
+    def push_post_request(self, data, sub_api=None, path=None, retry=True):
+        """Push post request into queue."""
+        self._outgoing_queue.append((data, sub_api, path, retry))
+
+    def _central_api_post(self, data, sub_api=None, path=None, timeout=10):
         """Make a POST request."""
-        central_server_address, api_key = cls.get_central_address()
+        central_server_address, api_key = self.get_central_address()
         get_url = central_server_address
         if sub_api is not None:
             get_url = posixpath.join(get_url, sub_api)
@@ -106,3 +135,6 @@ class ChainballCentralAPI:
             return False
 
         return True
+
+
+CENTRAL_API = ChainballCentralAPI()

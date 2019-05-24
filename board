@@ -8,6 +8,7 @@ import time
 from systemd.journal import JournalHandler
 
 from scoreboard.game.engine import ChainballGame
+from scoreboard.cbcentral.api import CENTRAL_API
 from scoreboard.util.threads import StoppableThread
 from scoreboard.util.configfiles import CHAINBALL_CONFIGURATION
 
@@ -89,6 +90,7 @@ if __name__ == "__main__":
     # spawn game engine in thread
     GAME_WRAPPER = GameWrapper(args.nohw)
     GAME_WRAPPER.start()
+    CENTRAL_API.start()
     IPC_HANDLER.associate_game(GAME_WRAPPER.game)
     IPC_HANDLER.start_handler()
 
@@ -104,3 +106,5 @@ if __name__ == "__main__":
     # done, cleanup and exit
     GAME_WRAPPER.stop()
     GAME_WRAPPER.join()
+    CENTRAL_API.stop()
+    CENTRAL_API.join()
