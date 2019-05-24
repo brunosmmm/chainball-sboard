@@ -30,7 +30,8 @@ class ChainballCentralAPI(StoppableThread):
     def run(self):
         """Run."""
         while not self.is_stopped():
-            while True:
+            while not self.is_stopped():
+                # drop everything
                 try:
                     data, sub_api, path, retry = self._outgoing_queue.popleft()
                     result = self._central_api_post(
