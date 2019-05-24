@@ -220,7 +220,9 @@ class GamePersistData:
         )
         if self._live_updates:
             # push game status
-            player_order = [player.username for player in self.player_data]
+            player_order = [
+                player.username for player in self.player_data.values()
+            ]
             live_game.game_start(
                 self.internal_game_id, remaining_time, player_order
             )
