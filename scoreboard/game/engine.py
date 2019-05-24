@@ -999,7 +999,7 @@ class ChainballGame:
             )
             self.game_increment_score(int(player), referee_event=True)
             self.game_increment_score(int(player), referee_event=True)
-        elif evt_type == "ratmeat":
+        elif evt_type == "selfhit":
             self.g_persist.log_event(
                 GameEventTypes.BALL_HIT,
                 {"player": int(player), "gtime": self.get_running_time()},
