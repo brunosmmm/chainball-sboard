@@ -27,6 +27,7 @@ class PlayerPersistData:
         player_name: str
            Full name, displayed on web interface
         """
+        self.score = 0
         if player_username is not None:
             try:
                 player_info = PLAYER_REGISTRY[player_username]
@@ -41,7 +42,6 @@ class PlayerPersistData:
         self._username = None
         self.display_name = display_name
         self.player_name = player_name
-        self.score = 0
 
     @property
     def username(self):
