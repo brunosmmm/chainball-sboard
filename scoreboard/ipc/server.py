@@ -362,7 +362,7 @@ class ChainballMainIPC(StoppableThread):
     @VerifyIPCFields(player_num=int)
     def ipc_set_turn(game, **req_data):
         """Set turn."""
-        game.set_active_player(req_data["player_num"])
+        game.game_set_active_player(req_data["player_num"])
 
     @staticmethod
     @VerifyIPCFields(player_num=int, score=int)
