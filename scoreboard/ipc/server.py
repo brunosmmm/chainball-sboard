@@ -142,7 +142,7 @@ class ChainballMainIPC(StoppableThread):
         return ipc_ok_response(ChainballMainIPC._get_scores(game))
 
     @staticmethod
-    def ipc_player_status(game, **req_data):
+    def make_player_status(game):
         """Get player status."""
         players = {}
         for player_id, player in game.players.items():
@@ -154,6 +154,12 @@ class ChainballMainIPC(StoppableThread):
                 "registered": player.registered,
             }
             players[str(player_id)] = player_dict
+        return players
+
+    @staticmethod
+    def ipc_player_status(game, **req_data):
+        """Get player status."""
+        players = ChainballMainIPC.make_player_status(game)
         return ipc_ok_response(players)
 
     @staticmethod
@@ -192,6 +198,7 @@ class ChainballMainIPC(StoppableThread):
             "tournament_str": tournament_str,
             "game_id": game.active_game_id,
             "game_seq": game_seq,
+            "players": ChainballMainIPC.make_player_status(game),
         }
         return ipc_ok_response(status)
 
