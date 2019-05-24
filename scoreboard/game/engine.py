@@ -556,6 +556,7 @@ class ChainballGame:
                 player_persist[player] = PlayerPersistData(
                     self.players[player].panel_text,
                     self.players[player].web_text,
+                    player_username=self.players[player].registry_username,
                 )
                 self.players[player].reset_serve()
 
