@@ -199,6 +199,7 @@ class ChainballMainIPC(StoppableThread):
             "game_id": game.active_game_id,
             "game_seq": game_seq,
             "players": ChainballMainIPC.make_player_status(game),
+            "remaining_time": game.get_remaining_time(),
         }
         return ipc_ok_response(status)
 
