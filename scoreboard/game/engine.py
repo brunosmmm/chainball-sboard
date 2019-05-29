@@ -119,6 +119,7 @@ class ChainballGame:
         self.active_player = None
         self.game_uuid = None
         self.paused = False
+        self.finished = False
         self.error = False
         self.score_display_ended = True
         self._next_uid = None
@@ -185,6 +186,7 @@ class ChainballGame:
         if self._tournament is None:
             raise ChainballGameError("no tournament is currently active")
         # remove all players
+        self.finished = False
         self.unregister_players([0, 1, 2, 3])
         self._tournament_game_id = game_id
 
@@ -570,6 +572,7 @@ class ChainballGame:
         # flag game start
         self.ongoing = True
         self.paused = False
+        self.finished = False
         self.game_set_active_player(0)
 
         self.timer_handler.start(self.game_config.game_duration)
@@ -699,6 +702,7 @@ class ChainballGame:
         )
 
         self.ongoing = False
+        self.finished = True
         self.game_uuid = None
         self._next_uid = None
         self._tournament_game_id = None

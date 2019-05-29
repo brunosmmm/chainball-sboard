@@ -170,6 +170,8 @@ class ChainballMainIPC(StoppableThread):
                 status_string = "paused"
             else:
                 status_string = "started"
+        elif game.finished:
+            status_string = "finished"
         else:
             status_string = "stopped"
 
