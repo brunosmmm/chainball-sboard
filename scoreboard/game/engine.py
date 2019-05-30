@@ -566,7 +566,7 @@ class ChainballGame:
 
         # create persistance data
         self.game_uuid = self.g_persist.new_record(
-            player_persist, self._next_uid
+            player_persist, self._next_uid, self._tournament_game_id
         )
 
         # flag game start

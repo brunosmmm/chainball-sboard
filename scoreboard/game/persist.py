@@ -100,7 +100,14 @@ class GameEventTypes:
 class GamePersistData:
     """Game persistance data structures."""
 
-    def __init__(self, players, handler, current_series, game_uid=None):
+    def __init__(
+        self,
+        players,
+        handler,
+        current_series,
+        game_uid=None,
+        central_game_uid=None,
+    ):
         """Initialize.
 
         Args
@@ -118,6 +125,7 @@ class GamePersistData:
         self.data_change_handler = handler
         self.events = []
         self.internal_game_id = current_series
+        self.central_game_id = central_game_uid
         self.user_game_id = game_uid
 
         scoreboard_config = CHAINBALL_CONFIGURATION.scoreboard
@@ -218,13 +226,13 @@ class GamePersistData:
         self.log_event(
             GameEventTypes.GAME_START, {"rtime": remaining_time, "gtime": 0}
         )
-        if self._live_updates:
+        if self._live_updates and self.central_game_id is not None:
             # push game status
             player_order = [
                 player.username for player in self.player_data.values()
             ]
             live_game.game_start(
-                self.internal_game_id, remaining_time, player_order
+                self.central_game_id, remaining_time, player_order
             )
 
     def end_game(self, reason, winner, running_time, remaining_time):
@@ -253,10 +261,10 @@ class GamePersistData:
         )
         # if self.data_change_handler:
         #     self.data_change_handler()
-        if self._live_updates:
+        if self._live_updates and self.central_game_id is not None:
             # push game status
             live_game.game_end(
-                self.internal_game_id,
+                self.central_game_id,
                 reason,
                 winner,
                 running_time,
@@ -298,8 +306,8 @@ class GamePersistData:
         if save is True and self.data_change_handler is not None:
             self.data_change_handler()
         IPC_HANDLER.publish_event(evt_type, evt_desc)
-        if self._live_updates:
-            live_game.push_event(self.internal_game_id, evt_type, evt_desc)
+        if self._live_updates and self.central_game_id is not None:
+            live_game.push_event(self.central_game_id, evt_type, evt_desc)
 
     @property
     def serialized(self):
@@ -391,7 +399,7 @@ class GamePersistance:
 
                 self.game_history[file_uuid] = game_data
 
-    def new_record(self, players, game_uid=None):
+    def new_record(self, players, game_uid=None, central_game_uid=None):
         """Create new game record.
 
         Args
@@ -403,7 +411,11 @@ class GamePersistance:
         self.current_game_series += 1
         self.current_game = game_uuid
         self.game_history[game_uuid] = GamePersistData(
-            players, self.save_current_data, self.current_game_series, game_uid
+            players,
+            self.save_current_data,
+            self.current_game_series,
+            game_uid,
+            central_game_uid,
         )
         self.save_current_data()
 
