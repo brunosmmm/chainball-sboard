@@ -47,10 +47,11 @@ class ChainballMainIPC(StoppableThread):
     ERROR_WRONG_TYPE = "wrong data type"
     ERROR_NOT_AVAILABLE = "IPC not available"
 
-    def __init__(self):
+    def __init__(self, port=5555):
         """Initialize."""
         super().__init__()
         self._game = None
+        self._port = port
 
     def run(self):
         """Run IPC server."""
@@ -58,7 +59,7 @@ class ChainballMainIPC(StoppableThread):
         rep_socket = ctx.socket(zmq.REP)
         rep_socket.setsockopt(zmq.RCVTIMEO, 1000)
         rep_socket.setsockopt(zmq.LINGER, 0)
-        rep_socket.bind("tcp://127.0.0.1:5555")
+        rep_socket.bind("tcp://127.0.0.1:{}".format(self._port))
         while not self.is_stopped():
             try:
                 req_type, req_data = rep_socket.recv_json()
@@ -377,10 +378,10 @@ class ChainballMainIPC(StoppableThread):
 class ChainballIPCHandler:
     """IPC Handler."""
 
-    def __init__(self):
+    def __init__(self, server_port=5555, evt_port=5556):
         """Initialize."""
-        self._evt_pub = ChainballEventPublisher(5556)
-        self._main_ipc = ChainballMainIPC()
+        self._evt_pub = ChainballEventPublisher(evt_port)
+        self._main_ipc = ChainballMainIPC(server_port)
         self._running = False
 
     def associate_game(self, game):
