@@ -11,7 +11,7 @@ def push_event(game_uuid, evt_type, evt_desc):
     """Push event to server."""
     post_data = {"evt_type": evt_type, "evt_data": evt_desc}
     CENTRAL_API.push_post_request(
-        post_data, sub_api="api", path=f"games/{game_uuid}/push_event"
+        post_data, sub_api="api", path=f"games/{game_uuid}/push_event/"
     )
 
 
@@ -20,7 +20,7 @@ def game_start(game_uuid, start_time, player_order):
     order = ",".join(player_order)
     post_data = {"start_time": start_time, "player_order": order}
     CENTRAL_API.push_post_request(
-        post_data, sub_api="api", path=f"games/{game_uuid}/start_game"
+        post_data, sub_api="api", path=f"games/{game_uuid}/start_game/"
     )
 
 
@@ -33,5 +33,5 @@ def game_end(game_uuid, reason, winner, running_time, remaining_time):
         "remaining_time": remaining_time,
     }
     CENTRAL_API.push_post_request(
-        post_data, sub_api="api", path=f"games/{game_uuid}/stop_game"
+        post_data, sub_api="api", path=f"games/{game_uuid}/stop_game/"
     )
