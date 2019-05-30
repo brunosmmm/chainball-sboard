@@ -223,9 +223,6 @@ class GamePersistData:
            Game duration
         """
         # doesnt change the current status for now, but i think it should
-        self.log_event(
-            GameEventTypes.GAME_START, {"rtime": remaining_time, "gtime": 0}
-        )
         if self._live_updates and self.central_game_id is not None:
             # push game status
             player_order = [
@@ -234,6 +231,9 @@ class GamePersistData:
             live_game.game_start(
                 self.central_game_id, remaining_time, player_order
             )
+        self.log_event(
+            GameEventTypes.GAME_START, {"rtime": remaining_time, "gtime": 0}
+        )
 
     def end_game(self, reason, winner, running_time, remaining_time):
         """Log end of game.
@@ -249,16 +249,6 @@ class GamePersistData:
         remaining_time: int
             Remaining time at end, in seconds
         """
-        self.game_state = GamePersistStates.FINISHED
-        self.log_event(
-            GameEventTypes.GAME_END,
-            {
-                "reason": reason,
-                "winner": winner,
-                "gtime": running_time,
-                "rtime": remaining_time,
-            },
-        )
         # if self.data_change_handler:
         #     self.data_change_handler()
         if self._live_updates and self.central_game_id is not None:
@@ -270,6 +260,16 @@ class GamePersistData:
                 running_time,
                 remaining_time,
             )
+        self.game_state = GamePersistStates.FINISHED
+        self.log_event(
+            GameEventTypes.GAME_END,
+            {
+                "reason": reason,
+                "winner": winner,
+                "gtime": running_time,
+                "rtime": remaining_time,
+            },
+        )
 
     def pause_unpause(self):
         """Pause or unpause game."""
