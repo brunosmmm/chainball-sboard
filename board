@@ -52,8 +52,14 @@ if __name__ == "__main__":
         action="store_true",
         help="hardware not present, development only",
     )
+    parser.add_argument(
+        "--conf", action="store", help="alternate configuration path"
+    )
 
     args = parser.parse_args()
+
+    if args.conf is not None:
+        CHAINBALL_CONFIGURATION.reload_configuration(args.conf)
 
     if CHAINBALL_CONFIGURATION.configuration_loaded is False:
         print("FATAL: cannot read configuration")

@@ -105,6 +105,13 @@ class ChainBallConfiguration:
         """Get whether configuration is loaded."""
         return self._loaded
 
+    def reload_configuration(self, config_path):
+        """Reload configuration."""
+        self._config_paths = [config_path]
+        self._config_files = {}
+        self._loaded = False
+        self.load_configuration()
+
     def load_configuration(self):
         """Try to load configuration."""
 
