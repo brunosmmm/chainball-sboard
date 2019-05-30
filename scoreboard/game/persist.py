@@ -251,6 +251,15 @@ class GamePersistData:
         """
         # if self.data_change_handler:
         #     self.data_change_handler()
+        self.log_event(
+            GameEventTypes.GAME_END,
+            {
+                "reason": reason,
+                "winner": winner,
+                "gtime": running_time,
+                "rtime": remaining_time,
+            },
+        )
         if self._live_updates and self.central_game_id is not None:
             # push game status
             live_game.game_end(
@@ -261,15 +270,6 @@ class GamePersistData:
                 remaining_time,
             )
         self.game_state = GamePersistStates.FINISHED
-        self.log_event(
-            GameEventTypes.GAME_END,
-            {
-                "reason": reason,
-                "winner": winner,
-                "gtime": running_time,
-                "rtime": remaining_time,
-            },
-        )
 
     def pause_unpause(self):
         """Pause or unpause game."""
