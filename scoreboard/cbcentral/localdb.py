@@ -3,17 +3,17 @@
 import json
 import os
 from logging import getLogger
-from typing import List, Dict, Type
+from typing import Dict, List, Type
 
+import scoreboard.cbcentral.api as api
 from scoreboard.cbcentral.queries import (
+    get_sfx_data,
     query_games,
     query_players,
     query_tournaments,
-    get_sfx_data,
 )
 from scoreboard.cbcentral.util import id_from_url, md5_sum
 from scoreboard.util.configfiles import CHAINBALL_CONFIGURATION
-from scoreboard.cbcentral.api import CBCentralAPIError
 from scoreboard.util.soundfx import SFX_HANDLER
 
 LOCALDB_LOGGER = getLogger("sboard.localdb")
@@ -58,6 +58,38 @@ class LocalRegistryEntry:
         serialized.update(self._kwargs)
         return serialized
 
+    def __eq__(self, other):
+        """Equal operator."""
+        if not isinstance(other, LocalRegistryEntry):
+            raise TypeError("unmatching time in comparison")
+
+        for field in self._fields:
+            this_value = getattr(self, field)
+            other_value = getattr(other, field)
+            if this_value != other_value:
+                return False
+
+        return True
+
+    def __hash__(self, other):
+        """Hash function."""
+        field_values = tuple([getattr(self, field) for field in self._fields])
+        return hash(field_value)
+
+    def compare_entries(self, other):
+        """Compare entries."""
+        if not isinstance(other, LocalRegistryEntry):
+            raise TypeError("unmatching type in comparison")
+
+        modified_fields = {}
+        for field in self._fields:
+            this_value = getattr(self, field)
+            other_value = getattr(other, field)
+            if this_value != other_value:
+                modified_fields[field] = (this_value, other_value)
+
+        return modified_fields
+
 
 class LocalRegistry:
     """Local registry."""
@@ -81,12 +113,13 @@ class LocalRegistry:
         # load registry
         try:
             with open(self._registry_location, "r") as registry:
-                self._registry_contents = json.load(registry)
+                _registry_contents = json.load(registry)
         except (OSError, json.JSONDecodeError):
             raise ChainBallLocalDBError("cannot load registry.")
 
         # build
-        self.build_registry(self._registry_contents)
+        self._registry_contents = []
+        self.build_registry(_registry_contents)
 
     @property
     def serialized(self):
@@ -97,11 +130,37 @@ class LocalRegistry:
         """Update registry."""
         raise NotImplementedError
 
+    def value_changed(self, entry_index, field_name, old_value, new_value):
+        """Value changed callback."""
+
     def build_registry(self, contents: List):
         """Build registry."""
-        self._registry_contents = [
-            self._entry_class(**item) for item in contents
-        ]
+        new_registry_contents = []
+        for item in contents:
+            new_content = self._entry_class(**item)
+            new_registry_contents.append(new_content)
+            try:
+                index_key = self._entry_class.get_index_name()
+                if index_key is not None:
+                    index_value = item[index_key]
+                    current_content = self[index_value]
+                    if current_content != new_content:
+                        modified_fields = current_content.compare_entries(
+                            new_content
+                        )
+                        for (
+                            field_name,
+                            (old_value, new_value),
+                        ) in modified_fields.items():
+                            self.value_changed(
+                                index_value, field_name, old_value, new_value
+                            )
+            except KeyError:
+                pass
+        # self._registry_contents = [
+        #     self._entry_class(**item) for item in contents
+        # ]
+        self._registry_contents = new_registry_contents
 
     def commit_registry(self):
         """Commit to disk."""
@@ -208,7 +267,7 @@ class TournamentEntry(LocalRegistryEntry):
         players,
         status,
         games,
-        **kwargs
+        **kwargs,
     ):
         """Initialize."""
         super().__init__(**kwargs)
@@ -314,7 +373,7 @@ class GameEntry(LocalRegistryEntry):
         duration,
         start_time,
         game_status,
-        **kwargs
+        **kwargs,
     ):
         """Initialize."""
         super().__init__(**kwargs)
@@ -407,7 +466,7 @@ def update_all():
     try:
         PLAYER_REGISTRY.update_registry()
         PLAYER_REGISTRY.commit_registry()
-    except CBCentralAPIError:
+    except api.CBCentralAPIError:
         LOCALDB_LOGGER.warning("could not update player registry from server")
 
     # check SFX data
@@ -416,7 +475,7 @@ def update_all():
             # SFX data not available, retrieve
             try:
                 data = get_sfx_data(player.username)
-            except CBCentralAPIError:
+            except api.CBCentralAPIError:
                 LOCALDB_LOGGER.error("failed to retrieve SFX data")
                 continue
             if data["status"] != "ok":
@@ -446,7 +505,7 @@ def update_all():
                 )
                 try:
                     data = get_sfx_data(player.username)
-                except CBCentralAPIError:
+                except api.CBCentralAPIError:
                     LOCALDB_LOGGER.error("failed to retrieve SFX data")
                     continue
 
@@ -468,7 +527,7 @@ def update_all():
     try:
         TOURNAMENT_REGISTRY.update_registry()
         TOURNAMENT_REGISTRY.commit_registry()
-    except CBCentralAPIError:
+    except api.CBCentralAPIError:
         LOCALDB_LOGGER.warning(
             "could not update tournament registry from server"
         )
@@ -476,5 +535,5 @@ def update_all():
     try:
         GAME_REGISTRY.update_registry()
         GAME_REGISTRY.commit_registry()
-    except CBCentralAPIError:
+    except api.CBCentralAPIError:
         LOCALDB_LOGGER.warning("could not update game registry from server")

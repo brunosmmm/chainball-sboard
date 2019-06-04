@@ -1,14 +1,15 @@
 """Server API access."""
 
 import posixpath
-
-import requests
 import time
 from collections import deque
-from requests.exceptions import ConnectionError, Timeout
-from scoreboard.util.threads import StoppableThread
 
+import requests
+from requests.exceptions import ConnectionError, Timeout
+
+import scoreboard.cbcentral.localdb as localdb
 from scoreboard.util.configfiles import CHAINBALL_CONFIGURATION
+from scoreboard.util.threads import StoppableThread
 
 
 class CBCentralAPIError(Exception):
@@ -30,6 +31,12 @@ class ChainballCentralAPI(StoppableThread):
     def run(self):
         """Run."""
         while not self.is_stopped():
+            # update game registry to track tournament progress
+            try:
+                localdb.GAME_REGISTRY.update_registry()
+                localdb.GAME_REGISTRY.commit_registry()
+            except CBCentralAPIError:
+                pass
             while not self.is_stopped():
                 # drop everything
                 try:
@@ -48,6 +55,7 @@ class ChainballCentralAPI(StoppableThread):
                             (data, sub_api, path, True)
                         )
 
+                time.sleep(1)
             time.sleep(1)
 
     @staticmethod
