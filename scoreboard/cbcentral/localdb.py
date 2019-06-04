@@ -360,6 +360,7 @@ class GameEntry(LocalRegistryEntry):
         "duration",
         "start_time",
         "game_status",
+        "court",
     ]
 
     def __init__(
@@ -373,6 +374,7 @@ class GameEntry(LocalRegistryEntry):
         duration,
         start_time,
         game_status,
+        court,
         **kwargs,
     ):
         """Initialize."""
@@ -386,6 +388,10 @@ class GameEntry(LocalRegistryEntry):
         self._duration = duration
         self._start_time = start_time
         self._status = game_status
+        if court is None:
+            self._court = None
+        else:
+            self._court = id_from_url(court)
 
     @staticmethod
     def _get_tournament_id(tournament):
@@ -428,6 +434,11 @@ class GameEntry(LocalRegistryEntry):
         return self._players
 
     @property
+    def court(self):
+        """Get court."""
+        return self._court
+
+    @property
     def duration(self):
         """Get duration."""
         return self._duration
@@ -449,11 +460,24 @@ class LocalGameRegistry(LocalRegistry):
     def __init__(self):
         """Initialize."""
         super().__init__("game_registry", GameEntry)
+        self.game_wrapper = None
 
     def update_registry(self):
         """Update registry."""
         upstream_games = query_games()
         self.build_registry(upstream_games)
+
+    def value_changed(self, entry_index, field_name, old_value, new_value):
+        """Value changed callback."""
+        if field_name == "game_status":
+            if old_value == "NYET" and new_value == "NEXT":
+                # announce
+                if self.game_wrapper is not None:
+                    game_entry = self[entry_index]
+                    if game_entry.court is not None:
+                        self.game_wrapper.announce_next_game(
+                            game_entry.court, game_entry.players
+                        )
 
 
 PLAYER_REGISTRY = LocalPlayerRegistry()

@@ -1128,3 +1128,7 @@ class ChainballGame:
                     5,
                     p,
                 )
+
+    def queue_game_announcement(self, court, players):
+        """Queue announcement."""
+        print(f"queuing announcement for court {court}, players: {players}")
