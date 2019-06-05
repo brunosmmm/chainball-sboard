@@ -16,6 +16,7 @@ class SFXMappableEvents:
 
     GAME_END = 0
     COW_OUT = 1
+    MUD_SKIPPER = 2
 
 
 class SFXMapping:
@@ -24,6 +25,7 @@ class SFXMapping:
     MAPPABLE_EVENTS = {
         "gameEnd": SFXMappableEvents.GAME_END,
         "cowOut": SFXMappableEvents.COW_OUT,
+        "mudSkipper": SFXMappableEvents.MUD_SKIPPER,
     }
 
     def __init__(self):

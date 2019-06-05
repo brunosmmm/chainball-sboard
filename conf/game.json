@@ -2,7 +2,8 @@
     "sfxmap" :
     {
         "gameEnd" : "buzzer",
-        "cowOut" : "out"
+        "cowOut" : "out",
+        "mudSkipper": null
     },
 
     "serveTimeout" : 3,
