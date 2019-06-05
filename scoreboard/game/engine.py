@@ -1131,4 +1131,16 @@ class ChainballGame:
 
     def queue_game_announcement(self, court, players):
         """Queue announcement."""
-        print(f"queuing announcement for court {court}, players: {players}")
+        # print(f"queuing announcement for court {court}, players: {players}")
+        # PLACEHOLDER FOR COURT ANNOUNCEMENT
+        try:
+            SFX_HANDLER.play_fx(f"court{court}")
+        except KeyError:
+            pass
+
+        # announce players
+        for player in players:
+            try:
+                SFX_HANDLER.play_fx(player)
+            except KeyError:
+                pass
