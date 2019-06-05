@@ -66,6 +66,8 @@ class GameSFXHandler(object):
         # check path, create if doesnt exist
         if not os.path.isabs(sfx_config.sfxpath):
             sfx_path = os.path.join(".", sfx_config.sfxpath)
+        else:
+            sfx_path = sfx_config.sfxpath
         if not os.path.exists(sfx_path):
             self.logger.warning("sfx database path does not exist")
             try:
