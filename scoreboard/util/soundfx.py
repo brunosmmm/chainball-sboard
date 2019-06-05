@@ -10,6 +10,7 @@ from scoreboard.util.configfiles import (
     CHAINBALL_CONFIGURATION,
     ChainBallConfigurationError,
 )
+from collections import deque
 
 
 class SFXDataError(Exception):
@@ -50,6 +51,7 @@ class GameSFXHandler(object):
         self.state = GameSFXHandlerStates.IDLE
         self.current_fx = None
 
+        self._fx_queue = deque()
         self._has_audio = True
 
         # build library
@@ -99,19 +101,26 @@ class GameSFXHandler(object):
             return
         # return
         if fx in self.fx_dict:
-            self.current_fx = GameSoundEffect(self.fx_dict[fx])
 
             # play
-            self.logger.debug("Playing {}".format(fx))
-            self.current_fx.start()
+            self.logger.debug("Queuing {}".format(fx))
+            self._fx_queue.append(GameSoundEffect(self.fx_dict[fx]))
             self.state = GameSFXHandlerStates.PLAYING
         else:
             raise KeyError("no such sound effect: {}".format(fx))
 
     def handle(self):
         """Handle play state machine."""
-        if self.current_fx is not None:
-            if self.current_fx.finished:
+        if self.current_fx is not None and not self.current_fx.finished:
+            return
+        else:
+            try:
+                next_fx = self._fx_queue.popleft()
+                self.current_fx = next_fx
+                self.state = GameSFXHandlerStates.PLAYING
+                next_fx.start()
+            except IndexError:
+                # queue is empty
                 self.state = GameSFXHandlerStates.IDLE
 
     def get_available_sfx(self):
