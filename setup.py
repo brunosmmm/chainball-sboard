@@ -7,7 +7,7 @@ setup(
     version="1.0",
     packages=find_packages(),
     install_requires=["pyserial>=3.4", "dbus-python>=1.2.8"],
-    package_data={"scoreboard": ["data/*"]},
+    package_data={"scoreboard": ["data/sfx/*"]},
     author="Bruno Morais",
     author_email="brunosmmm@gmail.com",
     description="The chainball scoreboard",
