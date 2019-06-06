@@ -11,6 +11,12 @@ from scoreboard.util.configfiles import (
     ChainBallConfigurationError,
 )
 from collections import deque
+from scoreboard.util.spotify import (
+    get_spotify_play_state,
+    SpotifyError,
+    play_spotify,
+    pause_spotify,
+)
 
 
 class SFXDataError(Exception):
@@ -20,15 +26,35 @@ class SFXDataError(Exception):
 class GameSoundEffect(threading.Thread):
     """Thread that plays a sound."""
 
-    def __init__(self, fxobj):
+    def __init__(self, fxobj, idx=1, control_spotify=True):
         """Initialize."""
-        super(GameSoundEffect, self).__init__()
+        super().__init__()
         self.fx = fxobj
         self.finished = False
+        self._idx = idx
+        self._spotify = control_spotify
 
     def run(self):
         """Play SFX."""
+        # first try to get spotify state
+        if self._spotify and CHAINBALL_CONFIGURATION.scoreboard.control_spotify:
+            try:
+                spotify_playing = get_spotify_play_state()
+            except SpotifyError:
+                # ignore
+                spotify_playing = False
+            # prepare by pausing spotify
+            if spotify_playing:
+                try:
+                    pause_spotify()
+                except SpotifyError:
+                    pass
+
         playsound(self.fx)
+
+        if self._spotify and CHAINBALL_CONFIGURATION.scoreboard.control_spotify:
+            if self._idx == 1:
+                play_spotify()
 
         self.finished = True
         # end
@@ -53,6 +79,7 @@ class GameSFXHandler(object):
 
         self._fx_queue = deque()
         self._has_audio = True
+        self._resume_spotify_playback = False
 
         # build library
         self.fx_dict = {}
@@ -96,20 +123,34 @@ class GameSFXHandler(object):
 
         self.logger.debug("loaded {} SFX files".format(len(self.fx_dict)))
 
-    def play_fx(self, fx):
+    def play_fx(self, *fx_list):
         """Play SFX."""
         if self._has_audio is False:
             self.logger.warning("no audio device, cannot play sfx")
             return
         # return
-        if fx in self.fx_dict:
-
-            # play
-            self.logger.debug("Queuing {}".format(fx))
-            self._fx_queue.append(GameSoundEffect(self.fx_dict[fx]))
-            self.state = GameSFXHandlerStates.PLAYING
-        else:
-            raise KeyError("no such sound effect: {}".format(fx))
+        try:
+            spotify_playing = get_spotify_play_state()
+        except SpotifyError:
+            # ignore
+            spotify_playing = False
+        offset = 0
+        for idx, fx in enumerate(fx_list):
+            if fx in self.fx_dict:
+                # play
+                self._fx_queue.append(
+                    (
+                        GameSoundEffect(
+                            self.fx_dict[fx],
+                            len(fx_list) - idx + offset,
+                            control_spotify=spotify_playing,
+                        )
+                    )
+                )
+                # self.state = GameSFXHandlerStates.PLAYING
+            else:
+                offset += 1
+                continue
 
     def handle(self):
         """Handle play state machine."""
@@ -120,6 +161,7 @@ class GameSFXHandler(object):
                 next_fx = self._fx_queue.popleft()
                 self.current_fx = next_fx
                 self.state = GameSFXHandlerStates.PLAYING
+
                 next_fx.start()
             except IndexError:
                 # queue is empty
