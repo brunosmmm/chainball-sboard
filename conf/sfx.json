@@ -12,13 +12,18 @@
       "builtin": true
     },
     "court1": {
-      "file": "tone.mp3",
+      "file": "court1.wav",
       "description": "Court 1 announcement",
       "builtin": true
     },
     "court2": {
-      "file": "tone.mp3",
+      "file": "court2.wav",
       "description": "Court 2 announcement",
+      "builtin": true
+    },
+    "mudskipper": {
+      "file": "mudskipper.wav",
+      "description": "Mudskipper",
       "builtin": true
     }
   }
