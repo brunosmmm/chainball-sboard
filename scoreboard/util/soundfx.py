@@ -1,22 +1,32 @@
 """SFX library and audio device handler."""
 
-import threading
+import base64
 import logging
 import os
-import base64
+import threading
+from collections import deque
+
 import pkg_resources
-from playsound import playsound
+
 from scoreboard.util.configfiles import (
     CHAINBALL_CONFIGURATION,
     ChainBallConfigurationError,
 )
-from collections import deque
 from scoreboard.util.spotify import (
-    get_spotify_play_state,
     SpotifyError,
-    play_spotify,
+    get_spotify_play_state,
     pause_spotify,
+    play_spotify,
 )
+
+# sound hack on rpi
+if CHAINBALL_CONFIGURATION.scoreboard.use_omx:
+    from subprocess import check_call, CalledProcessError
+else:
+    from playsound import playsound
+
+
+SFX_LOGGER = logging.getLogger("sboard.sfx")
 
 
 class SFXDataError(Exception):
@@ -36,6 +46,9 @@ class GameSoundEffect(threading.Thread):
 
     def run(self):
         """Play SFX."""
+        if self.fx is None:
+            self.finished = True
+            return
         # first try to get spotify state
         if self._spotify and CHAINBALL_CONFIGURATION.scoreboard.control_spotify:
             try:
@@ -50,7 +63,18 @@ class GameSoundEffect(threading.Thread):
                 except SpotifyError:
                     pass
 
-        playsound(self.fx)
+        if CHAINBALL_CONFIGURATION.scoreboard.use_omx:
+            try:
+                check_call(["omxplayer", "--no-keys", "-o", "local", self.fx])
+            except CalledProcessError:
+                SFX_LOGGER.error("could not play SFX: {}".format(self.fx))
+        else:
+            try:
+                playsound(self.fx)
+            except Exception as ex:
+                SFX_LOGGER.error(
+                    "could not play SFX: {}, got: {}".format(self.fx, ex)
+                )
 
         if self._spotify and CHAINBALL_CONFIGURATION.scoreboard.control_spotify:
             if self._idx == 1:
@@ -72,7 +96,6 @@ class GameSFXHandler(object):
 
     def __init__(self):
         """Initialize."""
-        self.logger = logging.getLogger("sboard.sfx")
 
         self.state = GameSFXHandlerStates.IDLE
         self.current_fx = None
@@ -87,7 +110,7 @@ class GameSFXHandler(object):
         try:
             sfx_config = CHAINBALL_CONFIGURATION.retrieve_configuration("sfx")
         except ChainBallConfigurationError:
-            self.logger.error("Invalid SFX library configuration file")
+            SFX_LOGGER.error("Invalid SFX library configuration file")
             return
 
         # check path, create if doesnt exist
@@ -96,11 +119,11 @@ class GameSFXHandler(object):
         else:
             sfx_path = sfx_config.sfxpath
         if not os.path.exists(sfx_path):
-            self.logger.warning("sfx database path does not exist")
+            SFX_LOGGER.warning("sfx database path does not exist")
             try:
                 os.makedirs(sfx_path)
             except OSError:
-                self.logger.error("cannot create sfx database path")
+                SFX_LOGGER.error("cannot create sfx database path")
 
         self.fx_dict = {}
         for name, sfx in sfx_config["sfxlib"].items():
@@ -121,12 +144,12 @@ class GameSFXHandler(object):
 
         self.fx_data_path = sfx_path
 
-        self.logger.debug("loaded {} SFX files".format(len(self.fx_dict)))
+        SFX_LOGGER.debug("loaded {} SFX files".format(len(self.fx_dict)))
 
     def play_fx(self, *fx_list):
         """Play SFX."""
         if self._has_audio is False:
-            self.logger.warning("no audio device, cannot play sfx")
+            SFX_LOGGER.warning("no audio device, cannot play sfx")
             return
         # return
         try:
