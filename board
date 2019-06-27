@@ -16,6 +16,8 @@ from scoreboard.util.configfiles import CHAINBALL_CONFIGURATION
 from scoreboard.cbcentral.localdb import update_all, GAME_REGISTRY
 from scoreboard.ipc.server import IPC_HANDLER
 
+DEBUG = False
+
 
 class GameWrapper(StoppableThread):
     """Main Game Thread."""
@@ -80,19 +82,20 @@ if __name__ == "__main__":
 
     # main loop
     logging.basicConfig(
-        level=logging.DEBUG,
+        level=logging.NOTSET,
         format="%(asctime)s - %(name)s -" " %(levelname)s - %(message)s",
     )
 
-    console = logging.StreamHandler()
-    console.setLevel(logging.INFO)
-    logging.getLogger("").addHandler(console)
+    if DEBUG:
+        logging.root.setLevel(logging.NOTSET)
+    else:
+        logging.root.setLevel(logging.INFO)
 
     logger = logging.getLogger("sboard")
     logger.addHandler(JournalHandler())
 
     if CHAINBALL_CONFIGURATION.scoreboard.chainball_server_token is not None:
-        logger.info("Connecting to Central server")
+        logger.info("Connecting to Central server and updating")
         update_all()
     else:
         logger.warning("Server API Token not set, not trying to update")
