@@ -18,6 +18,7 @@ from scoreboard.util.spotify import (
     pause_spotify,
     play_spotify,
 )
+from scoreboard.util.mopidy import mopidy_play, mopidy_pause, MopidyError
 
 # sound hack on rpi
 if CHAINBALL_CONFIGURATION.scoreboard.use_omx:
@@ -62,6 +63,11 @@ class GameSoundEffect(threading.Thread):
                     pause_spotify()
                 except SpotifyError:
                     pass
+        elif CHAINBALL_CONFIGURATION.scoreboard.control_mopidy:
+            try:
+                mopidy_pause()
+            except MopidyError:
+                pass
 
         if CHAINBALL_CONFIGURATION.scoreboard.use_omx:
             try:
@@ -79,6 +85,11 @@ class GameSoundEffect(threading.Thread):
         if self._spotify and CHAINBALL_CONFIGURATION.scoreboard.control_spotify:
             if self._idx == 1:
                 play_spotify()
+        elif CHAINBALL_CONFIGURATION.scoreboard.control_mopidy:
+            try:
+                mopidy_play()
+            except MopidyError:
+                pass
 
         self.finished = True
         # end
