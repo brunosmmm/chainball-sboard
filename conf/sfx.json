@@ -2,29 +2,59 @@
   "sfxpath": "data/sfx",
   "sfxlib": {
     "buzzer": {
-      "file": "buzzer.wav",
+      "file": "buzzer.mp3",
       "description": "Buzzer",
       "builtin": true
     },
     "out": {
-      "file": "out.wav",
+      "file": "out.mp3",
       "description": "Cowout",
       "builtin": true
     },
     "court1": {
-      "file": "court1.wav",
+      "file": "court1.mp3",
       "description": "Court 1 announcement",
       "builtin": true
     },
     "court2": {
-      "file": "court2.wav",
+      "file": "court2.mp3",
       "description": "Court 2 announcement",
       "builtin": true
     },
     "mudskipper": {
-      "file": "mudskipper.wav",
+      "file": "mudskipper.mp3",
       "description": "Mudskipper",
       "builtin": true
+    },
+    "p0": {
+      "file": "p0",
+      "description": "SFX_p0",
+      "builtin": false
+    },
+    "p1": {
+      "file": "p1",
+      "description": "SFX_p1",
+      "builtin": false
+    },
+    "p2": {
+      "file": "p2",
+      "description": "SFX_p2",
+      "builtin": false
+    },
+    "S_MacDonald": {
+      "file": "S_MacDonald",
+      "description": "SFX_S_MacDonald",
+      "builtin": false
+    },
+    "M_Bulian": {
+      "file": "M_Bulian",
+      "description": "SFX_M_Bulian",
+      "builtin": false
+    },
+    "A_Gineo": {
+      "file": "A_Gineo",
+      "description": "SFX_A_Gineo",
+      "builtin": false
     }
   }
 }
