@@ -1015,6 +1015,14 @@ class ChainballGame:
                 {"player": int(player), "gtime": self.get_running_time()},
             )
             self.game_decrement_score(int(player), referee_event=True)
+            # play sound effect
+            try:
+                mudskipper_sfx = self.sfx_mapping.get_sfx(
+                    SFXMappableEvents.MUD_SKIPPER
+                )
+                SFX_HANDLER.play_fx(mudskipper_sfx)
+            except SFXUnknownEvent:
+                self.logger.warning("SFX play error for mudskipper")
         elif evt_type == "sailormoon":
             self.g_persist.log_event(
                 GameEventTypes.SAILORMOON,
@@ -1133,6 +1141,9 @@ class ChainballGame:
         """Queue announcement."""
         # print(f"queuing announcement for court {court}, players: {players}")
         # PLACEHOLDER FOR COURT ANNOUNCEMENT
+        self.logger.info(
+            "Queuing announcement for next game in court {}".format(court)
+        )
         announcement = [f"court{court}"]
         announcement.extend(players)
         try:

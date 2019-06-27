@@ -3,7 +3,7 @@
     {
         "gameEnd" : "buzzer",
         "cowOut" : "out",
-        "mudSkipper": null
+        "mudSkipper": "mudskipper"
     },
 
     "serveTimeout" : 3,
