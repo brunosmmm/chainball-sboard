@@ -33,6 +33,7 @@ class ChainballCentralAPI(StoppableThread):
         while not self.is_stopped():
             # update game registry to track tournament progress
             try:
+                localdb.ANNOUNCE_REGISTRY.update_registry()
                 localdb.GAME_REGISTRY.update_registry()
                 localdb.GAME_REGISTRY.commit_registry()
             except CBCentralAPIError:

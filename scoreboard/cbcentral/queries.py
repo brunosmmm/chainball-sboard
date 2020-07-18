@@ -22,6 +22,13 @@ def query_games():
     return api.ChainballCentralAPI.central_api_get(sub_api="api", path="games")
 
 
+def query_announcements():
+    """Query announcements."""
+    return api.ChainballCentralAPI.central_api_get(
+        sub_api="api", path="announce"
+    )
+
+
 def get_sfx_data(player):
     """Get player SFX data."""
     return api.ChainballCentralAPI.central_api_get(

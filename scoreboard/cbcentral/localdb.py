@@ -11,6 +11,7 @@ from scoreboard.cbcentral.queries import (
     query_games,
     query_players,
     query_tournaments,
+    query_announcements,
 )
 from scoreboard.cbcentral.util import id_from_url, md5_sum
 from scoreboard.util.configfiles import CHAINBALL_CONFIGURATION
@@ -119,7 +120,9 @@ class LocalRegistry:
 
         # build
         self._registry_contents = []
+        self._initializing = True
         self.build_registry(_registry_contents)
+        self._initializing = False
 
     @property
     def serialized(self):
@@ -133,6 +136,9 @@ class LocalRegistry:
     def value_changed(self, entry_index, field_name, old_value, new_value):
         """Value changed callback."""
 
+    def new_entry(self, content):
+        """New entry callback."""
+
     def build_registry(self, contents: List):
         """Build registry."""
         new_registry_contents = []
@@ -143,8 +149,14 @@ class LocalRegistry:
                 index_key = self._entry_class.get_index_name()
                 if index_key is not None:
                     index_value = item[index_key]
+                    if not self._initializing and index_value not in self:
+                        # new content
+                        self.new_entry(new_content)
                     current_content = self[index_value]
-                    if current_content != new_content:
+                    if (
+                        not self._initializing
+                        and current_content != new_content
+                    ):
                         modified_fields = current_content.compare_entries(
                             new_content
                         )
@@ -346,6 +358,38 @@ class LocalTournamentRegistry(LocalRegistry):
         self.build_registry(upstream_tournaments)
 
 
+class AnnouncementEntry(LocalRegistryEntry):
+    """Announcement."""
+
+    _index = "identifier"
+    _fields = ["identifier", "players", "court"]
+
+    def __init__(self, identifier, players, court, **kwargs):
+        """Initialize."""
+        super().__init__(**kwargs)
+        self._identifier = identifier
+        self._players = [id_from_url(player) for player in players]
+        if court is None:
+            self._court = None
+        else:
+            self._court = id_from_url(court)
+
+    @property
+    def players(self):
+        """Get players."""
+        return self._players
+
+    @property
+    def identifier(self):
+        """Get identifier."""
+        return self._identifier
+
+    @property
+    def court(self):
+        """Get court."""
+        return self._court
+
+
 class GameEntry(LocalRegistryEntry):
     """Game registry entry."""
 
@@ -454,6 +498,28 @@ class GameEntry(LocalRegistryEntry):
         return self._status
 
 
+class LocalAnnounceRegistry(LocalRegistry):
+    """Get announcements from server."""
+
+    def __init__(self):
+        """Initialize."""
+        super().__init__("announce_registry", AnnouncementEntry)
+        self.game_wrapper = None
+
+    def update_registry(self):
+        """Update registry."""
+        upstream_announcements = query_announcements()
+        self.build_registry(upstream_announcements)
+        self.commit_registry()
+
+    def new_entry(self, content):
+        """New entry."""
+        if self.game_wrapper is not None:
+            self.game_wrapper.announce_next_game(
+                content.court, content.players
+            )
+
+
 class LocalGameRegistry(LocalRegistry):
     """Game registry retrieved from server."""
 
@@ -483,6 +549,7 @@ class LocalGameRegistry(LocalRegistry):
 PLAYER_REGISTRY = LocalPlayerRegistry()
 TOURNAMENT_REGISTRY = LocalTournamentRegistry()
 GAME_REGISTRY = LocalGameRegistry()
+ANNOUNCE_REGISTRY = LocalAnnounceRegistry()
 
 
 def update_all():

@@ -13,7 +13,11 @@ from scoreboard.util.threads import StoppableThread
 from scoreboard.util.configfiles import CHAINBALL_CONFIGURATION
 
 # from scoreboard.web import WebBoard
-from scoreboard.cbcentral.localdb import update_all, GAME_REGISTRY
+from scoreboard.cbcentral.localdb import (
+    update_all,
+    GAME_REGISTRY,
+    ANNOUNCE_REGISTRY,
+)
 from scoreboard.ipc.server import IPC_HANDLER
 
 DEBUG = False
@@ -33,11 +37,13 @@ class GameWrapper(StoppableThread):
         """Run thread."""
         # hack
         GAME_REGISTRY.game_wrapper = self
+        ANNOUNCE_REGISTRY.game_wrapper = self
         # never exit
         while True:
             if self.is_stopped():
                 self.game.shutdown()
                 GAME_REGISTRY.game_wrapper = None
+                ANNOUNCE_REGISTRY.game_wrapper = None
                 break
             else:
                 self.game.game_loop()

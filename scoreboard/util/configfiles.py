@@ -16,6 +16,7 @@ _DB_DEFAULTS = {
     "player_registry": "player_registry.json",
     "tournament_registry": "tournament_registry.json",
     "game_registry": "game_registry.json",
+    "announce_registry": "announce_registry.json",
 }
 
 _CONFIGURATION_DEFAULTS = {
