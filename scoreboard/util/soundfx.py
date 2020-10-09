@@ -7,27 +7,24 @@ import threading
 from collections import deque
 
 import pkg_resources
-
 from scoreboard.util.configfiles import (
     CHAINBALL_CONFIGURATION,
     ChainBallConfigurationError,
 )
+from scoreboard.util.mopidy import (
+    MopidyError,
+    mopidy_is_playing,
+    mopidy_pause,
+    mopidy_play,
+)
 from scoreboard.util.spotify import (
     SpotifyError,
     get_spotify_play_state,
-    pause_spotify,
-    play_spotify,
-)
-from scoreboard.util.mopidy import (
-    mopidy_is_playing,
-    mopidy_play,
-    mopidy_pause,
-    MopidyError,
 )
 
 # sound hack on rpi
 if CHAINBALL_CONFIGURATION.scoreboard.use_omx:
-    from subprocess import check_call, CalledProcessError
+    from subprocess import CalledProcessError, check_call
 else:
     from playsound import playsound
 
