@@ -18,7 +18,12 @@ from scoreboard.util.spotify import (
     pause_spotify,
     play_spotify,
 )
-from scoreboard.util.mopidy import mopidy_play, mopidy_pause, MopidyError
+from scoreboard.util.mopidy import (
+    mopidy_is_playing,
+    mopidy_play,
+    mopidy_pause,
+    MopidyError,
+)
 
 # sound hack on rpi
 if CHAINBALL_CONFIGURATION.scoreboard.use_omx:
@@ -45,29 +50,21 @@ class GameSoundEffect(threading.Thread):
         self._idx = idx
         self._spotify = control_spotify
 
+    @property
+    def control_spotify(self):
+        """Get whether playback should be controlled."""
+        return self._spotify
+
+    @property
+    def idx(self):
+        """Get index."""
+        return self._idx
+
     def run(self):
         """Play SFX."""
         if self.fx is None:
             self.finished = True
             return
-        # first try to get spotify state
-        if self._spotify and CHAINBALL_CONFIGURATION.scoreboard.control_spotify:
-            try:
-                spotify_playing = get_spotify_play_state()
-            except SpotifyError:
-                # ignore
-                spotify_playing = False
-            # prepare by pausing spotify
-            if spotify_playing:
-                try:
-                    pause_spotify()
-                except SpotifyError:
-                    pass
-        elif CHAINBALL_CONFIGURATION.scoreboard.control_mopidy:
-            try:
-                mopidy_pause()
-            except MopidyError:
-                pass
 
         if CHAINBALL_CONFIGURATION.scoreboard.use_omx:
             try:
@@ -81,15 +78,6 @@ class GameSoundEffect(threading.Thread):
                 SFX_LOGGER.error(
                     "could not play SFX: {}, got: {}".format(self.fx, ex)
                 )
-
-        if self._spotify and CHAINBALL_CONFIGURATION.scoreboard.control_spotify:
-            if self._idx == 1:
-                play_spotify()
-        elif CHAINBALL_CONFIGURATION.scoreboard.control_mopidy:
-            try:
-                mopidy_play()
-            except MopidyError:
-                pass
 
         self.finished = True
         # end
@@ -110,6 +98,7 @@ class GameSFXHandler(object):
 
         self.state = GameSFXHandlerStates.IDLE
         self.current_fx = None
+        self._paused_by_sboard = False
 
         self._fx_queue = deque()
         self._has_audio = True
@@ -190,16 +179,40 @@ class GameSFXHandler(object):
         """Handle play state machine."""
         if self.current_fx is not None and not self.current_fx.finished:
             return
-        else:
-            try:
-                next_fx = self._fx_queue.popleft()
-                self.current_fx = next_fx
-                self.state = GameSFXHandlerStates.PLAYING
+        try:
+            next_fx = self._fx_queue.popleft()
+            self.current_fx = next_fx
+            self.state = GameSFXHandlerStates.PLAYING
 
-                next_fx.start()
-            except IndexError:
-                # queue is empty
-                self.state = GameSFXHandlerStates.IDLE
+            # next_fx.start()
+        except IndexError:
+            # queue is empty
+            self.state = GameSFXHandlerStates.IDLE
+            if (
+                CHAINBALL_CONFIGURATION.scoreboard.control_mopidy
+                and self.current_fx is not None
+                and self._paused_by_sboard
+            ):
+                try:
+                    is_playing = mopidy_is_playing()
+                    if is_playing is False:
+                        mopidy_play()
+                        self._paused_by_sboard = False
+                except MopidyError:
+                    pass
+            return
+
+        # first try to get spotify state
+        if CHAINBALL_CONFIGURATION.scoreboard.control_mopidy:
+            try:
+                is_playing = mopidy_is_playing()
+                if is_playing:
+                    mopidy_pause()
+                    self._paused_by_sboard = True
+            except MopidyError:
+                pass
+
+        next_fx.start()
 
     def get_available_sfx(self):
         """Get available SFXs."""
