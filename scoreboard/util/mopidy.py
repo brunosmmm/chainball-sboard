@@ -25,8 +25,10 @@ def mopidy_pause():
             headers={"Content-Type": "application/json"},
             data=payload,
         )
-    except ConnectionError:
+    except requests.exceptions.ConnectionError:
         raise MopidyError("request failed")
+    except Exception:
+        raise MopidyError("unknown error")
 
     if ret.status_code != 200:
         raise MopidyError("request failed")
@@ -49,8 +51,10 @@ def mopidy_play():
             headers={"Content-Type": "application/json"},
             data=payload,
         )
-    except ConnectionError:
+    except requests.exceptions.ConnectionError:
         raise MopidyError("request failed")
+    except Exception:
+        raise MopidyError("unknown error")
 
     if ret.status_code != 200:
         raise MopidyError("request failed")
