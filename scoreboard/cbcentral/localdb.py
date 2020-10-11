@@ -15,7 +15,7 @@ from scoreboard.cbcentral.queries import (
 )
 from scoreboard.cbcentral.util import id_from_url, md5_sum
 from scoreboard.util.configfiles import CHAINBALL_CONFIGURATION
-from scoreboard.util.soundfx import SFX_HANDLER
+from scoreboard.util.soundfx import SFX_HANDLER, SFXDataError
 
 LOCALDB_LOGGER = getLogger("sboard.localdb")
 
@@ -561,6 +561,7 @@ def update_all():
         LOCALDB_LOGGER.warning("could not update player registry from server")
 
     # check SFX data
+    updated = False
     for player in PLAYER_REGISTRY:
         if player.username not in SFX_HANDLER.fx_desc:
             # SFX data not available, retrieve
@@ -579,7 +580,12 @@ def update_all():
 
             # insert data
             if data["data"] is not None:
-                SFX_HANDLER.insert_sfx_data(player.username, data["data"])
+                try:
+                    SFX_HANDLER.insert_sfx_data(player.username, data["data"])
+                except SFXDataError:
+                    LOCALDB_LOGGER.error("failed to write SFX data")
+                    continue
+                updated = True
         else:
             # check md5sum
             fx_path = os.path.join(SFX_HANDLER.fx_data_path, player.username)
@@ -610,10 +616,18 @@ def update_all():
 
                 # FIXME cannot fully remove SFX data!
                 if data["data"] is not None:
-                    SFX_HANDLER.insert_sfx_data(player.username, data["data"])
+                    try:
+                        SFX_HANDLER.insert_sfx_data(
+                            player.username, data["data"]
+                        )
+                    except SFXDataError:
+                        LOCALDB_LOGGER.error("failed to write SFX data")
+                        continue
+                    updated = True
 
     # save SFX configuration
-    SFX_HANDLER.commit_sfx_data()
+    if updated:
+        SFX_HANDLER.commit_sfx_data()
 
     try:
         TOURNAMENT_REGISTRY.update_registry()
