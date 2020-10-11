@@ -80,14 +80,14 @@ class GameSoundEffect(threading.Thread):
         # end
 
 
-class GameSFXHandlerStates(object):
+class GameSFXHandlerStates:
     """Handler states."""
 
     IDLE = 0
     PLAYING = 1
 
 
-class GameSFXHandler(object):
+class GameSFXHandler:
     """SFX Handler."""
 
     def __init__(self):
