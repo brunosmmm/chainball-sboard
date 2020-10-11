@@ -104,6 +104,9 @@ class GameSFXHandler:
         # build library
         self.fx_dict = {}
         self.fx_desc = {}
+        self._load_sfx_data()
+
+    def _load_sfx_data(self):
         try:
             sfx_config = CHAINBALL_CONFIGURATION.retrieve_configuration("sfx")
         except ChainBallConfigurationError:
@@ -243,6 +246,8 @@ class GameSFXHandler:
     def commit_sfx_data(self):
         """Save to disk."""
         CHAINBALL_CONFIGURATION.sfx.save()
+        # force reload
+        self._load_sfx_data()
 
 
 SFX_HANDLER = GameSFXHandler()
