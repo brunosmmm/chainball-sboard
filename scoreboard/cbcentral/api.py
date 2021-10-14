@@ -91,6 +91,7 @@ class ChainballCentralAPI(StoppableThread):
                 get_url,
                 timeout=timeout,
                 headers={"Authorization": f"Api-Key {api_key}"},
+                verify=False,
             )
         except Timeout:
             raise CBCentralAPITimeout("GET timed out.")
@@ -143,7 +144,7 @@ class ChainballCentralAPI(StoppableThread):
         central_server_address, _ = cls.get_central_address()
 
         try:
-            requests.get(central_server_address, timeout=timeout)
+            requests.get(central_server_address, timeout=timeout, verify=False)
         except (Timeout, ConnectionError):
             return False
 

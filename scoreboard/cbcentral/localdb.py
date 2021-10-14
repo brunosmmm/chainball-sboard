@@ -75,7 +75,7 @@ class LocalRegistryEntry:
     def __hash__(self, other):
         """Hash function."""
         field_values = tuple([getattr(self, field) for field in self._fields])
-        return hash(field_value)
+        return hash(field_values)
 
     def compare_entries(self, other):
         """Compare entries."""
@@ -513,7 +513,7 @@ class LocalAnnounceRegistry(LocalRegistry):
         self.commit_registry()
 
     def new_entry(self, content):
-        """New entry."""
+        """Add new entry."""
         if self.game_wrapper is not None:
             self.game_wrapper.announce_next_game(
                 content.court, content.players
@@ -573,6 +573,7 @@ def update_all():
                 data = get_sfx_data(player.username)
             except api.CBCentralAPIError:
                 LOCALDB_LOGGER.error("failed to retrieve SFX data")
+                raise
                 continue
             if data["status"] != "ok":
                 LOCALDB_LOGGER.error(
