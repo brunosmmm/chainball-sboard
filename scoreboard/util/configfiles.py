@@ -9,6 +9,7 @@ _SCOREBOARD_DEFAULTS = {
     "live_updates": True,
     "chainball_server": "",
     "chainball_server_token": "",
+    "implicit_announce": False,
 }
 
 _DB_DEFAULTS = {
@@ -34,7 +35,6 @@ class ChainBallConfigurationFile:
 
     def __init__(self, data, path, defaults=None):
         """Initialize."""
-
         self._data = data
         self._path = path
         if defaults is not None:

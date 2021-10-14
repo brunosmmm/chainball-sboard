@@ -536,7 +536,11 @@ class LocalGameRegistry(LocalRegistry):
     def value_changed(self, entry_index, field_name, old_value, new_value):
         """Value changed callback."""
         if field_name == "game_status":
-            if old_value == "NYET" and new_value == "NEXT":
+            if (
+                CHAINBALL_CONFIGURATION.scoreboard.implicit_announce
+                and old_value == "NYET"
+                and new_value == "NEXT"
+            ):
                 # announce
                 if self.game_wrapper is not None:
                     game_entry = self[entry_index]
