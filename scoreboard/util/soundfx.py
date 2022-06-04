@@ -11,12 +11,9 @@ from scoreboard.util.configfiles import (
     CHAINBALL_CONFIGURATION,
     ChainBallConfigurationError,
 )
-from scoreboard.util.mopidy import (
-    MopidyError,
-    mopidy_is_playing,
-    mopidy_pause,
-    mopidy_play,
-)
+from scoreboard.util.musicplayer import MusicPlayerException
+from scoreboard.util.mopidy import MopidyPlayer
+from scoreboard.util.mpris import LocalPlayer
 from scoreboard.util.spotify import (
     SpotifyError,
     get_spotify_play_state,
@@ -105,6 +102,13 @@ class GameSFXHandler:
         self.fx_dict = {}
         self.fx_desc = {}
         self._load_sfx_data()
+        player = CHAINBALL_CONFIGURATION.scoreboard.control_player
+        if player == "mopidy":
+            self._player = MopidyPlayer()
+        elif player == "local":
+            self._player = LocalPlayer()
+        else:
+            self._player = None
 
     def _load_sfx_data(self):
         try:
@@ -189,27 +193,25 @@ class GameSFXHandler:
             # queue is empty
             self.state = GameSFXHandlerStates.IDLE
             if (
-                CHAINBALL_CONFIGURATION.scoreboard.control_mopidy
+                self._player is not None
                 and self.current_fx is not None
                 and self._paused_by_sboard
             ):
                 try:
-                    is_playing = mopidy_is_playing()
-                    if is_playing is False:
-                        mopidy_play()
+                    if self._player.is_playing is False:
+                        self._player.play()
                         self._paused_by_sboard = False
-                except MopidyError:
+                except MusicPlayerException:
                     pass
             return
 
         # first try to get spotify state
-        if CHAINBALL_CONFIGURATION.scoreboard.control_mopidy:
+        if self._player is not None:
             try:
-                is_playing = mopidy_is_playing()
-                if is_playing:
-                    mopidy_pause()
+                if self._player.is_playing:
+                    self._player.pause()
                     self._paused_by_sboard = True
-            except MopidyError:
+            except MusicPlayerException:
                 pass
 
         next_fx.start()
