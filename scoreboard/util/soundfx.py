@@ -89,7 +89,6 @@ class GameSFXHandler:
 
     def __init__(self):
         """Initialize."""
-
         self.state = GameSFXHandlerStates.IDLE
         self.current_fx = None
         self._paused_by_sboard = False
