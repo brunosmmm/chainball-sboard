@@ -12,7 +12,6 @@ zmq = "^0.0.0"
 requests = "^2.26.0"
 systemd-python = "^234"
 dbus-python = "^1.2.16"
-PyGObject = "^3.40.1"
 
 [tool.poetry.dev-dependencies]
 
