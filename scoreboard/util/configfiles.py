@@ -65,6 +65,12 @@ class ChainBallConfigurationFile:
 
         raise AttributeError
 
+    def get(self, name, default=None):
+        """Try to retrieve attribute."""
+        if name in self._data:
+            return self._data[name]
+        return default
+
     def __getitem__(self, item):
         """Get item."""
         return self._data[item]

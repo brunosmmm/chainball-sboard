@@ -20,7 +20,7 @@ from scoreboard.util.spotify import (
 )
 
 # sound hack on rpi
-if CHAINBALL_CONFIGURATION.scoreboard.use_omx:
+if CHAINBALL_CONFIGURATION.scoreboard.get("use_omx", False):
     from subprocess import CalledProcessError, check_call
 else:
     from playsound import playsound
