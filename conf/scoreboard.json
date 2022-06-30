@@ -1,0 +1,9 @@
+{
+  "log_path": "scoreboard.log",
+  "chainball_server": "",
+  "chainball_server_token": "",
+  "control_player": true,
+  "live_updates": true,
+  "use_omx": false,
+  "implicit_announce": false
+}
