@@ -75,6 +75,8 @@ class ChainballCentralAPI(StoppableThread):
     def central_api_get(cls, sub_api=None, path=None, timeout=10):
         """Make a GET request."""
         central_server_address, api_key = cls.get_central_address()
+        if not central_server_address:
+            raise CBCentralAPIError("server address empty")
 
         # do not use access token for now
         # build request
@@ -112,6 +114,8 @@ class ChainballCentralAPI(StoppableThread):
     def _central_api_post(self, data, sub_api=None, path=None, timeout=10):
         """Make a POST request."""
         central_server_address, api_key = self.get_central_address()
+        if not central_server_address:
+            raise CBCentralAPIError("server address empty")
         get_url = central_server_address
         if sub_api is not None:
             get_url = posixpath.join(get_url, sub_api)
