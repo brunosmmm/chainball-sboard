@@ -103,6 +103,12 @@ class LocalRegistry:
             db_config.database_location, db_config[registry_name]
         )
 
+        if not os.path.exists(db_config.database_location):
+            try:
+                os.mkdir(db_config.database_location)
+            except OSError:
+                raise ChainBallLocalDBError("cannot create directory for db")
+
         if not os.path.exists(self._registry_location):
             try:
                 with open(self._registry_location, "w") as registry:
